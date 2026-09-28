@@ -15,6 +15,7 @@ Três páginas no topo: **Cenário Nacional**, **Cenário Estadual MA** e **Apur
   resultado real em 82% a 91% das simulações.
 
 ## Atualizar os números
+No computador, instale uma vez: `pip install -r requirements-modelos.txt` (o `requirements.txt` é só o do painel publicado).
 Clique duas vezes em `atualizar_tudo.bat` (roda os 6 scripts dos dois cenários e pergunta se envia ao GitHub). Ou, à mão:
 ```
 # Estadual (Maranhão)

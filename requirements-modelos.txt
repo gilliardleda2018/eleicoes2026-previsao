@@ -1,0 +1,4 @@
+# Para rodar os modelos no computador (atualizar_tudo.bat). O painel publicado usa só requirements.txt.
+-r requirements.txt
+scikit-learn==1.7.2
+shapely==2.1.2
