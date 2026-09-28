@@ -155,7 +155,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 SECOES = ["🏁 Veredito", "📊 Pesquisas", "🧠 Modelos", "🗺️ Mapa", "🏙️ Cidades", "🧭 Regiões", "📰 Mídia",
-          "🎛️ Cenários", "ℹ️ Metodologia"]
+          "🎛️ Cenários", "📚 Nossa base", "ℹ️ Metodologia"]
 _e = st.pills("Seção", SECOES, default=SECOES[0], selection_mode="single", label_visibility="collapsed", key="secao")
 SECAO = SECOES.index(_e) if _e in SECOES else 0
 
@@ -402,8 +402,122 @@ elif SECAO == 7:
         st.markdown(f"**Ponto de virada:** Orleans passa a favorito se as pesquisas estiverem subestimando-o em cerca de "
                     f"**{n(virada, 1)} pontos** na margem, com essas premissas de transferência.")
 
-# ====================================================================== 9. metodologia
+# ====================================================================== 9. nossa base (linguagem simples)
 elif SECAO == 8:
+    ver = pd.read_csv(DADOS / "pesquisas_verificadas.csv")
+    rec = pd.read_csv(DADOS / "pesquisas_recortes_regionais.csv")
+    pref = pd.read_csv(DADOS / "prefeitos_apoio_governo_2026.csv")
+    n_conf = int((PESQ.origem == "conferida").sum())
+    n_futuras = int((ver.status == "nao_confirmada").sum())
+    n_disputas = HI.get("corridas_1t", 0) + HI.get("corridas_2t", 0)
+    st.subheader("Em que se apoia esta previsão")
+    st.markdown("Tudo aqui é público e verificável. Abaixo, cada fonte em poucas frases, com números e links.")
+
+    k = st.columns(4)
+    k[0].metric("Pesquisas analisadas", len(PESQ), f"{n_conf} conferidas em 2ª fonte", delta_color="off")
+    k[1].metric("Institutos", PESQ.instituto.nunique())
+    k[2].metric("Pesquisas históricas × urna", HI.get("pesquisas", 0), f"{n_disputas} disputas no Nordeste",
+                delta_color="off")
+    k[3].metric("Cenários simulados", n(SIM["n_cenarios"]), "+ 20 mil no cenário de alerta", delta_color="off")
+
+    st.markdown(f"""
+### 1. O que o eleitor diz: as pesquisas
+- Reunimos **{len(PESQ)} pesquisas de 1º turno** de **{PESQ.instituto.nunique()} institutos**, de março a setembro de 2026.
+- **{n_conf} foram conferidas** em uma segunda fonte (jornais, relatórios dos institutos e registro no TSE/PesqEle).
+  Na conferência achamos e corrigimos **números errados** que circulavam: por exemplo, brancos, nulos e indecisos da
+  Quaest de setembro somam 12%, e não 1%.
+- Os institutos **discordam muito**: alguns dão Braide 20 pontos à frente, outros dão Orleans na frente. Em vez de escolher
+  um lado, **medimos o viés de cada instituto** (quanto cada um costuma puxar para um candidato) e o descontamos.
+- Olhamos também **quem pagou e como foi feita** cada pesquisa: os levantamentos que põem Orleans à frente vêm dos mesmos
+  poucos contratantes; a Quaest usa sorteio de domicílios, o método mais rigoroso.
+- Há ainda **{n_futuras} pesquisas registradas** que não foram divulgadas ou sairão até 3/10. O modelo será atualizado
+  quando saírem.
+
+### 2. Como cada região pensa
+- Recortes por região da pesquisa **IPPI** (Norte, Oeste, Leste, Centro, Sul) e pesquisas só de **São Luís** (800
+  entrevistas) e **Imperatriz** (350), do IPSensus.
+- Comparamos cada região **com o estado na mesma pesquisa**, o que anula o viés do instituto. Resultado: Braide vence pela
+  Grande Ilha; no interior o jogo é equilibrado ou favorável a Orleans.
+
+### 3. O que as urnas já mostraram: histórico oficial do TSE
+- Votação para governador de **2018 e 2022 em todos os 217 municípios** (dados oficiais do Tribunal Superior Eleitoral).
+- Em 2022, os grupos que hoje apoiam Orleans (Brandão + Weverton) somaram **72% dos votos válidos**. Isso mostra o tamanho
+  da máquina política, e por que a liderança de Braide nas pesquisas chama a atenção.
+
+### 4. Quanto as pesquisas já erraram no Nordeste
+- Comparamos **{HI.get('pesquisas', 0)} pesquisas finais** com o resultado das urnas em **{HI.get('corridas_1t', 0)} disputas
+  de 1º turno e {HI.get('corridas_2t', 0)} de 2º turno** para governador (2014, 2018 e 2022, nos 9 estados do Nordeste).
+- Em média, as pesquisas **subestimaram o candidato do governo em {n(HI.get('media_1t', 0), 1)} pontos** na diferença
+  entre os dois.
+- Nos casos parecidos com o nosso, com a oposição liderada por um **ex-prefeito da capital** (Bahia e Piauí 2022), o erro
+  foi de **{n(HI.get('ex_prefeito_media', 0), 0)} pontos**. Por isso mostramos sempre os dois cenários.
+- **Cada um dos {n(SIM['n_cenarios'])} cenários sorteia o erro de uma disputa real.** Não é chute: é o que já aconteceu.
+
+### 5. Quem está com quem: os prefeitos
+- Levantamento público do posicionamento dos **217 prefeitos** (18/09/2026):
+  **{int((pref.prefeito_apoia == 'Orleans').sum())} com Orleans**, **{int((pref.prefeito_apoia == 'Braide').sum())} com Braide**
+  e {int((pref.prefeito_apoia == 'Neutro').sum())} sem posição.
+- Entra no modelo como vantagem para o candidato do prefeito, maior nas cidades pequenas.
+
+### 6. O que a mídia e os comentários públicos dizem
+- **{len(MIDIA)} notícias e comentários** de **{MIDIA.veiculo.nunique() if len(MIDIA) else 0} veículos** (agosto e setembro),
+  cada um classificado como positivo, negativo ou neutro, com link. Serve para entender os argumentos de cada lado e
+  **não entra no cálculo** da chance, porque a maior parte da blogosfera local é governista e distorceria o resultado.
+
+### 7. Os modelos: uma "segunda opinião" de cada método
+- **6 formas diferentes de ler as pesquisas** (média ponderada, mediana, regressão com viés de instituto, filtro de Kalman,
+  processo gaussiano e modelo bayesiano). Todas chegam a números próximos: Braide entre
+  {n(ENS['ensemble']['braide']['min_modelos'], 1)}% e {n(ENS['ensemble']['braide']['max_modelos'], 1)}% dos votos válidos.
+- **5 modelos de aprendizado de máquina** para a geografia do voto (regressão linear, Ridge, Random Forest, Gradient
+  Boosting e vizinhos mais próximos).
+- **{n(SIM['n_cenarios'])} simulações** da eleição inteira, 1º e 2º turno, mais {n(4000 * len(MUN))} resultados municipais.
+""")
+
+    st.markdown("### Por que esta análise é confiável")
+    st.markdown(f"""
+<div class="cartao azul"><h4>✔ Não depende de um único instituto</h4>Usa todos os que divulgaram e corrige o viés de cada um.</div>
+<div class="cartao azul"><h4>✔ Números conferidos</h4>{n_conf} pesquisas checadas em segunda fonte, com erros corrigidos.</div>
+<div class="cartao azul"><h4>✔ Aprende com os erros do passado</h4>Usa quanto as pesquisas realmente erraram em {n_disputas} eleições do Nordeste.</div>
+<div class="cartao azul"><h4>✔ Vários métodos concordam</h4>Seis agregadores independentes chegam a resultados com menos de 1,5 ponto de diferença.</div>
+<div class="cartao laranja"><h4>✔ Mostra o risco, não esconde</h4>Traz lado a lado o cenário principal e o de alerta (padrão Bahia/Piauí), e diz em que ponto o favorito muda.</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("### O que ainda não sabemos")
+    st.markdown("""
+- **Pesquisas que ainda vão sair** até 3/10 (Quaest, AtlasIntel, Econométrica e outras).
+- **O último debate** (TV Mirante, 29/09).
+- **O peso real do apoio dos prefeitos**, que nunca foi medido em eleições anteriores: é uma estimativa com faixa larga.
+- **A previsão por cidade** é orientativa: o voto de cada município muda muito de uma eleição para outra.
+""")
+
+    link = {"Fonte": st.column_config.LinkColumn("Fonte")}
+    with st.expander("📋 Lista de pesquisas (instituto, datas, quem pagou, método e situação)"):
+        cols = [c for c in ["instituto", "fim", "amostra", "contratante", "metodo", "braide", "orleans", "status",
+                            "fonte_url"] if c in ver.columns]
+        tabela(ver[ver.turno == 1][cols].sort_values("fim", ascending=False).rename(columns={
+            "instituto": "Instituto", "fim": "Fim do campo", "amostra": "Entrevistas", "contratante": "Quem pagou",
+            "metodo": "Método", "braide": "Braide %", "orleans": "Orleans %", "status": "Situação",
+            "fonte_url": "Fonte"}), column_config=link)
+    with st.expander("📋 Recortes regionais"):
+        tabela(rec[["instituto", "fim", "recorte", "braide", "orleans", "base", "fonte_url"]].rename(columns={
+            "instituto": "Instituto", "fim": "Fim", "recorte": "Recorte", "braide": "Braide %", "orleans": "Orleans %",
+            "base": "Base", "fonte_url": "Fonte"}), column_config=link)
+    if HIST is not None:
+        with st.expander("📋 Histórico: pesquisas finais × urnas no Nordeste (2014–2022)"):
+            tabela(HIST[["ano", "uf", "turno", "candidato_governo", "candidato_oposicao", "instituto", "pesq_governo",
+                         "pesq_oposicao", "urna_governo_validos", "urna_oposicao_validos", "fonte_url"]].rename(columns={
+                "ano": "Ano", "uf": "UF", "turno": "Turno", "candidato_governo": "Candidato do governo",
+                "candidato_oposicao": "Oposição", "instituto": "Instituto", "pesq_governo": "Pesquisa governo %",
+                "pesq_oposicao": "Pesquisa oposição %", "urna_governo_validos": "Urna governo %",
+                "urna_oposicao_validos": "Urna oposição %", "fonte_url": "Fonte"}), column_config=link)
+    with st.expander("📋 Prefeitos: posição de cada um"):
+        tabela(pref[["municipio", "prefeito_apoia"]].sort_values(["prefeito_apoia", "municipio"]).rename(
+            columns={"municipio": "Município", "prefeito_apoia": "Apoia"}))
+    st.caption("Dados oficiais do TSE (votação por município). Demais fontes com link em cada tabela. "
+               "Arquivos completos na pasta dados/ do projeto.")
+
+# ====================================================================== 10. metodologia
+elif SECAO == 9:
     st.subheader("Como o modelo funciona")
     st.markdown(f"""
 **Dados.** {ENS['n_pesquisas']} pesquisas de 1º turno registradas (fonte: compilação pública, conferida em portais);
