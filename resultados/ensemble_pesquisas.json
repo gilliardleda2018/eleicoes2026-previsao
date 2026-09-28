@@ -1,0 +1,136 @@
+{
+  "fonte": "pesquisas_verificadas.csv + compilação",
+  "n_pesquisas": 27,
+  "n_conferidas": 17,
+  "institutos": [
+    "AtlasIntel",
+    "Doxa",
+    "Econométrica",
+    "INOP",
+    "IPPI",
+    "IPSensus",
+    "Paraná Pesquisas",
+    "Quaest",
+    "Qualitativa",
+    "Ranking",
+    "Real Time Big Data",
+    "Veritá",
+    "Viva Voz",
+    "Véritas"
+  ],
+  "modelos": {
+    "braide": {
+      "Média ponderada": {
+        "est": 47.38,
+        "dp": 2.43
+      },
+      "Mediana robusta (últimos 30 dias)": {
+        "est": 47.37,
+        "dp": 4.71
+      },
+      "Regressão com efeito-instituto": {
+        "est": 48.04,
+        "dp": 2.18
+      },
+      "Filtro de Kalman": {
+        "est": 47.61,
+        "dp": 1.41
+      },
+      "Processo Gaussiano": {
+        "est": 47.54,
+        "dp": 1.23
+      },
+      "Bayesiano hierárquico (Gibbs)": {
+        "est": 48.66,
+        "dp": 2.03
+      },
+      "_ancora_nacionais": {
+        "est": 49.97,
+        "dp": 2.73
+      }
+    },
+    "orleans": {
+      "Média ponderada": {
+        "est": 36.94,
+        "dp": 2.52
+      },
+      "Mediana robusta (últimos 30 dias)": {
+        "est": 33.68,
+        "dp": 4.95
+      },
+      "Regressão com efeito-instituto": {
+        "est": 36.8,
+        "dp": 2.14
+      },
+      "Filtro de Kalman": {
+        "est": 37.04,
+        "dp": 1.4
+      },
+      "Processo Gaussiano": {
+        "est": 37.18,
+        "dp": 1.18
+      },
+      "Bayesiano hierárquico (Gibbs)": {
+        "est": 36.35,
+        "dp": 2.24
+      },
+      "_ancora_nacionais": {
+        "est": 33.94,
+        "dp": 2.68
+      }
+    }
+  },
+  "efeito_instituto": {
+    "braide": {
+      "AtlasIntel": 9.45,
+      "Doxa": -6.88,
+      "Econométrica": -4.05,
+      "INOP": -4.22,
+      "IPPI": 5.51,
+      "IPSensus": -7.88,
+      "Paraná Pesquisas": -1.48,
+      "Quaest": 4.91,
+      "Qualitativa": -5.55,
+      "Ranking": -4.1,
+      "Real Time Big Data": -1.08,
+      "Veritá": 15.25,
+      "Viva Voz": 7.18,
+      "Véritas": -7.06
+    },
+    "orleans": {
+      "AtlasIntel": -9.66,
+      "Doxa": 6.93,
+      "Econométrica": 3.95,
+      "INOP": 6.22,
+      "IPPI": -5.82,
+      "IPSensus": 8.68,
+      "Paraná Pesquisas": 1.29,
+      "Quaest": -4.83,
+      "Qualitativa": 8.01,
+      "Ranking": 2.17,
+      "Real Time Big Data": -3.95,
+      "Veritá": -16.03,
+      "Viva Voz": -6.34,
+      "Véritas": 9.36
+    }
+  },
+  "ensemble": {
+    "braide": {
+      "est": 47.77,
+      "dp": 2.64,
+      "min_modelos": 47.37,
+      "max_modelos": 48.66
+    },
+    "orleans": {
+      "est": 36.33,
+      "dp": 3.01,
+      "min_modelos": 33.68,
+      "max_modelos": 37.18
+    }
+  },
+  "outros_validos_recentes": {
+    "camarao": 8.88,
+    "rocha": 4.37,
+    "outros": 2.6
+  }
+}

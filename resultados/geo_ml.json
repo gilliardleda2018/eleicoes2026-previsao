@@ -1,0 +1,32 @@
+{
+  "Regressão linear": {
+    "r2_cv": 0.024,
+    "erro_medio_pts": 11.36
+  },
+  "Ridge": {
+    "r2_cv": 0.029,
+    "erro_medio_pts": 11.35
+  },
+  "Random Forest": {
+    "r2_cv": 0.133,
+    "erro_medio_pts": 10.76
+  },
+  "Gradient Boosting": {
+    "r2_cv": 0.108,
+    "erro_medio_pts": 10.69
+  },
+  "KNN geográfico": {
+    "r2_cv": 0.116,
+    "erro_medio_pts": 10.78
+  },
+  "_ensemble": {
+    "pesos": {
+      "Regressão linear": 0.059,
+      "Ridge": 0.071,
+      "Random Forest": 0.324,
+      "Gradient Boosting": 0.263,
+      "KNN geográfico": 0.283
+    },
+    "erro_medio_pts": 10.82
+  }
+}

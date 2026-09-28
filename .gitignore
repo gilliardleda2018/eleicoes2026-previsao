@@ -1,0 +1,5 @@
+__pycache__/
+streamlit.log
+resultados/log_mc.txt
+.streamlit/secrets.toml
+dados/ma_municipios.geojson
