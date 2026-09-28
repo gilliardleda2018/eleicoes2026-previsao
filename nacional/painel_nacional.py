@@ -14,7 +14,7 @@ import streamlit as st
 
 RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ.parent))
-from comum import CSS, grafico, n, pct, tabela  # noqa: E402
+from comum import CSS, barra_navegacao, grafico, n, pct, tabela  # noqa: E402
 
 RES, DADOS = RAIZ / "resultados", RAIZ / "dados"
 VERM, AZUL, CINZA, VERDE, AMAR = "#C8102E", "#1D4E89", "#8A8F98", "#1F7A4D", "#F2A900"
@@ -45,6 +45,7 @@ P1, P2, FIM, ALR, HI = SIM["primeiro_turno"], SIM["segundo_turno"], SIM["resulta
 pl, pf = FIM["prob_lula_presidente"], FIM["prob_flavio_presidente"]
 N1 = ENS["n_pesquisas_1t"]
 
+barra_navegacao("br")
 st.markdown(f"""
 <div class="capa" style="background: linear-gradient(100deg, #C8102E 0%, #1B2A41 50%, #1D4E89 100%);">
   <div class="selo">ELEIÇÃO PRESIDENCIAL · BRASIL · 4 DE OUTUBRO DE 2026 · MODELO INDEPENDENTE</div>

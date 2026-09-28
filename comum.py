@@ -1,6 +1,8 @@
 """Visual, formatação e componentes comuns aos dois cenários (nacional e estadual)."""
+import base64
 import hmac
 import os
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -18,6 +20,31 @@ CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=Manrope:wght@400;600;800&display=swap');
 html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-serif;}
+/* não sobrescrever a fonte dos ícones do Streamlit (senão aparece o nome do ícone, ex.: "double_arrow_right") */
+[data-testid="stIconMaterial"], [class*="material-symbols"], [class*="material-icons"] {
+    font-family: 'Material Symbols Rounded', 'Material Icons' !important;}
+/* página inicial: cards de navegação */
+[class*="st-key-card_"] {background: #FFFFFF; border: 1px solid #D9E1EC; border-radius: 22px; padding: 22px 22px 14px;
+    box-shadow: 0 6px 22px rgba(27,42,65,.08); height: 100%;}
+[class*="st-key-card_"] .card-icone {font-size: 2.6rem; line-height: 1;}
+[class*="st-key-card_"] .card-selo {font: 800 .72rem 'Manrope'; letter-spacing: .14em; color: #5B6477; margin-top: 10px;}
+[class*="st-key-card_"] .card-titulo {font: 900 1.7rem/1.1 'Archivo'; color: #1B2A41; margin: 4px 0 8px;}
+[class*="st-key-card_"] .card-texto {font: 600 .95rem 'Manrope'; color: #3A4458;}
+[class*="st-key-card_"] .card-numero {font: 900 2rem 'Archivo'; margin-top: 10px;}
+[class*="st-key-card_"] [data-testid="stPageLink"] a {background: #1B2A41; border-radius: 12px; justify-content: center;
+    padding: .55rem 1rem;}
+[class*="st-key-card_"] [data-testid="stPageLink"] a p {color: #FFFFFF !important; font-weight: 800;}
+.st-key-card_br {border-top: 6px solid #C8102E;} .st-key-card_ma {border-top: 6px solid #1F6FB2;}
+.st-key-card_ap {border-top: 6px solid #0F5132;}
+.st-key-compartilhar [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
+    color: #FFFFFF !important; font-weight: 800; border-radius: 14px;}
+.desenvolvedor {display: flex; align-items: center; justify-content: center; gap: 14px; margin: 28px 0 8px;
+                padding: 10px 18px; border-radius: 16px; background: linear-gradient(100deg, #122545, #1d3a66);}
+.desenvolvedor span {color: rgba(255,255,255,.8); font: 600 .78rem 'Manrope', sans-serif; letter-spacing: .08em;}
+.desenvolvedor img {height: 54px;}
+@media (max-width: 760px) {.desenvolvedor {flex-direction: column; gap: 6px;} .desenvolvedor img {height: 46px;}}
+[class*="st-key-barra_nav"] [data-testid="stPageLink"] a {background: #FFFFFF; border: 1px solid #D9E1EC;
+    border-radius: 999px; justify-content: center; padding: .2rem .6rem;}
 h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B2A41;}
 .block-container {padding-top: 4.2rem; max-width: 1400px;}
 [data-testid="stMetric"] {background: #FFFFFF; border: 1px solid #D9E1EC; border-radius: 14px; padding: 10px 14px;}
@@ -98,3 +125,36 @@ def tabela(df, **kw):
     kw.setdefault("width", "stretch")
     with caixa():
         st.dataframe(est, **kw)
+
+
+PAGINAS = {"inicio": ("inicio.py", "🏠 Início"), "br": ("nacional/painel_nacional.py", "🌎 Brasil"),
+           "ma": ("painel_governo_ma.py", "🏛️ Maranhão"), "ap": ("apuracao/painel_apuracao.py", "📡 Apuração")}
+
+
+def barra_navegacao(atual):
+    """Atalhos entre as páginas (só quando o painel roda pelo app.py, que registra as páginas)."""
+    try:
+        with st.container(key="barra_nav"):
+            cols = st.columns(len(PAGINAS))
+            for col, (chave, (arq, rotulo)) in zip(cols, PAGINAS.items()):
+                if chave != atual:
+                    col.page_link(arq, label=rotulo, width="stretch")
+                else:
+                    col.markdown(f"<div style='text-align:center;font-weight:800;padding:.35rem'>{rotulo}</div>",
+                                 unsafe_allow_html=True)
+    except Exception:  # página rodando sozinha (streamlit run <página>): sem atalhos
+        pass
+
+
+@st.cache_data
+def _logo_base64():
+    arq = Path(__file__).resolve().parent / "assets" / "aggilli_logo_web.webp"
+    return base64.b64encode(arq.read_bytes()).decode() if arq.exists() else ""
+
+
+def rodape_desenvolvedor():
+    """Faixa de créditos com a logomarca da Aggilli Intelligence (rodapé de todas as páginas)."""
+    logo = _logo_base64()
+    if logo:
+        st.markdown(f'''<div class="desenvolvedor"><span>DESENVOLVIDO POR</span>
+<img src="data:image/webp;base64,{logo}" alt="Aggilli Intelligence"></div>''', unsafe_allow_html=True)

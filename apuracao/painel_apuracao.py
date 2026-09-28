@@ -13,7 +13,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "apuracao"))
 import motor  # noqa: E402
-from comum import CSS, grafico, n, pct, tabela  # noqa: E402
+from comum import CSS, barra_navegacao, grafico, n, pct, tabela  # noqa: E402
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Apuração ao vivo", page_icon="🗳️", layout="wide")
@@ -32,6 +32,7 @@ DISPUTAS = {
                                              loc="cd_ibge", zoom=5.3, centro={"lat": -5.2, "lon": -45.2}),
 }
 
+barra_navegacao("ap")
 st.markdown("""
 <div class="capa" style="background: linear-gradient(100deg, #0F5132 0%, #1B2A41 55%, #6D2E8F 100%);">
   <div class="selo">DOMINGO, 4 DE OUTUBRO · APURAÇÃO OFICIAL DO TSE · ATUALIZA A CADA 90 SEGUNDOS</div>
