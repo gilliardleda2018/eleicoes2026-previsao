@@ -84,11 +84,12 @@ A chance de a eleição ir ao 2º turno é de <b>{pct(P1['prob_segundo_turno'])}
 <b>{n(P2['lula_validos_p10_p50_p90'][1], 1)}%</b>. Favorito hoje: <b>{lider}</b>.</div>
 
 <div class="cartao azul"><h4>Por que o modelo não dá empate, se as pesquisas dão?</h4>
-Em <b>todas as cinco eleições presidenciais desde 2006</b>, as pesquisas finais de 1º turno superestimaram o PT
-(em média {n(abs(HI['media_1t']), 1)} pontos na diferença entre os dois). Em 2022, as simulações de 2º turno feitas antes
-do 1º turno erraram <b>{n(abs(HI['erro_2t_antecipado_2022']), 1)} pontos</b>, todas no mesmo sentido. Como os institutos podem
-ter corrigido parte disso depois de 2022, o modelo principal supõe que o viés se repete <b>entre 0% e 100%</b> (incerto).
-Mesmo assim, isso basta para tirar o empate.</div>
+As pesquisas costumam superestimar o PT, mas com intensidades diferentes. No <b>1º turno</b>, erraram nas cinco eleições
+desde 2006 (em média {n(abs(HI['media_1t']), 1)} pontos na diferença), boa parte por <b>voto útil de última hora</b>. Para o
+<b>2º turno</b>, um confronto direto, o modelo usa só as evidências da era polarizada: 2018 e 2022 no 1º turno
+({', '.join(n(v, 1) for v in HI.get('erros_usados_2t', [])[:2])} pontos) e as simulações de 2º turno feitas antes do 1º
+turno de 2022 ({n(HI['erro_2t_antecipado_2022'], 1)} pontos). Como os institutos podem ter se corrigido, supõe que esse viés se
+repete <b>entre 0% e 100%</b>. O resultado: Flávio favorito, mas numa disputa aberta.</div>
 """, unsafe_allow_html=True)
     sc = SIM.get("sem_correcao_historica", {})
     st.markdown("#### Três leituras, do mais otimista ao mais cauteloso para Lula")
@@ -323,7 +324,9 @@ elif SECAO == 8:
 - Erro médio no 1º turno: **{n(HI['media_1t'], 1)} pontos** na margem PT − adversário (negativo = pesquisas
   superestimaram o PT), no mesmo sentido em todas as eleições.
 - Em 2022, as simulações de 2º turno feitas **antes** do 1º turno erraram **{n(HI['erro_2t_antecipado_2022'], 1)} pontos**
-  (9 institutos) — por isso o 2º turno herda o mesmo erro sorteado para o 1º.
+  (9 institutos).
+- **1º turno:** usa o erro de todas as eleições (2006–2022), que inclui o voto útil de última hora. **2º turno:** usa só a era
+  polarizada (2018, 2022 e as simulações antecipadas de 2022), porque o voto útil não se aplica a um confronto direto.
 - Como os institutos podem ter se corrigido, o modelo supõe que o viés se repete **entre 0% e 100%** (incerto).
 
 ### 5. Quem está com quem: os governadores
@@ -372,7 +375,8 @@ treinados em 2018 → 2022 por estado e aplicados de 2022 para 2026.
 
 **4. Erro histórico:** cada um dos {n(SIM['n_cenarios'])} cenários sorteia o erro real de uma eleição presidencial
 ({', '.join(map(str, HI['eleicoes']))}), multiplicado por uma persistência incerta (0 a 100%), mais o ruído normal das
-pesquisas. O 2º turno herda o mesmo erro (as simulações de 2º turno são feitas antes do 1º). Cenário de alerta: o erro de
+pesquisas. No 2º turno, o erro vem só da era polarizada (2018, 2022 e as simulações de 2º turno feitas antes do 1º turno de
+2022), porque o erro de 2006–2014 foi dominado por voto útil de 1º turno. Cenário de alerta: o erro de
 2022 se repete por inteiro, inclusive o das simulações antecipadas de 2º turno ({n(HI['erro_2t_antecipado_2022'], 1)} pts).
 
 **5. Monte Carlo:** 1º turno (alguém passa de 50%?) e 2º turno (50% pesquisas de 2º turno pelos 6 agregadores, 50%

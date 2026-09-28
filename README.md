@@ -7,6 +7,7 @@ streamlit run app.py
 Duas páginas no topo: **Cenário Nacional** e **Cenário Estadual MA**. Senha opcional: variável `APP_PASSWORD`.
 
 ## Atualizar os números
+Clique duas vezes em `atualizar_tudo.bat` (roda os 6 scripts dos dois cenários e pergunta se envia ao GitHub). Ou, à mão:
 ```
 # Estadual (Maranhão)
 python preparar_base.py && python modelos_pesquisas.py && python modelo_municipios_mc.py
@@ -28,5 +29,6 @@ cd nacional && python preparar_base_nacional.py && python modelos_pesquisas_naci
 | Monte Carlo | 20 mil cenários + alerta (Bahia/Piauí) | 20 mil cenários + alerta (padrão 2022) |
 | Mídia | 63 itens | 71 itens |
 
-Regra do erro histórico (igual nos dois): erro de uma eleição real sorteada × persistência incerta (0 a 100%) + ruído;
-o 2º turno herda o mesmo erro, porque as simulações de 2º turno são feitas antes do 1º turno.
+Regra do erro histórico: erro de uma eleição real sorteada × persistência incerta (0 a 100%) + ruído.
+No nacional, o 2º turno usa só os erros da era polarizada (2018, 2022 e as simulações de 2º turno feitas antes do 1º turno
+de 2022), porque os grandes erros de 2006–2014 vieram de voto útil de 1º turno.

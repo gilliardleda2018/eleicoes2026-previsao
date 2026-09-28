@@ -128,7 +128,12 @@ e_pre2t_2022 = pre2t.erro_margem.values
 # O mesmo sorteio vale para o 1º turno e para o 2º (as pesquisas de 2º turno de hoje são feitas antes do 1º turno).
 persist = rng.uniform(0, 1, N_SIM)
 ruido_setor = rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
+# 1º turno: todas as eleições (2006–2022) — inclui o voto útil de última hora, fenômeno típico de 1º turno
 erro1 = persist * rng.choice(e1, N_SIM) + ruido_setor
+# 2º turno (confronto direto): só evidências da era polarizada — 1º turno de 2018 e 2022 (sem voto útil relevante)
+# e o erro das simulações de 2º turno feitas antes do 1º turno de 2022
+e2_polar = np.array(list(corr[(corr.turno == 1) & (corr.ano >= 2018)].erro_margem.values) + [e_pre2t_2022.mean()])
+erro2t = persist * rng.choice(e2_polar, N_SIM) + rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
 # Cenário de alerta: o padrão de 2022 se repete integralmente
 erro_alerta_1t = rng.choice(e_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
 erro_alerta_2t = rng.choice(e_pre2t_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
@@ -138,6 +143,8 @@ HIST = {"pesquisas": int(len(h)), "eleicoes": sorted(int(a) for a in h.ano.uniqu
         "media_2018_2022": round(float(e_2022.mean()), 1), "media_2022_1t": round(float(e_2022.mean()), 1),
         "erro_2t_antecipado_2022": round(float(e_pre2t_2022.mean()), 1),
         "persistencia": "uniforme de 0% a 100%",
+        "erros_usados_2t": [round(float(v), 1) for v in (list(corr[(corr.turno == 1) & (corr.ano >= 2018)].erro_margem.values)
+                                                         + [e_pre2t_2022.mean()])],
         "detalhe": {f"{int(a)} {int(t)}º t": round(float(v), 1) for a, t, v in corr.itertuples(index=False)}}
 
 L1 = np.clip(lf[:, 0] + erro1 / 2, 20, 75)
@@ -165,8 +172,8 @@ if "lula_2t" in ens["ensemble"]:
 else:
     L2_pesq = L2_transf
 usa_pesq = rng.random(N_SIM) < 0.5
-# as pesquisas de 2º turno de hoje são feitas antes do 1º turno: herdam o MESMO erro sorteado para o 1º turno
-L2 = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro1 / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
+# 2º turno: erro da era polarizada (ver erro2t), com a mesma persistência sorteada do 1º turno
+L2 = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro2t / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
 
 vence_1t_l, vence_1t_f = L1 >= 50, F1 >= 50
 havera_2t = ~vence_1t_l & ~vence_1t_f
