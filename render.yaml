@@ -1,0 +1,21 @@
+# Blueprint do Render: New → Blueprint → escolher o repositório eleicoes2026-previsao.
+services:
+  - type: web
+    name: eleicoes2026-previsao
+    runtime: python
+    plan: free
+    region: virginia
+    branch: main
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: >-
+      streamlit run app.py
+      --server.port $PORT --server.address 0.0.0.0
+      --server.headless true --browser.gatherUsageStats false
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Senha para abrir o painel (o Render pede o valor ao criar o serviço). Obrigatória: o link é público.
+      - key: APP_PASSWORD
+        sync: false
