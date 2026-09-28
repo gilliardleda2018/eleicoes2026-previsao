@@ -45,6 +45,15 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 @media (max-width: 760px) {.desenvolvedor {flex-direction: column; gap: 6px;} .desenvolvedor img {height: 46px;}}
 [class*="st-key-barra_nav"] [data-testid="stPageLink"] a {background: #FFFFFF; border: 1px solid #D9E1EC;
     border-radius: 999px; justify-content: center; padding: .2rem .6rem;}
+/* veredito em perguntas e respostas */
+.respostas {display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px;}
+.resp {background: #FFFFFF; border: 1px solid #D9E1EC; border-top: 5px solid var(--cor, #1B2A41); border-radius: 16px;
+       padding: 12px 16px;}
+.resp .perg {font: 700 .9rem 'Manrope'; color: #5B6477;}
+.resp .fala {font: 900 1.45rem/1.15 'Archivo'; color: var(--cor, #1B2A41); margin: 6px 0 4px;}
+.resp .obs {font: 600 .85rem/1.35 'Manrope'; color: #3A4458;}
+@media (max-width: 900px) {.respostas {grid-template-columns: repeat(2, 1fr);}}
+@media (max-width: 520px) {.respostas {grid-template-columns: 1fr;}}
 h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B2A41;}
 .block-container {padding-top: 4.2rem; max-width: 1400px;}
 [data-testid="stMetric"] {background: #FFFFFF; border: 1px solid #D9E1EC; border-radius: 14px; padding: 10px 14px;}
@@ -125,6 +134,47 @@ def tabela(df, **kw):
     kw.setdefault("width", "stretch")
     with caixa():
         st.dataframe(est, **kw)
+
+
+def chance_amigavel(p):
+    """Probabilidade sem falsa precisão: 'menos de 1%' em vez de 0%."""
+    return "menos de 1%" if p < .01 else "mais de 99%" if p > .99 else pct(p)
+
+
+def em_palavras(p):
+    """Chance de 'sim' em linguagem de conversa."""
+    for lim, txt in [(.99, "Quase certeza que sim"), (.85, "Muito provável"), (.65, "Provável"),
+                     (.35, "Cara ou coroa"), (.15, "Pouco provável"), (.01, "Muito difícil")]:
+        if p >= lim:
+            return txt
+    return "Quase impossível"
+
+
+def veredito_simples(a, b, cor_a, cor_b, p2t, pa_1t, va_2t, pa):
+    """Os 4 cartões do veredito em pergunta e resposta. a/b = nomes; p2t = chance de 2º turno;
+    pa_1t = chance de A levar no 1º turno; va_2t = % de A nos válidos do 2º turno; pa = chance de A ser eleito."""
+    fav, outro, cfav, pfav = (a, b, cor_a, pa) if pa >= .5 else (b, a, cor_b, 1 - pa)
+    fala_fav = (f"{fav}, com folga" if pfav >= .9 else f"{fav}, mas nada decidido" if pfav >= .65
+                else f"{fav}, por pouco" if pfav >= .55 else "Empate técnico")
+    (n1, v1, c1), (n2, v2) = ((a, va_2t, cor_a), (b, 100 - va_2t)) if va_2t >= 50 else ((b, 100 - va_2t, cor_b), (a, va_2t))
+    dif = v1 - v2
+    clima = (f"Tá apertado: só {n(dif, 1)} pontos de diferença." if dif < 3
+             else f"{n1} na frente por {n(dif, 1)} pontos." if dif < 8 else f"{n1} com folga de {n(dif, 1)} pontos.")
+    x = min(max(round(100 * pfav), 1), 99)
+    cartoes = [
+        ("Vai ter 2º turno?", em_palavras(p2t), "#1B2A41",
+         f"Chance: {chance_amigavel(p2t)}. " + ("Ninguém deve passar dos 50% no dia 4." if p2t >= .65
+                                               else "Pode acabar já no dia 4.")),
+        (f"{a} leva já no 1º turno?", em_palavras(pa_1t), cor_a,
+         f"Chance: {chance_amigavel(pa_1t)}. Precisaria de mais da metade dos votos válidos."),
+        ("E o placar do 2º turno?", f"{n1} {n(v1, 1)}% × {n2} {n(v2, 1)}%", c1,
+         f"{clima} (votos válidos, no palpite mais provável)"),
+        ("Quem é o favorito?", fala_fav, cfav,
+         f"De cada 100 eleições simuladas, {fav} ganha {x} e {outro} ganha {100 - x}."),
+    ]
+    st.markdown('<div class="respostas">' + "".join(
+        f'<div class="resp" style="--cor:{cor}"><div class="perg">{perg}</div><div class="fala">{fala}</div>'
+        f'<div class="obs">{obs}</div></div>' for perg, fala, cor, obs in cartoes) + "</div>", unsafe_allow_html=True)
 
 
 PAGINAS = {"inicio": ("inicio.py", "🏠 Início"), "br": ("nacional/painel_nacional.py", "🌎 Brasil"),

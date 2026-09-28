@@ -15,7 +15,7 @@ import streamlit as st
 
 RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ))
-from comum import CSS, barra_navegacao, caixa, grafico, n, pct, tabela  # noqa: E402,F401
+from comum import CSS, barra_navegacao, caixa, grafico, n, pct, tabela, veredito_simples  # noqa: E402,F401
 
 RES, DADOS = RAIZ / "resultados", RAIZ / "dados"
 AZUL, LARANJA, VERMELHO, VERDE, CINZA, TINTA = "#1F6FB2", "#E07B1F", "#C0392B", "#2E8B57", "#8A8F98", "#1B2A41"
@@ -71,11 +71,8 @@ SECAO = SECOES.index(_e) if _e in SECOES else 0
 
 # ====================================================================== 1. veredito
 if SECAO == 0:
-    k = st.columns(4)
-    k[0].metric("Chance de 2º turno", pct(P1["prob_segundo_turno"]))
-    k[1].metric("Braide liquida no 1º turno", pct(P1["prob_braide_vence_1t"]))
-    k[2].metric("Braide no 2º turno (válidos)", f"{n(P2['braide_validos_p10_p50_p90'][1], 1)}%")
-    k[3].metric("Braide vence se houver 2º turno", pct(P2["prob_braide_vence_se_2t"]))
+    veredito_simples("Braide", "Orleans", "#1F6FB2", "#E07B1F", P1["prob_segundo_turno"], P1["prob_braide_vence_1t"],
+                     P2["braide_validos_p10_p50_p90"][1], pb)
     b1 = P1["braide_validos_p10_p50_p90"]
     risco = SIM.get("cenario_historico")
     st.markdown(f"""

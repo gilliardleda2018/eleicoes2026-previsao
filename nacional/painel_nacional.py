@@ -14,7 +14,7 @@ import streamlit as st
 
 RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ.parent))
-from comum import CSS, barra_navegacao, grafico, n, pct, tabela  # noqa: E402
+from comum import CSS, barra_navegacao, grafico, n, pct, tabela, veredito_simples  # noqa: E402
 
 RES, DADOS = RAIZ / "resultados", RAIZ / "dados"
 VERM, AZUL, CINZA, VERDE, AMAR = "#C8102E", "#1D4E89", "#8A8F98", "#1F7A4D", "#F2A900"
@@ -70,11 +70,8 @@ SECAO = SECOES.index(_e) if _e in SECOES else 0
 
 # ====================================================================== veredito
 if SECAO == 0:
-    k = st.columns(4)
-    k[0].metric("Chance de 2º turno", pct(P1["prob_segundo_turno"]))
-    k[1].metric("Lula liquida no 1º turno", pct(P1["prob_lula_vence_1t"]))
-    k[2].metric("Lula no 2º turno (válidos)", f"{n(P2['lula_validos_p10_p50_p90'][1], 1)}%")
-    k[3].metric("Lula vence se houver 2º turno", pct(P2["prob_lula_vence_se_2t"]))
+    veredito_simples("Lula", "Flávio", VERM, AZUL, P1["prob_segundo_turno"], P1["prob_lula_vence_1t"],
+                     P2["lula_validos_p10_p50_p90"][1], pl)
     l1, f1 = P1["lula_validos_p10_p50_p90"], P1["flavio_validos_p10_p50_p90"]
     lider = "Lula" if pl >= pf else "Flávio"
     st.markdown(f"""
