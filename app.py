@@ -18,5 +18,6 @@ paginas = [
             url_path="nacional", default=True),
     st.Page(RAIZ / "painel_governo_ma.py", title="Cenário Estadual MA · Braide × Orleans", icon="🏛️",
             url_path="maranhao"),
+    st.Page(RAIZ / "apuracao" / "painel_apuracao.py", title="Apuração ao vivo", icon="📡", url_path="apuracao"),
 ]
 st.navigation(paginas, position="top").run()

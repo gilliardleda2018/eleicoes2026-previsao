@@ -4,7 +4,15 @@
 ```
 streamlit run app.py
 ```
-Duas páginas no topo: **Cenário Nacional** e **Cenário Estadual MA**. Senha opcional: variável `APP_PASSWORD`.
+Três páginas no topo: **Cenário Nacional**, **Cenário Estadual MA** e **Apuração ao vivo**. Senha: variável `APP_PASSWORD`.
+
+## Apuração ao vivo (domingo)
+- Lê a apuração oficial do TSE (resultados.tse.jus.br) a cada 90 s: 27 estados (presidente) e 217 municípios (governador MA).
+- Compara cada unidade apurada com a projeção do modelo e estima o resultado final (desvio aplicado aos votos que faltam).
+- Descobre sozinha os códigos da eleição de 2026 na configuração pública do TSE. Se precisar fixar à mão, crie
+  `apuracao/codigos_2026.json`: `{"ciclo": "ele2026", "presidente": {"1": "XXX", "2": "YYY"}, "governador": {"1": "ZZZ", "2": "WWW"}}`.
+- **Modo ensaio**: reproduz a apuração de 2022 para testar. Calibração: com 15% ou mais apurado, a faixa de 80% contém o
+  resultado real em 82% a 91% das simulações.
 
 ## Atualizar os números
 Clique duas vezes em `atualizar_tudo.bat` (roda os 6 scripts dos dois cenários e pergunta se envia ao GitHub). Ou, à mão:
