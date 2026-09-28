@@ -2,49 +2,49 @@
   "n_cenarios": 20000,
   "primeiro_turno": {
     "lula_validos_p10_p50_p90": [
-      36.8,
-      40.7,
-      44.1
+      37.0,
+      40.9,
+      44.3
     ],
     "flavio_validos_p10_p50_p90": [
       36.9,
       40.5,
-      44.7
+      44.6
     ],
-    "outros_validos_p50": 18.7,
+    "outros_validos_p50": 18.6,
     "prob_lula_vence_1t": 0.0,
     "prob_flavio_vence_1t": 0.003,
     "prob_segundo_turno": 0.997
   },
   "segundo_turno": {
     "lula_validos_p10_p50_p90": [
-      44.7,
-      48.7,
-      52.1
+      44.8,
+      48.8,
+      52.2
     ],
-    "prob_lula_vence_se_2t": 0.314,
+    "prob_lula_vence_se_2t": 0.325,
     "modelo_pesquisas_2t_p50": 50.0,
-    "modelo_transferencia_p50": 49.6,
+    "modelo_transferencia_p50": 49.8,
     "transferencia_medida": {
       "lula": 0.389,
       "dp": 0.047,
-      "pares": 52
+      "pares": 53
     }
   },
   "sem_correcao_historica": {
-    "lula_2t_p50": 49.8,
-    "prob_lula": 0.452
+    "lula_2t_p50": 49.9,
+    "prob_lula": 0.477
   },
   "resultado_final": {
-    "prob_lula_presidente": 0.313,
-    "prob_flavio_presidente": 0.687
+    "prob_lula_presidente": 0.324,
+    "prob_flavio_presidente": 0.676
   },
   "cenario_alerta": {
-    "prob_lula_presidente": 0.082,
-    "prob_flavio_presidente": 0.918,
-    "lula_1t_p50": 39.6,
+    "prob_lula_presidente": 0.083,
+    "prob_flavio_presidente": 0.917,
+    "lula_1t_p50": 39.8,
     "flavio_1t_p50": 41.6,
-    "lula_2t_p50": 43.9
+    "lula_2t_p50": 44.0
   },
   "erro_historico": {
     "pesquisas": 64,
@@ -87,11 +87,11 @@
     "indefinidos": 1
   },
   "regioes_2t": {
-    "Centro-Oeste": 38.3,
-    "Nordeste": 63.7,
-    "Norte": 45.3,
-    "Sudeste": 44.4,
-    "Sul": 39.5
+    "Centro-Oeste": 38.4,
+    "Nordeste": 63.8,
+    "Norte": 45.4,
+    "Sudeste": 44.5,
+    "Sul": 39.6
   },
   "ajustes_regionais": {
     "PR": [
