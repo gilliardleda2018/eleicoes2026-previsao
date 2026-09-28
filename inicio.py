@@ -55,7 +55,10 @@ for c, (chave, icone, selo, titulo, texto, numeros, pagina, botao) in zip(col, c
 <div class="card-texto">{texto}</div>
 {linhas}
 """, unsafe_allow_html=True)
-        st.page_link(pagina, label=botao, width="stretch")
+        try:
+            st.page_link(pagina, label=botao, width="stretch")
+        except Exception:  # página aberta sozinha (fora do app.py): sem navegação registrada
+            pass
 
 # compartilhar no WhatsApp (o link mostra a miniatura com título e créditos)
 url = os.environ.get("RENDER_EXTERNAL_URL") or getattr(st.context, "url", "") or ""
