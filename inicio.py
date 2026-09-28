@@ -61,10 +61,13 @@ for c, (chave, icone, selo, titulo, texto, numeros, pagina, botao) in zip(col, c
             pass
 
 # compartilhar no WhatsApp (o link mostra a miniatura com título e créditos)
-url = os.environ.get("RENDER_EXTERNAL_URL") or getattr(st.context, "url", "") or ""
-if url:
-    u = urlparse(url)
-    url = f"{u.scheme}://{u.netloc}"
+# link público (redireciona para o Render); LINK_PUBLICO="" usa o endereço do próprio servidor
+url = os.environ.get("LINK_PUBLICO", "https://aggillintelligence.com.br/eleicoes_2026")
+if not url:
+    url = os.environ.get("RENDER_EXTERNAL_URL") or getattr(st.context, "url", "") or ""
+    if url:
+        u = urlparse(url)
+        url = f"{u.scheme}://{u.netloc}"
 if url:
     texto = ("📊 Previsão eleitoral 2026 — Brasil (Lula × Flávio) e Maranhão (Braide × Orleans), "
              f"com apuração ao vivo no domingo: {url}")
