@@ -78,6 +78,32 @@
         "est": 33.94,
         "dp": 2.68
       }
+    },
+    "braide_2t": {
+      "Média ponderada": {
+        "est": 58.67,
+        "dp": 4.8
+      },
+      "Mediana robusta (últimos 30 dias)": {
+        "est": 58.24,
+        "dp": 6.12
+      },
+      "Regressão com efeito-instituto": {
+        "est": 60.71,
+        "dp": 2.92
+      },
+      "Filtro de Kalman": {
+        "est": 60.11,
+        "dp": 1.78
+      },
+      "Processo Gaussiano": {
+        "est": 59.71,
+        "dp": 1.45
+      },
+      "Bayesiano hierárquico (Gibbs)": {
+        "est": 59.16,
+        "dp": 4.29
+      }
     }
   },
   "efeito_instituto": {
@@ -112,6 +138,16 @@
       "Veritá": -16.03,
       "Viva Voz": -6.34,
       "Véritas": 9.36
+    },
+    "braide_2t": {
+      "AtlasIntel": 10.49,
+      "Doxa": -11.45,
+      "IPPI": 0.95,
+      "Paraná Pesquisas": -2.63,
+      "Quaest": 1.07,
+      "Real Time Big Data": -1.78,
+      "Veritá": 15.0,
+      "Véritas": -11.65
     }
   },
   "ensemble": {
@@ -126,8 +162,15 @@
       "dp": 3.01,
       "min_modelos": 33.68,
       "max_modelos": 37.18
+    },
+    "braide_2t": {
+      "est": 59.44,
+      "dp": 4.04,
+      "min_modelos": 58.24,
+      "max_modelos": 60.71
     }
   },
+  "n_pesquisas_2t": 10,
   "outros_validos_recentes": {
     "camarao": 8.88,
     "rocha": 4.37,

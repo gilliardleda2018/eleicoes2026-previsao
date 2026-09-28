@@ -1,0 +1,101 @@
+{
+  "n_cenarios": 20000,
+  "primeiro_turno": {
+    "lula_validos_p10_p50_p90": [
+      36.8,
+      40.7,
+      44.1
+    ],
+    "flavio_validos_p10_p50_p90": [
+      36.9,
+      40.5,
+      44.7
+    ],
+    "outros_validos_p50": 18.7,
+    "prob_lula_vence_1t": 0.0,
+    "prob_flavio_vence_1t": 0.003,
+    "prob_segundo_turno": 0.997
+  },
+  "segundo_turno": {
+    "lula_validos_p10_p50_p90": [
+      44.1,
+      48.2,
+      51.9
+    ],
+    "prob_lula_vence_se_2t": 0.268,
+    "modelo_pesquisas_2t_p50": 50.0,
+    "modelo_transferencia_p50": 49.6,
+    "transferencia_medida": {
+      "lula": 0.389,
+      "dp": 0.047,
+      "pares": 52
+    }
+  },
+  "sem_correcao_historica": {
+    "lula_2t_p50": 49.8,
+    "prob_lula": 0.455
+  },
+  "resultado_final": {
+    "prob_lula_presidente": 0.267,
+    "prob_flavio_presidente": 0.733
+  },
+  "cenario_alerta": {
+    "prob_lula_presidente": 0.087,
+    "prob_flavio_presidente": 0.913,
+    "lula_1t_p50": 39.7,
+    "flavio_1t_p50": 41.5,
+    "lula_2t_p50": 43.9
+  },
+  "erro_historico": {
+    "pesquisas": 64,
+    "eleicoes": [
+      2006,
+      2010,
+      2014,
+      2018,
+      2022
+    ],
+    "media_1t": -7.0,
+    "dp_1t": 5.8,
+    "media_2t": 0.4,
+    "dp_2t": 2.2,
+    "media_2018_2022": -2.7,
+    "media_2022_1t": -2.7,
+    "erro_2t_antecipado_2022": -11.8,
+    "persistencia": "uniforme de 0% a 100%",
+    "detalhe": {
+      "2006 1º t": -7.0,
+      "2006 2º t": -0.3,
+      "2010 1º t": -8.7,
+      "2010 2º t": -0.8,
+      "2014 1º t": -15.7,
+      "2014 2º t": -1.0,
+      "2018 1º t": -0.8,
+      "2018 2º t": 4.4,
+      "2022 1º t": -2.7,
+      "2022 2º t": -0.1
+    }
+  },
+  "estados": {
+    "favorito_lula": 9,
+    "favorito_flavio": 17,
+    "indefinidos": 1
+  },
+  "regioes_2t": {
+    "Centro-Oeste": 37.8,
+    "Nordeste": 63.3,
+    "Norte": 44.8,
+    "Sudeste": 43.8,
+    "Sul": 39.0
+  },
+  "ajustes_regionais": {
+    "PR": [
+      0.079,
+      0.25
+    ],
+    "CE": [
+      -0.112,
+      0.25
+    ]
+  }
+}

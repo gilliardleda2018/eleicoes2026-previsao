@@ -114,28 +114,30 @@ lf = rng.multivariate_normal([el["est"], ef_["est"]], cov, N_SIM)
 
 # D) erro histórico das pesquisas presidenciais (margem PT − adversário; + = subestimou o PT)
 HIST = None
-arq_h = D / "erro_historico_presidente.csv"
-h = pd.read_csv(arq_h)
-for c in ("pesq_pt", "pesq_adv", "urna_pt_validos", "urna_adv_validos"):
-    h[c] = pd.to_numeric(h[c], errors="coerce")
-h = h.dropna(subset=["pesq_pt", "pesq_adv", "urna_pt_validos", "urna_adv_validos"])
-h["erro_margem"] = 2 * (100 * h.urna_pt_validos / (h.urna_pt_validos + h.urna_adv_validos)
-                        - 100 * h.pesq_pt / (h.pesq_pt + h.pesq_adv))
+import sys
+sys.path.insert(0, str(RAIZ))
+from historico import carregar as carregar_historico  # noqa: E402
+h = carregar_historico(D / "erro_historico_presidente.csv")
 corr = h.groupby(["ano", "turno"]).erro_margem.mean().reset_index()
 e1, e2 = corr[corr.turno == 1].erro_margem.values, corr[corr.turno == 2].erro_margem.values
-e_recente = corr[corr.ano >= 2018].erro_margem.values  # era Bolsonaro
+e_2022 = h[(h.ano == 2022) & (h.turno == 1)].erro_margem.values          # alerta, 1º turno (por instituto)
+pre2t = pd.read_csv(D / "erro_2t_antecipado_2022.csv")                     # alerta, 2º turno antecipado (2022)
+e_pre2t_2022 = pre2t.erro_margem.values
 
-
-def amostra_erro(valores, n_, esc=None):
-    esc = esc if esc is not None else max(0.35 * valores.std(ddof=1), 1.5)
-    return rng.choice(valores, n_) + rng.normal(0, esc, n_)
-
-
-erro1, erro2, erro_rec = amostra_erro(e1, N_SIM), amostra_erro(e2, N_SIM), amostra_erro(e_recente, N_SIM)
+# Modelo principal: erro = persistência (0 a 100%, incerta) × erro de uma eleição real sorteada + ruído normal.
+# O mesmo sorteio vale para o 1º turno e para o 2º (as pesquisas de 2º turno de hoje são feitas antes do 1º turno).
+persist = rng.uniform(0, 1, N_SIM)
+ruido_setor = rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
+erro1 = persist * rng.choice(e1, N_SIM) + ruido_setor
+# Cenário de alerta: o padrão de 2022 se repete integralmente
+erro_alerta_1t = rng.choice(e_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
+erro_alerta_2t = rng.choice(e_pre2t_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
 HIST = {"pesquisas": int(len(h)), "eleicoes": sorted(int(a) for a in h.ano.unique()),
         "media_1t": round(float(e1.mean()), 1), "dp_1t": round(float(e1.std(ddof=1)), 1),
         "media_2t": round(float(e2.mean()), 1), "dp_2t": round(float(e2.std(ddof=1)), 1),
-        "media_2018_2022": round(float(e_recente.mean()), 1),
+        "media_2018_2022": round(float(e_2022.mean()), 1), "media_2022_1t": round(float(e_2022.mean()), 1),
+        "erro_2t_antecipado_2022": round(float(e_pre2t_2022.mean()), 1),
+        "persistencia": "uniforme de 0% a 100%",
         "detalhe": {f"{int(a)} {int(t)}º t": round(float(v), 1) for a, t, v in corr.itertuples(index=False)}}
 
 L1 = np.clip(lf[:, 0] + erro1 / 2, 20, 75)
@@ -145,29 +147,39 @@ tot = L1 + F1 + R1
 L1, F1, R1 = 100 * L1 / tot, 100 * F1 / tot, 100 * R1 / tot
 
 # 2º turno: 50% pesquisas de 2º turno (6 agregadores) + 50% transferência dos demais candidatos
-t_out = rng.beta(0.45 * 20, 0.55 * 20, N_SIM)  # parcela dos eleitores dos demais que vai para Lula
-L2_transf = (L1 + t_out * R1) / 100
+# transferência MEDIDA: 52 pesquisas (ago/set) com 1º e 2º turno na mesma entrevista
+pp = pd.read_csv(RES / "pesquisas_nacionais_tratadas.csv")
+par = pp[pp.turno == 1].drop(columns=["lula_2p"], errors="ignore").merge(
+    pp[pp.turno == 2][["instituto", "fim", "lula_2p"]], on=["instituto", "fim"])
+par["resto"] = 100 - par.lula_val - par.flavio_val
+par = par[(par.resto > 3) & (pd.to_datetime(par.fim) >= "2026-08-01")]
+par["t"] = (par.lula_2p - par.lula_val) / par.resto
+T_MED, T_DP, T_N = float(par.t.mean()), float(max(par.t.std(), 0.03)), int(len(par))
+k_ = T_MED * (1 - T_MED) / T_DP ** 2 - 1
+t_out = rng.beta(T_MED * k_, (1 - T_MED) * k_, N_SIM)  # parcela dos eleitores dos demais que vai para Lula
+L0, F0 = lf[:, 0], lf[:, 1]                               # pesquisas cruas (sem erro histórico)
+L2_transf = (L0 + t_out * np.clip(100 - L0 - F0, 1, None)) / 100
 if "lula_2t" in ens["ensemble"]:
     e2t = ens["ensemble"]["lula_2t"]
     L2_pesq = rng.normal(e2t["est"], e2t["dp"], N_SIM) / 100
 else:
     L2_pesq = L2_transf
 usa_pesq = rng.random(N_SIM) < 0.5
-L2 = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro2 / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
+# as pesquisas de 2º turno de hoje são feitas antes do 1º turno: herdam o MESMO erro sorteado para o 1º turno
+L2 = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro1 / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
 
 vence_1t_l, vence_1t_f = L1 >= 50, F1 >= 50
 havera_2t = ~vence_1t_l & ~vence_1t_f
 lula_leva = vence_1t_l | (havera_2t & (L2 > 0.5))
 flavio_leva = vence_1t_f | (havera_2t & (L2 < 0.5))
 
-# cenário de alerta: pesquisas erram como em 2018/2022 (direita subestimada)
-L1x = np.clip(lf[:, 0] + erro_rec / 2, 20, 75)
-F1x = np.clip(lf[:, 1] - erro_rec / 2, 15, 70)
+# cenário de alerta: as pesquisas erram exatamente como em 2022 (1º turno e simulações antecipadas de 2º turno)
+L1x = np.clip(lf[:, 0] + erro_alerta_1t / 2, 20, 75)
+F1x = np.clip(lf[:, 1] - erro_alerta_1t / 2, 15, 70)
 R1x = np.clip(100 - L1x - F1x, 1, None)
 tx = L1x + F1x + R1x
 L1x, F1x, R1x = 100 * L1x / tx, 100 * F1x / tx, 100 * R1x / tx
-e2_rec = corr[(corr.turno == 2) & (corr.ano >= 2018)].erro_margem.values
-L2x = np.clip(np.where(usa_pesq, L2_pesq, (L1x + t_out * R1x) / 100) + amostra_erro(e2_rec, N_SIM) / 200, 0.3, 0.7)
+L2x = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro_alerta_2t / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
 lula_x = (L1x >= 50) | ((L1x < 50) & (F1x < 50) & (L2x > 0.5))
 
 # ------------------------------------------------------------------ estados
@@ -226,7 +238,10 @@ sim = {
                                                    for k in (10, 50, 90)],
                       "prob_lula_vence_se_2t": pct(L2[havera_2t] > 0.5),
                       "modelo_pesquisas_2t_p50": round(float(100 * np.median(L2_pesq)), 1),
-                      "modelo_transferencia_p50": round(float(100 * np.median(L2_transf)), 1)},
+                      "modelo_transferencia_p50": round(float(100 * np.median(L2_transf)), 1),
+                      "transferencia_medida": {"lula": round(T_MED, 3), "dp": round(T_DP, 3), "pares": T_N}},
+    "sem_correcao_historica": {"lula_2t_p50": round(float(100 * np.median(np.where(usa_pesq, L2_pesq, L2_transf))), 1),
+                               "prob_lula": pct(np.where(usa_pesq, L2_pesq, L2_transf) > 0.5)},
     "resultado_final": {"prob_lula_presidente": pct(lula_leva), "prob_flavio_presidente": pct(flavio_leva)},
     "cenario_alerta": {"prob_lula_presidente": pct(lula_x), "prob_flavio_presidente": pct(~lula_x),
                        "lula_1t_p50": round(float(np.median(L1x)), 1), "flavio_1t_p50": round(float(np.median(F1x)), 1),

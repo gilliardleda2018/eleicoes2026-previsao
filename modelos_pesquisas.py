@@ -85,6 +85,30 @@ for cand in ("braide", "orleans"):
     resultado["modelos"][cand]["_ancora_nacionais"] = {"est": round(float(alt[0]), 2), "dp": round(float(alt[1]), 2)}
     resultado["efeito_instituto"][cand] = ef
     resultado.setdefault("ensemble", {})[cand] = ens_c
+# 2º turno Braide × Orleans: os mesmos 6 agregadores (paridade com o cenário nacional)
+v2 = pd.read_csv(RAIZ / "dados" / "pesquisas_verificadas.csv")
+v2 = v2[(v2.turno == 2) & (v2.status != "nao_confirmada")].copy()
+for c in ("braide", "orleans"):
+    v2[c] = pd.to_numeric(v2[c], errors="coerce")
+v2 = v2.dropna(subset=["braide", "orleans"])
+w2 = pd.read_csv(RAIZ / "dados" / "pesquisas_governo_ma_2026.csv")
+w2 = w2[(w2.turno == 2)].copy()
+chave2 = lambda d: d.instituto + "|" + d.fim.astype(str)
+v2 = pd.concat([v2, w2[~chave2(w2).isin(chave2(v2))]], ignore_index=True)
+v2["fim"] = pd.to_datetime(v2.fim); v2["inicio"] = pd.to_datetime(v2.inicio)
+v2["meio"] = v2.inicio + (v2.fim - v2.inicio) / 2
+v2["dias_antes"] = (ELEICAO - v2.meio).dt.days
+v2["n"] = pd.to_numeric(v2.amostra, errors="coerce").fillna(1000)
+v2 = v2.sort_values("meio").reset_index(drop=True)
+v2["braide_2p"] = 100 * v2.braide / (v2.braide + v2.orleans)
+if len(v2) >= 4:
+    mods2, ef2, _, ens2 = rodar_ensemble(v2.braide_2p.values, v2, rng, ELEICAO)
+    resultado["modelos"]["braide_2t"] = mods2
+    resultado["efeito_instituto"]["braide_2t"] = ef2
+    resultado["ensemble"]["braide_2t"] = ens2
+    resultado["n_pesquisas_2t"] = int(len(v2))
+    v2.to_csv(SAIDA / "pesquisas_2t_tratadas.csv", index=False, encoding="utf-8")
+
 resultado["outros_validos_recentes"] = {
     c: round(float(p.loc[p.dias_antes <= 38, f"{c}_val"].mean()), 2) for c in ("camarao", "rocha", "outros")}
 

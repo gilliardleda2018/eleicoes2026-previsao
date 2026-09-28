@@ -1,25 +1,32 @@
-# Governo do Maranhão 2026 — Braide × Orleans (modelo independente)
+# Eleições 2026 — Previsão: Cenário Nacional (Lula × Flávio) e Estadual MA (Braide × Orleans)
 
-## Rodar
+## Rodar o painel
 ```
-python preparar_base.py
-python modelos_pesquisas.py
-python modelo_municipios_mc.py
-streamlit run painel_governo_ma.py
+streamlit run app.py
+```
+Duas páginas no topo: **Cenário Nacional** e **Cenário Estadual MA**. Senha opcional: variável `APP_PASSWORD`.
+
+## Atualizar os números
+```
+# Estadual (Maranhão)
+python preparar_base.py && python modelos_pesquisas.py && python modelo_municipios_mc.py
+# Nacional
+cd nacional && python preparar_base_nacional.py && python modelos_pesquisas_nacional.py && python modelo_ufs_mc.py
 ```
 
-## Dados (pasta `dados/`)
-- `pesquisas_verificadas.csv` — pesquisas conferidas em segunda fonte (e registro PesqEle); `pesquisas_governo_ma_2026.csv` — compilação pública.
-- `pesquisas_recortes_regionais.csv` — recortes por mesorregião (IPPI) e por cidade (IPSensus).
-- `erro_historico_pesquisas.csv` — pesquisas finais × urna, governador no Nordeste 2014–2022.
-- `prefeitos_apoio_governo_2026.csv` — posição pública dos 217 prefeitos (18/09/2026).
-- `midia_itens.csv`, `midia_argumentos.md` — mídia classificada, com links.
-- `tse/` — votação por município (TSE), governador 2018 e 2022.
+## Mesma metodologia nos dois cenários
+| Etapa | Estadual (MA) | Nacional |
+|---|---|---|
+| Pesquisas | `dados/pesquisas_verificadas.csv` | `nacional/dados/pesquisas_presidente.csv` |
+| 6 agregadores (`agregadores.py`, código comum) | 1º e 2º turno | 1º e 2º turno |
+| Histórico oficial (TSE) | governador 2018/2022, 217 municípios | presidente 2018/2022, 27 UFs (API TSE) |
+| 5 modelos de ML de geografia | municípios | estados |
+| Calibração regional | IPPI (mesorregiões), IPSensus (capital) | recortes regionais e pesquisas estaduais |
+| Máquina política | 217 prefeitos | 27 governadores |
+| Erro histórico das pesquisas | governador no Nordeste 2014–2022 | presidente 2006–2022 + 2º turno antecipado 2022 |
+| Transferência para o 2º turno | medida em pesquisas com os dois turnos | medida em pesquisas com os dois turnos |
+| Monte Carlo | 20 mil cenários + alerta (Bahia/Piauí) | 20 mil cenários + alerta (padrão 2022) |
+| Mídia | 63 itens | 71 itens |
 
-## Modelos
-1. `modelos_pesquisas.py` — 6 agregadores (média ponderada, mediana robusta, regressão com efeito-instituto, Kalman,
-   processo gaussiano, bayesiano hierárquico).
-2. `modelo_municipios_mc.py` — 5 modelos de ML de geografia (2018→2022), calibração regional por pesquisas,
-   efeito dos prefeitos, erro histórico das pesquisas e Monte Carlo (20 mil cenários) de 1º e 2º turno.
-
-Senha opcional do painel: variável `APP_PASSWORD`.
+Regra do erro histórico (igual nos dois): erro de uma eleição real sorteada × persistência incerta (0 a 100%) + ruído;
+o 2º turno herda o mesmo erro, porque as simulações de 2º turno são feitas antes do 1º turno.

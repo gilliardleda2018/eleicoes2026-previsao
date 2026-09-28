@@ -95,22 +95,20 @@ e2 = corridas.loc[corridas.turno == 2, "erro"].values
 e_ex = corridas.loc[(corridas.turno == 1) & (corridas.ex_prefeito.astype(str).str.lower() == "sim"), "erro"].values
 
 
-def amostra_erro(valores, n_):
-    """Bootstrap das disputas reais + suavização (kernel) — preserva o viés médio e as caudas observadas."""
-    return rng.choice(valores, n_) + rng.normal(0, 0.35 * valores.std(ddof=1), n_)
-
-
-erro_margem = amostra_erro(e1, N_SIM)           # 1º turno: todas as disputas do Nordeste
-erro_margem_2t = amostra_erro(e2, N_SIM)         # 2º turno
-erro_margem_ex = amostra_erro(e_ex, N_SIM)       # cenário: oposição = ex-prefeito da capital (BA 2022, PI 2022)
+# Modelo principal (mesma regra do cenário nacional): erro = persistência incerta (0 a 100%) × erro de uma
+# disputa real sorteada + ruído normal. O mesmo sorteio vale para o 1º e o 2º turno.
+persist = rng.uniform(0, 1, N_SIM)
+erro_margem = persist * rng.choice(e1, N_SIM) + rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
+# Cenário de alerta: padrão "ex-prefeito da capital" (BA 2022, PI 2022) se repete integralmente
+erro_margem_ex = rng.choice(e_ex, N_SIM) + rng.normal(0, 1.5, N_SIM)
 corr_txt = lambda d: {f"{a_} {u} {t}º t": round(float(v), 1) for a_, u, t, v in zip(d.ano, d.uf, d.turno, d.erro)}
 HISTORICO = {"pesquisas": int(len(h)), "corridas_1t": int(len(e1)), "corridas_2t": int(len(e2)),
              "media_1t": round(float(e1.mean()), 1), "dp_1t": round(float(e1.std(ddof=1)), 1),
              "media_2t": round(float(e2.mean()), 1), "dp_2t": round(float(e2.std(ddof=1)), 1),
              "pct_subestimou_governo_1t": round(float((e1 > 0).mean()), 3),
              "ex_prefeito_corridas": int(len(e_ex)), "ex_prefeito_media": round(float(e_ex.mean()), 1),
-             "corridas_detalhe": corr_txt(corridas)}
-erro_setor = -erro_margem  # convenção abaixo: positivo favorece Braide (oposição); Orleans é o candidato do governo
+             "persistencia": "uniforme de 0% a 100%", "corridas_detalhe": corr_txt(corridas)}
+erro_setor = -erro_margem  # positivo favorece Braide (oposição); Orleans é o candidato do governo
 B1 = np.clip(bo[:, 0] + erro_setor / 2, 20, 75)
 O1 = np.clip(bo[:, 1] - erro_setor / 2, 15, 70)
 resto = np.clip(100 - B1 - O1, 3, None)
@@ -121,45 +119,39 @@ C1, R1, X1 = resto * frac_c, resto * frac_r, resto * (1 - frac_c - frac_r)
 tot = B1 + O1 + resto
 B1, O1, C1, R1, X1 = (v * 100 / tot for v in (B1, O1, C1, R1, X1))
 
-# ------------------------------------------------------------------ estado: 2º turno (transferência)
+
+# ------------------------------------------------------------------ estado: 2º turno
 def beta(media, dp, n):
     k = media * (1 - media) / dp ** 2 - 1
     return rng.beta(media * k, (1 - media) * k, n)
 
 
-t_cam = beta(0.50, 0.12, N_SIM)   # eleitor de Camarão (PT/Dino, rompido com Brandão, mas pró-Lula como Orleans)
-t_roc = beta(0.72, 0.10, N_SIM)   # eleitor de Rocha (direita) tende a Braide
-t_out = beta(0.55, 0.12, N_SIM)
-B2_transf = B1 + t_cam * C1 + t_roc * R1 + t_out * X1
-share_transf = B2_transf / (B1 + O1 + C1 + R1 + X1)
+# transferência MEDIDA nas pesquisas que perguntaram 1º e 2º turno na mesma entrevista
+pt1 = pd.read_csv(RES / "pesquisas_tratadas.csv")
+pt2 = pd.read_csv(RES / "pesquisas_2t_tratadas.csv")
+par = pt1.merge(pt2[["instituto", "fim", "braide_2p"]], on=["instituto", "fim"])
+par["resto"] = 100 - par.braide_val - par.orleans_val
+par = par[par.resto > 3]
+par["t"] = (par.braide_2p - par.braide_val) / par.resto
+T_MED, T_DP, T_N = float(par.t.mean()), float(max(par.t.std(), 0.04)), int(len(par))
+t_out = beta(T_MED, T_DP, N_SIM)
+B0, O0 = bo[:, 0], bo[:, 1]  # pesquisas cruas (sem erro histórico)
+share_transf = (B0 + t_out * np.clip(100 - B0 - O0, 3, None)) / 100
+e2t = ens["ensemble"]["braide_2t"]  # 6 agregadores sobre as pesquisas de 2º turno
+b2p_pesq = e2t["est"]
+share_pesq = rng.normal(e2t["est"], e2t["dp"], N_SIM) / 100
+usa_pesq = rng.random(N_SIM) < 0.5  # ensemble 50/50 entre pesquisas de 2º turno e transferência
+B2_bruto = np.where(usa_pesq, share_pesq, share_transf)
+# as pesquisas de 2º turno de hoje são feitas antes do 1º turno: herdam o MESMO erro sorteado para o 1º turno
+B2 = np.clip(B2_bruto - erro_margem / 200 + rng.normal(0, 0.015, N_SIM), 0.2, 0.9)
 
-# 2º turno direto das pesquisas (Quaest set/26 como âncora recente, corrigida pelo efeito-instituto do 1º turno)
-p2 = pd.read_csv(RAIZ / "dados" / ("pesquisas_verificadas.csv" if (RAIZ / "dados" / "pesquisas_verificadas.csv").exists()
-                                   else "pesquisas_governo_ma_2026.csv"))
-p2 = p2[p2.turno == 2].copy()
-p2 = p2[pd.to_numeric(p2.braide, errors="coerce").notna() & pd.to_numeric(p2.orleans, errors="coerce").notna()]
-if "status" in p2.columns:
-    p2 = p2[p2.status != "nao_confirmada"]
-p2["fim"] = pd.to_datetime(p2.fim)
-p2["b2p"] = 100 * pd.to_numeric(p2.braide) / (pd.to_numeric(p2.braide) + pd.to_numeric(p2.orleans))
-ef = ens["efeito_instituto"]
-p2["ajuste"] = p2.instituto.map(lambda c: (ef["braide"].get(c, 0) - ef["orleans"].get(c, 0)) / 2)
-p2["b2p_aj"] = p2.b2p - p2.ajuste
-pesos2 = np.exp(-(pd.Timestamp("2026-10-04") - p2.fim).dt.days / 30)
-b2p_pesq = float(np.average(p2.b2p_aj, weights=pesos2))
-share_pesq = rng.normal(b2p_pesq, 4.0, N_SIM) / 100
-usa_pesq = rng.random(N_SIM) < 0.5  # ensemble 50/50 entre transferência e pesquisas de 2º turno
-B2 = np.where(usa_pesq, share_pesq, share_transf)
-B2 = np.clip(B2 - erro_margem_2t / 200 + rng.normal(0, 0.015, N_SIM), 0.2, 0.9)  # erro histórico de 2º turno
-
-# cenário "padrão ex-prefeito da capital": 1º turno com o erro das disputas BA 2022 e PI 2022
+# cenário "padrão ex-prefeito da capital"
 B1x = np.clip(bo[:, 0] - erro_margem_ex / 2, 20, 75)
 O1x = np.clip(bo[:, 1] + erro_margem_ex / 2, 15, 70)
 Rx = np.clip(100 - B1x - O1x, 3, None)
 tx = B1x + O1x + Rx
 B1x, O1x, Rx = 100 * B1x / tx, 100 * O1x / tx, 100 * Rx / tx
-B2x = (B1x + (t_cam * frac_c + t_roc * frac_r + t_out * (1 - frac_c - frac_r)) * Rx) / 100
-B2x = np.where(usa_pesq, B2 - (B1 - B1x) / 200, B2x - erro_margem_2t / 200)
+B2x = np.clip(B2_bruto - erro_margem_ex / 200 + rng.normal(0, 0.015, N_SIM), 0.2, 0.9)
 leva_x = (B1x >= 50) | ((B1x < 50) & (O1x < 50) & (B2x > 0.5))
 leva_orleans_x = (O1x >= 50) | ((B1x < 50) & (O1x < 50) & (B2x < 0.5))
 
@@ -283,16 +275,18 @@ sim = {
         "prob_braide_vence_se_2t": pct(B2[havera_2t] > 0.5),
         "modelo_transferencia_p50": round(float(100 * np.median(share_transf)), 1),
         "modelo_pesquisas_2t_p50": round(b2p_pesq, 1),
-        "premissas_transferencia": {"camarao_para_braide": 0.50, "rocha_para_braide": 0.72, "outros_para_braide": 0.55},
+        "transferencia_medida": {"braide": round(T_MED, 3), "dp": round(T_DP, 3), "pares": T_N},
     },
     "resultado_final": {"prob_braide_governador": pct(braide_leva), "prob_orleans_governador": pct(orleans_leva)},
+    "sem_correcao_historica": {"braide_2t_p50": round(float(100 * np.median(B2_bruto)), 1),
+                               "prob_braide": pct(((bo[:, 0] >= 50)) | ((bo[:, 0] < 50) & (B2_bruto > .5)))},
     "erro_historico": HISTORICO,
     "cenario_ex_prefeito": {"prob_braide_governador": pct(leva_x), "prob_orleans_governador": pct(leva_orleans_x),
                             "braide_1t_p50": round(float(np.median(B1x)), 1), "orleans_1t_p50": round(float(np.median(O1x)), 1),
                             "prob_orleans_vence_1t": pct(O1x >= 50), "prob_segundo_turno": pct((B1x < 50) & (O1x < 50)),
                             "braide_2t_p50": round(float(100 * np.median(B2x)), 1)},
     "sensibilidade": {
-        "sem_erro_sistemático": pct((bo[:, 0] >= 50) | (~(bo[:, 0] >= 50) & (B2 > .5))),
+        "persistencia_do_vies": "uniforme de 0% a 100%",
         "ancora_institutos_nacionais_braide_1t": ens["modelos"]["braide"]["_ancora_nacionais"]["est"],
     },
     "municipios": {"favorito_braide": int((b.favorito_2t == "Braide").sum()),

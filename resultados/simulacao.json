@@ -2,39 +2,43 @@
   "n_cenarios": 20000,
   "primeiro_turno": {
     "braide_validos_p10_p50_p90": [
-      35.9,
-      46.8,
-      54.9
+      39.3,
+      47.2,
+      54.5
     ],
     "orleans_validos_p10_p50_p90": [
-      29.0,
-      37.4,
-      48.4
+      29.4,
+      37.0,
+      45.2
     ],
     "camarao_validos_p50": 8.9,
     "rocha_validos_p50": 4.4,
-    "prob_braide_vence_1t": 0.309,
-    "prob_orleans_vence_1t": 0.069,
-    "prob_segundo_turno": 0.622
+    "prob_braide_vence_1t": 0.308,
+    "prob_orleans_vence_1t": 0.026,
+    "prob_segundo_turno": 0.665
   },
   "segundo_turno": {
     "braide_validos_p10_p50_p90": [
-      46.4,
-      53.9,
-      59.8
+      48.3,
+      55.3,
+      62.0
     ],
-    "prob_braide_vence_se_2t": 0.757,
-    "modelo_transferencia_p50": 55.8,
-    "modelo_pesquisas_2t_p50": 56.4,
-    "premissas_transferencia": {
-      "camarao_para_braide": 0.5,
-      "rocha_para_braide": 0.72,
-      "outros_para_braide": 0.55
+    "prob_braide_vence_se_2t": 0.836,
+    "modelo_transferencia_p50": 57.0,
+    "modelo_pesquisas_2t_p50": 59.4,
+    "transferencia_medida": {
+      "braide": 0.583,
+      "dp": 0.118,
+      "pares": 10
     }
   },
   "resultado_final": {
-    "prob_braide_governador": 0.779,
-    "prob_orleans_governador": 0.221
+    "prob_braide_governador": 0.864,
+    "prob_orleans_governador": 0.136
+  },
+  "sem_correcao_historica": {
+    "braide_2t_p50": 58.1,
+    "prob_braide": 0.991
   },
   "erro_historico": {
     "pesquisas": 88,
@@ -47,6 +51,7 @@
     "pct_subestimou_governo_1t": 0.545,
     "ex_prefeito_corridas": 2,
     "ex_prefeito_media": 19.9,
+    "persistencia": "uniforme de 0% a 100%",
     "corridas_detalhe": {
       "2014 BA 1º t": 19.4,
       "2014 CE 1º t": 6.8,
@@ -80,29 +85,29 @@
     }
   },
   "cenario_ex_prefeito": {
-    "prob_braide_governador": 0.308,
-    "prob_orleans_governador": 0.692,
+    "prob_braide_governador": 0.314,
+    "prob_orleans_governador": 0.686,
     "braide_1t_p50": 37.9,
     "orleans_1t_p50": 46.3,
-    "prob_orleans_vence_1t": 0.118,
-    "prob_segundo_turno": 0.882,
-    "braide_2t_p50": 47.7
+    "prob_orleans_vence_1t": 0.124,
+    "prob_segundo_turno": 0.876,
+    "braide_2t_p50": 48.2
   },
   "sensibilidade": {
-    "sem_erro_sistemático": 0.822,
+    "persistencia_do_vies": "uniforme de 0% a 100%",
     "ancora_institutos_nacionais_braide_1t": 49.97
   },
   "municipios": {
-    "favorito_braide": 58,
-    "favorito_orleans": 110,
-    "indefinidos": 49
+    "favorito_braide": 62,
+    "favorito_orleans": 71,
+    "indefinidos": 84
   },
   "regioes_2t": {
-    "Caxias": 44.3,
-    "Imperatriz": 46.1,
-    "Presidente Dutra": 39.3,
-    "Santa Inês - Bacabal": 44.1,
-    "São Luís": 67.1
+    "Caxias": 47.6,
+    "Imperatriz": 49.2,
+    "Presidente Dutra": 42.2,
+    "Santa Inês - Bacabal": 47.2,
+    "São Luís": 69.5
   },
   "calibracao_regional": {
     "mesorregioes_ippi": {

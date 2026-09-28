@@ -57,7 +57,7 @@ st.markdown(f"""
     <div class="lado"><div class="nome">Flávio Bolsonaro (PL)</div><div class="prob">{pct(pf)}</div>
       <div class="leg">chance de ser eleito · 1º turno: {n(P1['flavio_validos_p10_p50_p90'][1], 1)}% dos válidos</div></div>
   </div>
-  <div class="sub" style="margin-top:12px">⚠️ Se as pesquisas errarem como em 2018 e 2022 (direita subestimada):
+  <div class="sub" style="margin-top:12px">⚠️ Se as pesquisas errarem exatamente como em 2022 (direita subestimada):
   <b>Lula {pct(ALR['prob_lula_presidente'])} × Flávio {pct(ALR['prob_flavio_presidente'])}</b>. Veja “Cenários”.</div>
 </div>
 """, unsafe_allow_html=True)
@@ -83,11 +83,23 @@ Corrigido o viés de cada instituto, os seis agregadores apontam Lula com <b>{n(
 A chance de a eleição ir ao 2º turno é de <b>{pct(P1['prob_segundo_turno'])}</b>. No 2º turno, o modelo projeta Lula com
 <b>{n(P2['lula_validos_p10_p50_p90'][1], 1)}%</b>. Favorito hoje: <b>{lider}</b>.</div>
 
-<div class="cartao azul"><h4>O que joga contra o favorito</h4>
-Nas duas últimas eleições (2018 e 2022), as pesquisas <b>subestimaram a direita</b>: em média
-{n(abs(HI['media_2018_2022']), 1)} pontos na diferença entre os dois. Se isso se repetir, a chance de Lula passa a
-<b>{pct(ALR['prob_lula_presidente'])}</b>. É o principal risco para quem lidera.</div>
+<div class="cartao azul"><h4>Por que o modelo não dá empate, se as pesquisas dão?</h4>
+Em <b>todas as cinco eleições presidenciais desde 2006</b>, as pesquisas finais de 1º turno superestimaram o PT
+(em média {n(abs(HI['media_1t']), 1)} pontos na diferença entre os dois). Em 2022, as simulações de 2º turno feitas antes
+do 1º turno erraram <b>{n(abs(HI['erro_2t_antecipado_2022']), 1)} pontos</b>, todas no mesmo sentido. Como os institutos podem
+ter corrigido parte disso depois de 2022, o modelo principal supõe que o viés se repete <b>entre 0% e 100%</b> (incerto).
+Mesmo assim, isso basta para tirar o empate.</div>
 """, unsafe_allow_html=True)
+    sc = SIM.get("sem_correcao_historica", {})
+    st.markdown("#### Três leituras, do mais otimista ao mais cauteloso para Lula")
+    tabela(pd.DataFrame([
+        {"Leitura": "Só as pesquisas (sem correção histórica)", "Chance de Lula %": 100 * sc.get("prob_lula", 0),
+         "Chance de Flávio %": 100 * (1 - sc.get("prob_lula", 0))},
+        {"Leitura": "Modelo principal: viés histórico com persistência incerta (0 a 100%)",
+         "Chance de Lula %": 100 * pl, "Chance de Flávio %": 100 * pf},
+        {"Leitura": "Alerta: repete o erro de 2022 por inteiro",
+         "Chance de Lula %": 100 * ALR["prob_lula_presidente"], "Chance de Flávio %": 100 * ALR["prob_flavio_presidente"]},
+    ]))
     fig = go.Figure()
     for nome, prob, cor in [("Lula", pl, VERM), ("Flávio", pf, AZUL)]:
         fig.add_bar(x=[prob * 100], y=[nome], orientation="h", marker_color=cor, text=[pct(prob, 1)],
@@ -251,21 +263,26 @@ elif SECAO == 7:
     vies = c[0].slider("Erro das pesquisas a favor de Flávio (pts na margem)", -10.0, 15.0,
                        float(round(-HI["media_1t"] * 2) / 2), 0.5,
                        help="Positivo = as pesquisas subestimam Flávio (como Bolsonaro em 2018 e 2022)")
-    t_o = c[1].slider("Eleitores dos demais candidatos que vão para Lula no 2º turno", 0.0, 1.0, 0.45, 0.05)
+    tm = P2["transferencia_medida"]["lula"]
+    t_o = c[1].slider("Eleitores dos demais candidatos que vão para Lula no 2º turno", 0.0, 1.0,
+                      float(round(tm * 20) / 20), 0.05, help=f"Valor medido nas pesquisas: {pct(tm)}")
     rng = np.random.default_rng(1)
-    x = np.linspace(-10, 15, 51)
-    probs = []
-    for vv in x:
-        l1 = rng.normal(el["est"], el["dp"], 4000) - vv / 2
-        f1 = rng.normal(ef_["est"], ef_["dp"], 4000) + vv / 2
-        rs = np.clip(100 - l1 - f1, 1, None)
-        l2 = (l1 + t_o * rs) / (l1 + f1 + rs)
-        probs.append(((l1 >= 50) | ((l1 < 50) & (f1 < 50) & (l2 > .5))).mean())
-    atual = probs[int(np.argmin(np.abs(x - vies)))]
+
+    def simular(v, n_=4000):
+        l0 = rng.normal(el["est"], el["dp"], n_)
+        f0 = rng.normal(ef_["est"], ef_["dp"], n_)
+        l1, f1 = l0 - v / 2, f0 + v / 2
+        l2 = (l0 + t_o * np.clip(100 - l0 - f0, 1, None)) / 100 - v / 200  # 2º turno herda o mesmo erro
+        return ((l1 >= 50) | ((l1 < 50) & (f1 < 50) & (l2 > .5))).mean()
+
+    x = np.linspace(-10, 20, 61)
+    probs = [simular(vv) for vv in x]
+    atual = simular(vies, 20000)
     st.metric("Chance de Lula com essas premissas", pct(atual))
     fig = go.Figure(go.Scatter(x=x, y=np.array(probs) * 100, mode="lines", line=dict(color=VERM, width=3)))
     fig.add_hline(y=50, line_dash="dot", line_color=CINZA)
-    for rot, val, cor in [("média histórica", -HI["media_1t"], CINZA), ("2018/2022", -HI["media_2018_2022"], AZUL)]:
+    for rot, val, cor in [("média 1º turno 2006–2022", -HI["media_1t"], CINZA),
+                          ("2º turno antecipado 2022", -HI["erro_2t_antecipado_2022"], AZUL)]:
         fig.add_vline(x=val, line_dash="dash", line_color=cor, annotation_text=rot, annotation_position="top")
     fig.update_layout(title="Chance de Lula conforme o erro das pesquisas", height=380,
                       xaxis_title="Erro a favor de Flávio (pts na margem Lula–Flávio)", yaxis_title="Chance de Lula (%)")
@@ -303,8 +320,11 @@ elif SECAO == 8:
 
 ### 4. Quanto as pesquisas já erraram
 - **{HI['pesquisas']} pesquisas finais** comparadas com as urnas nas eleições presidenciais de {', '.join(map(str, HI['eleicoes']))}.
-- Erro médio no 1º turno: **{n(HI['media_1t'], 1)} pontos** na margem PT − adversário (negativo = pesquisas superestimaram o PT);
-  em 2018–2022: **{n(HI['media_2018_2022'], 1)} pontos**. Cada cenário sorteia o erro de uma eleição real.
+- Erro médio no 1º turno: **{n(HI['media_1t'], 1)} pontos** na margem PT − adversário (negativo = pesquisas
+  superestimaram o PT), no mesmo sentido em todas as eleições.
+- Em 2022, as simulações de 2º turno feitas **antes** do 1º turno erraram **{n(HI['erro_2t_antecipado_2022'], 1)} pontos**
+  (9 institutos) — por isso o 2º turno herda o mesmo erro sorteado para o 1º.
+- Como os institutos podem ter se corrigido, o modelo supõe que o viés se repete **entre 0% e 100%** (incerto).
 
 ### 5. Quem está com quem: os governadores
 - Posição dos **27 governadores** (setembro de 2026): {', '.join(f'{v} {k}' for k, v in ngov.items())}.
@@ -351,9 +371,13 @@ treinados em 2018 → 2022 por estado e aplicados de 2022 para 2026.
 **3. Ajustes:** recortes regionais das pesquisas de 2026 (em relação ao país, na mesma pesquisa) e apoio dos governadores.
 
 **4. Erro histórico:** cada um dos {n(SIM['n_cenarios'])} cenários sorteia o erro real de uma eleição presidencial
-({', '.join(map(str, HI['eleicoes']))}), separado por turno. Cenário de alerta: só os erros de 2018 e 2022.
+({', '.join(map(str, HI['eleicoes']))}), multiplicado por uma persistência incerta (0 a 100%), mais o ruído normal das
+pesquisas. O 2º turno herda o mesmo erro (as simulações de 2º turno são feitas antes do 1º). Cenário de alerta: o erro de
+2022 se repete por inteiro, inclusive o das simulações antecipadas de 2º turno ({n(HI['erro_2t_antecipado_2022'], 1)} pts).
 
-**5. Monte Carlo:** 1º turno (alguém passa de 50%?) e 2º turno (50% pesquisas de 2º turno, 50% transferência de votos).
+**5. Monte Carlo:** 1º turno (alguém passa de 50%?) e 2º turno (50% pesquisas de 2º turno pelos 6 agregadores, 50%
+transferência de votos **medida** em {P2['transferencia_medida']['pares']} pesquisas: {pct(P2['transferencia_medida']['lula'])}
+dos eleitores dos demais vão para Lula).
 
 **Limites:** o efeito dos governadores é hipótese; parte das posições dos governadores não foi reconfirmada em setembro;
 a eleição é decidida no total nacional — o mapa por estado é informativo.

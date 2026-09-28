@@ -15,6 +15,7 @@ import pandas as pd
 
 RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ.parent))
+sys.path.insert(0, str(RAIZ))
 from agregadores import rodar_ensemble  # noqa: E402
 
 RES = RAIZ / "resultados"
@@ -40,16 +41,13 @@ p = p.sort_values("meio").reset_index(drop=True)
 ANCORA = None
 hist = RAIZ / "dados" / "erro_historico_presidente.csv"
 if hist.exists():
-    h = pd.read_csv(hist)
-    for c in ("pesq_pt", "pesq_adv", "urna_pt_validos", "urna_adv_validos"):
-        h[c] = pd.to_numeric(h[c], errors="coerce")
-    h = h.dropna(subset=["pesq_pt", "pesq_adv", "urna_pt_validos", "urna_adv_validos"])
+    from historico import carregar as carregar_historico, sem_acento
+    h = carregar_historico(hist)
     h = h[h.ano == 2022]
-    h["erro"] = (2 * (100 * h.urna_pt_validos / (h.urna_pt_validos + h.urna_adv_validos)
-                      - 100 * h.pesq_pt / (h.pesq_pt + h.pesq_adv))).abs()
-    melhores = h.groupby("instituto").erro.mean().sort_values()
-    ANCORA = set(melhores.index[:3]) & set(p.instituto)
-    ANCORA = ANCORA or None
+    h["erro"] = h.erro_margem.abs()
+    melhores = h.groupby(h.instituto.map(sem_acento)).erro.mean().sort_values()
+    nomes_2026 = {sem_acento(i): i for i in p.instituto.unique()}
+    ANCORA = {nomes_2026[i] for i in melhores.index[:4] if i in nomes_2026} or None
 
 res = {"n_pesquisas_1t": 0, "n_pesquisas_2t": 0, "modelos": {}, "efeito_instituto": {}, "ensemble": {},
        "ancora": sorted(ANCORA) if ANCORA else None}

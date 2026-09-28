@@ -93,6 +93,16 @@ não como ruído.</div>
     if risco:
         st.markdown(f"""<div class="cartao alerta"><h4>⚠️ O risco "Bahia 2022"</h4>{risco['texto']}</div>""",
                     unsafe_allow_html=True)
+    sc = SIM.get("sem_correcao_historica", {})
+    st.markdown("#### Três leituras, do mais otimista ao mais cauteloso para quem lidera")
+    tabela(pd.DataFrame([
+        {"Leitura": "Só as pesquisas (sem correção histórica)", "Chance de Braide %": 100 * sc.get("prob_braide", 0),
+         "Chance de Orleans %": 100 * (1 - sc.get("prob_braide", 0))},
+        {"Leitura": "Modelo principal: viés histórico com persistência incerta (0 a 100%)",
+         "Chance de Braide %": 100 * pb, "Chance de Orleans %": 100 * po},
+        {"Leitura": "Alerta: repete o padrão Bahia/Piauí 2022 por inteiro",
+         "Chance de Braide %": 100 * CX["prob_braide_governador"], "Chance de Orleans %": 100 * CX["prob_orleans_governador"]},
+    ]))
     fig = go.Figure()
     for nome, prob, cor in [("Braide", pb, AZUL), ("Orleans", po, LARANJA)]:
         fig.add_bar(x=[prob * 100], y=[nome], orientation="h", marker_color=cor, text=[pct(prob, 1)],
@@ -172,9 +182,10 @@ Se a referência fossem os institutos locais pró-Orleans, o quadro se aproximar
     c = st.columns(2)
     c[0].metric("Pelas pesquisas de 2º turno (corrigidas)", f"{n(P2['modelo_pesquisas_2t_p50'], 1)}% Braide")
     c[1].metric("Pela transferência de votos do 1º turno", f"{n(P2['modelo_transferencia_p50'], 1)}% Braide")
-    t = P2["premissas_transferencia"]
-    st.caption(f"Transferência: {pct(t['camarao_para_braide'])} dos eleitores de Camarão, {pct(t['rocha_para_braide'])} "
-               f"dos de Rocha e {pct(t['outros_para_braide'])} dos demais iriam para Braide (com incerteza).")
+    t = P2["transferencia_medida"]
+    st.caption(f"Transferência medida em {t['pares']} pesquisas que perguntaram 1º e 2º turno na mesma entrevista: "
+               f"{pct(t['braide'])} dos eleitores de Camarão, Rocha e demais vão para Braide (±{pct(t['dp'])}). "
+               "O 2º turno usa os mesmos 6 agregadores do 1º turno.")
 
 # ====================================================================== 4. mapa
 elif SECAO == 3:
@@ -268,21 +279,25 @@ elif SECAO == 6:
 elif SECAO == 7:
     st.subheader("E se…? Mexa nas premissas")
     eb, eo = ENS["ensemble"]["braide"], ENS["ensemble"]["orleans"]
-    c = st.columns(3)
+    c = st.columns(2)
     vies = c[0].slider("Erro das pesquisas a favor de Orleans (pts na margem)", -10.0, 25.0,
                        float(round(HI.get("media_1t", 0.0) * 2) / 2), 0.5,
-                       help="Positivo = as pesquisas subestimam Orleans (como na Bahia em 2022 com o candidato do governo)")
-    t_c = c[1].slider("Eleitores de Camarão que vão para Braide no 2º turno", 0.0, 1.0, 0.5, 0.05)
-    t_r = c[2].slider("Eleitores de Rocha que vão para Braide", 0.0, 1.0, 0.72, 0.05)
+                       help="Positivo = as pesquisas subestimam Orleans (como na Bahia em 2022 com o candidato do governo). "
+                            "Vale para os dois turnos.")
+    tm = P2["transferencia_medida"]["braide"]
+    t_o = c[1].slider("Eleitores dos demais candidatos que vão para Braide no 2º turno", 0.0, 1.0,
+                      float(round(tm * 20) / 20), 0.05, help=f"Valor medido nas pesquisas: {pct(tm)}")
     rng = np.random.default_rng(1)
-    N = 20000
-    B1 = rng.normal(eb["est"], eb["dp"], N) - vies / 2
-    O1 = rng.normal(eo["est"], eo["dp"], N) + vies / 2
-    resto = np.clip(100 - B1 - O1, 3, None)
-    C1, R1, X1 = resto * .55, resto * .27, resto * .18
-    B2 = (B1 + t_c * C1 + t_r * R1 + .55 * X1) / (B1 + O1 + resto)
+
+    def simular(v, n_=20000):
+        b0 = rng.normal(eb["est"], eb["dp"], n_)
+        o0 = rng.normal(eo["est"], eo["dp"], n_)
+        b1, o1 = b0 - v / 2, o0 + v / 2
+        b2 = (b0 + t_o * np.clip(100 - b0 - o0, 3, None)) / 100 - v / 200  # 2º turno herda o mesmo erro
+        return b1, o1, b2, (b1 >= 50) | ((b1 < 50) & (o1 < 50) & (b2 > .5))
+
+    B1, O1, B2, leva = simular(vies)
     v1 = B1 >= 50
-    leva = v1 | (~v1 & (O1 < 50) & (B2 > .5))
     k = st.columns(3)
     k[0].metric("Braide vence no 1º turno", pct(v1.mean()))
     k[1].metric("Braide no 2º turno", f"{n(100 * np.median(B2), 1)}%")
@@ -290,11 +305,7 @@ elif SECAO == 7:
     x = np.linspace(-10, 25, 71)
     probs = []
     for vv in x:
-        b1 = rng.normal(eb["est"], eb["dp"], 4000) - vv / 2
-        o1 = rng.normal(eo["est"], eo["dp"], 4000) + vv / 2
-        rs = np.clip(100 - b1 - o1, 3, None)
-        b2 = (b1 + t_c * rs * .55 + t_r * rs * .27 + .55 * rs * .18) / (b1 + o1 + rs)
-        probs.append(((b1 >= 50) | ((b1 < 50) & (o1 < 50) & (b2 > .5))).mean())
+        probs.append(simular(vv, 4000)[3].mean())
     fig = go.Figure(go.Scatter(x=x, y=np.array(probs) * 100, mode="lines", line=dict(color=AZUL, width=3)))
     fig.add_hline(y=50, line_dash="dot", line_color=CINZA)
     if HI:
@@ -443,7 +454,9 @@ relação entre o mapa de 2018 e o de 2022, e a aplicam de 2022 para 2026.
 **3. Efeitos locais.** Apoio do prefeito (efeito sorteado entre ~0,5 e 7 pontos, maior em cidades pequenas — hipótese,
 não medido); São Luís calibrada pela pesquisa da capital.
 
-**4. Monte Carlo.** {n(SIM['n_cenarios'])} cenários com incerteza das pesquisas, erro sistemático do setor, transferência de
+**4. Monte Carlo.** O erro histórico sorteado é multiplicado por uma persistência incerta (0 a 100%) e vale para os
+dois turnos; a transferência de votos para o 2º turno é **medida** nas pesquisas que perguntaram os dois turnos.
+Detalhes: {n(SIM['n_cenarios'])} cenários com incerteza das pesquisas, erro sistemático do setor, transferência de
 votos no 2º turno (50% a 50% entre modelo de transferência e pesquisas de 2º turno) e ruído municipal.
 
 **5. Erro histórico das pesquisas.** O erro sistemático não é chutado: vem de {HI.get('pesquisas', '—')} pesquisas finais em
