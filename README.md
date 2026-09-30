@@ -5,12 +5,19 @@
 streamlit run app.py
 ```
 Três páginas no topo: **Cenário Nacional**, **Cenário Estadual MA** e **Apuração ao vivo**. Senha: variável `APP_PASSWORD`.
+O painel estratégico da Bruna Pessoa não faz parte deste app (fica no app próprio, bruna_api_webapp_v2_mapa).
 
 ## Apuração ao vivo (domingo)
 - Lê a apuração oficial do TSE (resultados.tse.jus.br) a cada 90 s: 27 estados (presidente) e 217 municípios (governador MA).
+- **Assembleia MA**: acompanha em votos só Bruna Pessoa (15800), Abigail Cunha e Eric Costa (cargo 7, mesmos 217
+  municípios). A Bruna é comparada com a projeção do modelo; Abigail e Eric com a votação de 2022 + 3% de eleitorado.
+  Projeções por município em `apuracao/deputados_previsao.csv` (só os números, extraídos do modelo da Bruna; para
+  atualizar, rode `python apuracao/atualizar_deputados.py` depois de recalcular o modelo em C:\modelo_bruna).
+  Os nomes de urna procurados ficam em `apuracao/motor.py` (`NOMES_2026["deputado"]`). O ensaio dos deputados roda
+  sem internet (votos reais de 2022 de Abigail e Eric; os da Bruna são sorteados em torno da projeção).
 - Compara cada unidade apurada com a projeção do modelo e estima o resultado final (desvio aplicado aos votos que faltam).
 - Descobre sozinha os códigos da eleição de 2026 na configuração pública do TSE. Se precisar fixar à mão, crie
-  `apuracao/codigos_2026.json`: `{"ciclo": "ele2026", "presidente": {"1": "XXX", "2": "YYY"}, "governador": {"1": "ZZZ", "2": "WWW"}}`.
+  `apuracao/codigos_2026.json`: `{"ciclo": "ele2026", "presidente": {"1": "XXX", "2": "YYY"}, "governador": {"1": "ZZZ", "2": "WWW"}}` (o de deputado, se faltar, é o do governador no 1º turno).
 - **Modo ensaio**: reproduz a apuração de 2022 para testar. Calibração: com 15% ou mais apurado, a faixa de 80% contém o
   resultado real em 82% a 91% das simulações.
 

@@ -2,29 +2,29 @@
   "n_cenarios": 20000,
   "primeiro_turno": {
     "braide_validos_p10_p50_p90": [
-      39.3,
-      47.2,
-      54.5
+      39.0,
+      46.9,
+      54.3
     ],
     "orleans_validos_p10_p50_p90": [
       29.4,
-      37.0,
-      45.2
+      36.8,
+      44.9
     ],
-    "camarao_validos_p50": 8.9,
-    "rocha_validos_p50": 4.4,
-    "prob_braide_vence_1t": 0.308,
-    "prob_orleans_vence_1t": 0.026,
-    "prob_segundo_turno": 0.665
+    "camarao_validos_p50": 9.2,
+    "rocha_validos_p50": 4.5,
+    "prob_braide_vence_1t": 0.295,
+    "prob_orleans_vence_1t": 0.024,
+    "prob_segundo_turno": 0.681
   },
   "segundo_turno": {
     "braide_validos_p10_p50_p90": [
-      48.3,
-      55.3,
-      62.0
+      48.2,
+      55.4,
+      62.2
     ],
-    "prob_braide_vence_se_2t": 0.836,
-    "modelo_transferencia_p50": 57.0,
+    "prob_braide_vence_se_2t": 0.835,
+    "modelo_transferencia_p50": 57.1,
     "modelo_pesquisas_2t_p50": 59.4,
     "transferencia_medida": {
       "braide": 0.583,
@@ -38,7 +38,7 @@
   },
   "sem_correcao_historica": {
     "braide_2t_p50": 58.1,
-    "prob_braide": 0.991
+    "prob_braide": 0.989
   },
   "erro_historico": {
     "pesquisas": 88,
@@ -85,29 +85,29 @@
     }
   },
   "cenario_ex_prefeito": {
-    "prob_braide_governador": 0.314,
-    "prob_orleans_governador": 0.686,
-    "braide_1t_p50": 37.9,
-    "orleans_1t_p50": 46.3,
-    "prob_orleans_vence_1t": 0.124,
-    "prob_segundo_turno": 0.876,
+    "prob_braide_governador": 0.315,
+    "prob_orleans_governador": 0.685,
+    "braide_1t_p50": 37.6,
+    "orleans_1t_p50": 46.1,
+    "prob_orleans_vence_1t": 0.098,
+    "prob_segundo_turno": 0.902,
     "braide_2t_p50": 48.2
   },
   "sensibilidade": {
     "persistencia_do_vies": "uniforme de 0% a 100%",
-    "ancora_institutos_nacionais_braide_1t": 49.97
+    "ancora_institutos_nacionais_braide_1t": 49.98
   },
   "municipios": {
     "favorito_braide": 62,
-    "favorito_orleans": 71,
-    "indefinidos": 84
+    "favorito_orleans": 72,
+    "indefinidos": 83
   },
   "regioes_2t": {
-    "Caxias": 47.6,
-    "Imperatriz": 49.2,
-    "Presidente Dutra": 42.2,
+    "Caxias": 47.5,
+    "Imperatriz": 49.3,
+    "Presidente Dutra": 42.3,
     "Santa Inês - Bacabal": 47.2,
-    "São Luís": 69.5
+    "São Luís": 69.6
   },
   "calibracao_regional": {
     "mesorregioes_ippi": {
@@ -150,6 +150,6 @@
     ]
   },
   "cenario_historico": {
-    "texto": "Em 22 disputas de 1º turno para governador no Nordeste (2014–2022, 88 pesquisas finais), as pesquisas subestimaram o candidato do governo em média 3,5 pontos na margem (dispersão de ±13). Esse erro já está no modelo principal. Mas quando a oposição era um <b>ex-prefeito da capital</b> (Bahia e Piauí em 2022), o erro foi de <b>20 pontos</b> a favor do governo. Se 2026 repetir esse padrão, a chance de Braide cai para <b>31%</b> e a de Orleans sobe para <b>69%</b> (1º turno: Braide 37,9% × Orleans 46,3%). São só 2 disputas: é um alerta, não uma regra."
+    "texto": "Em 22 disputas de 1º turno para governador no Nordeste (2014–2022, 88 pesquisas finais), as pesquisas subestimaram o candidato do governo em média 3,5 pontos na margem (dispersão de ±13). Esse erro já está no modelo principal. Mas quando a oposição era um <b>ex-prefeito da capital</b> (Bahia e Piauí em 2022), o erro foi de <b>20 pontos</b> a favor do governo. Se 2026 repetir esse padrão, a chance de Braide cai para <b>32%</b> e a de Orleans sobe para <b>68%</b> (1º turno: Braide 37,6% × Orleans 46,1%). São só 2 disputas: é um alerta, não uma regra."
   }
 }

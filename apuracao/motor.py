@@ -3,6 +3,9 @@
 Fonte: API pública de divulgação do TSE (resultados.tse.jus.br) — a mesma usada para 2022.
 - Nacional (presidente, cargo 1): um arquivo por UF (27) + Brasil.
 - Estadual (governador MA, cargo 3): um arquivo por município (217) + estado.
+- Assembleia (deputado estadual MA, cargo 7): mesmo formato; acompanha só Bruna Pessoa, Abigail Cunha e Eric Costa,
+  em votos (não em %), comparando com a projeção do modelo da Bruna (resumo em apuracao/deputados_previsao.csv; o painel
+  estratégico dela fica só no app próprio, bruna_api_webapp_v2_mapa).
 
 Projeção do resultado final ("agulha"): nas unidades já apuradas mede-se o desvio entre o voto real e a projeção do
 modelo (em logit, ponderado pelos votos já contados); esse desvio é aplicado aos votos que faltam em cada unidade.
@@ -27,7 +30,16 @@ UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "
 ENSAIO = {"ciclo": "ele2022", "presidente": {1: "544", 2: "545"}, "governador": {1: "546", 2: None}}
 ENSAIO_CAND = {"presidente": {"lula": "13", "flavio": "22"}, "governador": {"braide": "20", "orleans": "40"}}
 NOMES_2026 = {"presidente": {"lula": ["LULA"], "flavio": ["FLÁVIO BOLSONARO", "FLAVIO BOLSONARO", "FLÁVIO"]},
-              "governador": {"braide": ["BRAIDE"], "orleans": ["ORLEANS"]}}
+              "governador": {"braide": ["BRAIDE"], "orleans": ["ORLEANS"]},
+              # do nome mais específico para o mais genérico (o primeiro que casar vale)
+              "deputado": {"bruna": ["BRUNA PESSOA", "BRUNA"], "abigail": ["ABIGAIL CUNHA", "ABIGAIL"],
+                           "eric": ["ERIC COSTA", "ERIC"]}}
+NUMEROS_FIXOS = {"deputado": {"bruna": "15800"}}  # número de urna já conhecido
+CARGO = {"presidente": 1, "governador": 3, "deputado": 7}
+MUNICIPIOS = {"governador": RAIZ / "resultados" / "municipios_previsao.csv",
+              "deputado": RAIZ / "apuracao" / "deputados_previsao.csv"}
+REFERENCIAS_ALEMA = {"menor eleito em 2022": 24800, "último eleito da chapa do governo em 2022": 38329,
+                     "mediana dos eleitos em 2022": 44068}
 
 
 def _num(v):
@@ -54,8 +66,10 @@ def descobrir_2026():
     manual = RAIZ / "apuracao" / "codigos_2026.json"
     if manual.exists():  # permite fixar os códigos à mão, se necessário
         m = json.loads(manual.read_text(encoding="utf-8"))
-        for k in ("presidente", "governador"):
+        for k in ("presidente", "governador", "deputado"):
             m[k] = {int(t): c for t, c in m.get(k, {}).items() if c}
+        if not m["deputado"] and m["governador"].get(1):  # deputados saem na mesma eleição do governador (1º turno)
+            m["deputado"] = {1: m["governador"][1]}
         return m
     try:
         cfg = _get(f"{BASE}/comum/config/ele-c.json")
@@ -63,7 +77,7 @@ def descobrir_2026():
         return None
     if "2026" not in str(cfg.get("c", "")):
         return None
-    achado = {"ciclo": cfg["c"], "presidente": {}, "governador": {}}
+    achado = {"ciclo": cfg["c"], "presidente": {}, "governador": {}, "deputado": {}}
     for pl in cfg.get("pl", []):
         for e in pl.get("e", []):
             cargos = {c.get("cd") for a in e.get("abr", []) for c in a.get("cp", [])}
@@ -72,6 +86,10 @@ def descobrir_2026():
                 achado["presidente"][turno] = e["cd"]
             if "3" in cargos:
                 achado["governador"][turno] = e["cd"]
+            if "7" in cargos:
+                achado["deputado"][turno] = e["cd"]
+    if not achado["deputado"] and achado["governador"].get(1):
+        achado["deputado"] = {1: achado["governador"][1]}
     return achado if achado["presidente"] or achado["governador"] else None
 
 
@@ -89,7 +107,11 @@ def ler_total(ciclo, ele, abrang, cargo):
     t = _get(_url_simplificado(ciclo, ele, abrang, cargo))
     return {"pst": _num(t.get("pst", "0")), "vv": _num(t.get("vv", 0)),
             "votos": {c["n"]: _num(c["vap"]) for c in t.get("cand", [])},
-            "nomes": {c["n"]: c.get("nm", "") for c in t.get("cand", [])}}
+            "nomes": {c["n"]: c.get("nm", "") for c in t.get("cand", [])},
+            # situação publicada pelo TSE ao fim da totalização (ex.: "Eleito por QP", "Suplente"); "e" = "s" se eleito
+            "situacao": {c["n"]: c.get("st", "") for c in t.get("cand", [])},
+            "eleito": {c["n"]: str(c.get("e", "")).lower() == "s" for c in t.get("cand", [])},
+            "totalizado": str(t.get("tf", "")).lower() == "s"}
 
 
 def ler_municipio(ciclo, ele, uf, cdmun, cargo):
@@ -103,8 +125,13 @@ def identificar_numeros(nomes, disputa):
     """Descobre o número de urna de cada candidato pelo nome publicado pelo TSE."""
     achados = {}
     for chave, padroes in NOMES_2026[disputa].items():
-        for n, nm in nomes.items():
-            if any(_sem_acento(p) in _sem_acento(nm) for p in padroes):
+        fixo = NUMEROS_FIXOS.get(disputa, {}).get(chave)
+        if fixo and fixo in nomes:
+            achados[chave] = fixo
+            continue
+        for p in padroes:  # o padrão mais específico primeiro
+            n = next((n for n, nm in nomes.items() if _sem_acento(p) in _sem_acento(nm)), None)
+            if n:
                 achados[chave] = n
                 break
     return achados
@@ -112,6 +139,8 @@ def identificar_numeros(nomes, disputa):
 
 def baixar(disputa, turno, ensaio=False):
     """Baixa a apuração atual. Retorna (tabela por unidade, total geral, números dos candidatos, info)."""
+    if ensaio and disputa == "deputado":
+        return ensaio_deputados()
     if ensaio:
         ciclo, ele = ENSAIO["ciclo"], ENSAIO[disputa][turno]
     else:
@@ -119,7 +148,7 @@ def baixar(disputa, turno, ensaio=False):
         if not cod or not cod.get(disputa, {}).get(turno):
             return None, None, None, {"erro": "Os códigos da eleição de 2026 ainda não foram publicados pelo TSE."}
         ciclo, ele = cod["ciclo"], cod[disputa][turno]
-    cargo = 1 if disputa == "presidente" else 3
+    cargo = CARGO[disputa]
     if disputa == "presidente":
         geral = ler_total(ciclo, ele, "br", cargo)
         with ThreadPoolExecutor(12) as ex:
@@ -128,7 +157,7 @@ def baixar(disputa, turno, ensaio=False):
                                  for u, d in partes])
     else:
         geral = ler_total(ciclo, ele, "ma", cargo)
-        mun = pd.read_csv(RAIZ / "resultados" / "municipios_previsao.csv")
+        mun = pd.read_csv(MUNICIPIOS[disputa])
         cods = mun.CD_MUNICIPIO.astype(int).map(lambda c: f"{c:05d}")
 
         def pega(c):
@@ -143,6 +172,61 @@ def baixar(disputa, turno, ensaio=False):
                                   **{f"v_{k}": v for k, v in d["votos"].items()}} for d in partes])
     numeros = ENSAIO_CAND[disputa] if ensaio else identificar_numeros(geral["nomes"], disputa)
     return unidades.fillna(0), geral, numeros, {"ciclo": ciclo, "eleicao": ele, "ensaio": ensaio}
+
+
+def ensaio_deputados(semente=7):
+    """Ensaio offline dos deputados: Abigail e Eric com os votos reais de 2022 por município (TSE); a Bruna não
+    disputou em 2022, então os votos dela são a projeção do modelo com um sorteio de ±35% por cidade (fictício)."""
+    rng = np.random.default_rng(semente)
+    b = pd.read_csv(MUNICIPIOS["deputado"])
+    bruna = np.round(b.votos_projetados.fillna(0) * rng.lognormal(0, 0.35, len(b)))
+    unidades = pd.DataFrame({"unidade": b.CD_MUNICIPIO.astype(int), "pst": 100.0,
+                             "vv": b.total_dep_est_2022.astype(float), "v_15800": bruna,
+                             "v_ABIGAIL2022": b.abigail_2022.astype(float), "v_ERIC2022": b.eric_costa_2022.astype(float)})
+    geral = {"pst": 100.0, "vv": float(unidades.vv.sum()), "votos": {}, "nomes": {}}
+    numeros = {"bruna": "15800", "abigail": "ABIGAIL2022", "eric": "ERIC2022"}
+    return unidades, geral, numeros, {"ciclo": "ele2022", "eleicao": "546 (offline)", "ensaio": True}
+
+
+def projetar_votos(unidades, previsao, numeros, colunas_prev, chave_prev="CD_MUNICIPIO", col_total="total_esperado",
+                   n_boot=3000, semente=0, forca_prior=3000):
+    """Deputados: projeta o total de VOTOS de cada candidato a partir da apuração parcial.
+
+    Em cada município, "esperado até agora" = projeção do modelo × fração apurada. O ritmo do candidato
+    (votos reais ÷ esperado, reamostrado entre os municípios já apurados e puxado para 1 no começo) corrige a projeção
+    dos votos que faltam; em município já bem apurado vale o ritmo do próprio município."""
+    rng = np.random.default_rng(semente)
+    d = previsao.merge(unidades, left_on=chave_prev, right_on="unidade", how="left").fillna({"pst": 0, "vv": 0})
+    p = (d.pst.astype(float) / 100).clip(0, 1).values
+    tot = d[col_total].astype(float).values
+    frac = float((p * tot).sum() / max(tot.sum(), 1))
+    alarga = 0.20 * (1 - frac) ** 2  # incerteza comum (desvio em log) que ainda não apareceu nas urnas
+    res = {"apurado_pct": 100 * frac, "unidades_com_votos": int((p > 0).sum()), "unidades": int(len(d)), "cand": {}}
+    ap = np.flatnonzero(p > 0)
+    boot = rng.integers(0, max(len(ap), 1), (n_boot, max(len(ap), 1)))
+    peso_proprio = np.clip(p / 0.5, 0, 1)  # com metade das seções apuradas, a própria cidade já basta
+    for k, col in colunas_prev.items():
+        v = d.get(f"v_{numeros.get(k)}", pd.Series(0.0, index=d.index)).fillna(0).astype(float).values
+        prev = d[col].fillna(0).astype(float).values
+        esp = prev * p
+        d[f"real_{k}"], d[f"prev_{k}"], d[f"esp_{k}"] = v, prev, esp
+        d[f"ritmo_{k}"] = np.where(esp > 5, v / np.maximum(esp, 1e-9), np.nan)
+        if len(ap):
+            r = (v[ap][boot].sum(1) + forca_prior) / (esp[ap][boot].sum(1) + forca_prior)
+        else:
+            r = np.ones(n_boot)
+        proprio = np.where(p > 0, v / np.maximum(p, 1e-6) * (1 - p), 0.0)
+        falta = peso_proprio * proprio + (1 - peso_proprio) * prev * (1 - p) * r[:, None]
+        choque = rng.lognormal(0, alarga, (n_boot, 1)) if alarga > 0 else 1.0
+        final = v.sum() + (falta * choque).sum(1)
+        res["cand"][k] = {
+            "contado": float(v.sum()), "previsto": float(prev.sum()), "esperado_ate_agora": float(esp.sum()),
+            "ritmo": float(v.sum() / esp.sum()) if esp.sum() > 0 else None,
+            "final": [float(np.percentile(final, q)) for q in (10, 50, 90)],
+            "prob_acima": {nome: float((final >= corte).mean()) for nome, corte in REFERENCIAS_ALEMA.items()},
+            "_amostras": final,
+        }
+    return d, res
 
 
 def simular_parcial(unidades, fracao, semente=0):

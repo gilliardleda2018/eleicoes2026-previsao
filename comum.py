@@ -75,6 +75,7 @@ h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B
 .cartao.vermelho {border-left-color: #C8102E;} .cartao.verde {border-left-color: #1F7A4D;}
 .cartao.alerta {border-left-color: #C0392B; background: #FFF6F4;}
 .cartao h4 {margin: 0 0 4px 0;}
+.pequeno {font-size: .85rem; opacity: .75;}
 @media (max-width: 760px) {
   .block-container {padding-left: 1rem; padding-right: 1rem;}
   .capa .titulo {font-size: 1.6rem;} .placar .prob {font-size: 2rem;}
