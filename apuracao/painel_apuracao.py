@@ -405,7 +405,7 @@ FOTOS = RAIZ / "assets" / "fotos"  # coloque aqui lula.jpg / flavio.jpg (fotos d
 
 
 @st.cache_data(ttl=6 * 3600, show_spinner=False)
-def foto_base64(chave, ciclo, ele, sqcand):
+def foto_base64(chave, ciclo, ele, sqcand, abr="br"):
     """Foto do placar: arquivo em assets/fotos/<chave>.(jpg|png|webp) → foto oficial do TSE → vazio (iniciais)."""
     import base64
     for ext, mime in (("jpg", "jpeg"), ("jpeg", "jpeg"), ("png", "png"), ("webp", "webp")):
@@ -414,58 +414,79 @@ def foto_base64(chave, ciclo, ele, sqcand):
             return f"data:image/{mime};base64," + base64.b64encode(arq.read_bytes()).decode()
     if sqcand:
         try:
-            return "data:image/jpeg;base64," + base64.b64encode(motor.foto_tse(ciclo, ele, "br", sqcand)).decode()
+            return "data:image/jpeg;base64," + base64.b64encode(motor.foto_tse(ciclo, ele, abr, sqcand)).decode()
         except Exception:  # noqa: BLE001
             pass
     return ""
 
 
+def _cd_tuntum():
+    mun = pd.read_csv(RAIZ / "apuracao" / "deputados_previsao.csv")
+    return int(mun.loc[mun.municipio.astype(str).str.lower() == "tuntum", "CD_MUNICIPIO"].iloc[0])
+
+
 @st.cache_data(ttl=90, show_spinner=False)
 def tuntum_presidente(ciclo, ele):
     """Votação para presidente em Tuntum (arquivo do município no TSE)."""
-    mun = pd.read_csv(RAIZ / "apuracao" / "deputados_previsao.csv")
-    cd = f"{int(mun.loc[mun.municipio.astype(str).str.lower() == 'tuntum', 'CD_MUNICIPIO'].iloc[0]):05d}"
-    return motor.ler_municipio(ciclo, ele, "ma", cd, 1)
+    return motor.ler_municipio(ciclo, ele, "ma", f"{_cd_tuntum():05d}", 1)
 
 
-def placar_presidente(unidades, geral, numeros, info):
-    """Placar grande: Lula (vermelho) × Flávio (azul), com as fotos acima de cada quadro."""
-    na, nb = numeros.get("lula"), numeros.get("flavio")
+# placar grande de cada disputa: (chave da foto, nome, nome curto, cor, cor escura)
+PLACAR = {"presidente": dict(a=("lula", "Lula", "Lula", "#C8102E", "#8E0B20"),
+                             b=("flavio", "Flávio Bolsonaro", "Flávio", "#1D4E89", "#123563"),
+                             legenda="🇧🇷 VOTAÇÃO BRASIL", abr="br"),
+          "governador": dict(a=("braide", "Eduardo Braide", "Braide", "#1F6FB2", "#14507F"),
+                             b=("orleans", "Orleans Brandão", "Orleans", "#E07B1F", "#A8560F"),
+                             legenda="🏛️ VOTAÇÃO MARANHÃO", abr="ma")}
+
+
+def placar_duelo(disputa, unidades, geral, numeros, info):
+    """Placar grande do duelo (cores e fotos de cada candidato) + quadros de Tuntum, com legendas."""
+    pc = PLACAR[disputa]
+    (ka, nome_a, curto_a, cor_a, esc_a), (kb, nome_b, curto_b, cor_b, esc_b) = pc["a"], pc["b"]
+    na, nb = numeros.get(ka), numeros.get(kb)
     if geral.get("votos"):
         va, vb, vv = geral["votos"].get(na, 0), geral["votos"].get(nb, 0), geral.get("vv", 0)
-    else:  # ensaio: soma das UFs
+    else:  # ensaio: soma das unidades
         va, vb = (float(unidades[f"v_{x}"].sum()) if f"v_{x}" in unidades else 0.0 for x in (na, nb))
         vv = float(unidades.vv.sum())
     pa, pb = (100 * va / vv, 100 * vb / vv) if vv else (0, 0)
     sq = geral.get("sqcand", {})
     lados = []
-    for chave, nome, num, votos, p, cor, escuro in (("lula", "Lula", na, va, pa, "#C8102E", "#8E0B20"),
-                                                    ("flavio", "Flávio Bolsonaro", nb, vb, pb, "#1D4E89", "#123563")):
-        foto = foto_base64(chave, info.get("ciclo"), info.get("eleicao"), sq.get(num, ""))
+    for chave, nome, num, votos, p, cor, escuro in ((ka, nome_a, na, va, pa, cor_a, esc_a),
+                                                    (kb, nome_b, nb, vb, pb, cor_b, esc_b)):
+        foto = foto_base64(chave, info.get("ciclo"), info.get("eleicao"), sq.get(num, ""), pc["abr"])
         img = (f'<img src="{foto}" alt="{nome}">' if foto
                else f'<div class="pl-ini" style="background:{cor}">{"".join(w[0] for w in nome.split()[:2])}</div>')
         lados.append(f"""
 <div class="pl-lado">
   <div class="pl-foto" style="--cor:{cor}">{img}</div>
   <div class="pl-quadro" style="background: linear-gradient(160deg, {cor}, {escuro});">
-    <div class="pl-nome">{nome.upper()} · {num or '—'}</div>
+    <div class="pl-nome">{nome.upper()} · {num if str(num).isdigit() else '—'}</div>
     <div class="pl-votos">{n(votos)}</div>
     <div class="pl-pct">{n(p, 2)}% dos votos válidos</div>
   </div>
 </div>""")
+
     def diferenca(a, b):
-        lider = "Lula" if a > b else "Flávio" if b > a else ""
+        lider = curto_a if a > b else curto_b if b > a else ""
         return f"{lider} à frente por {n(abs(a - b))} votos" if lider else "empate"
 
-    # ---- Tuntum (arquivo do município; no ensaio não há a votação de 2022 de Tuntum para presidente)
+    # ---- Tuntum: governador vem da própria tabela de municípios; presidente, do arquivo de Tuntum no TSE
     tun = None
-    if not info.get("ensaio"):
+    if disputa == "governador":
+        linha = unidades[unidades.unidade.astype(int) == _cd_tuntum()]
+        if len(linha) and float(linha.vv.iloc[0]) > 0:
+            l0 = linha.iloc[0]
+            tun = {"pst": float(l0.pst), "vv": float(l0.vv),
+                   "votos": {x: float(l0.get(f"v_{x}", 0) or 0) for x in (na, nb)}}
+    elif not info.get("ensaio"):
         try:
             tun = tuntum_presidente(info.get("ciclo"), info.get("eleicao"))
         except Exception:  # noqa: BLE001
             tun = None
     quadros_t = []
-    for nome, num, cor in (("Lula", na, "#C8102E"), ("Flávio Bolsonaro", nb, "#1D4E89")):
+    for nome, num, cor in ((nome_a, na, cor_a), (nome_b, nb, cor_b)):
         if tun:
             v = tun["votos"].get(num, 0)
             corpo = (f'<div class="pt-votos">{n(v)}</div>'
@@ -477,7 +498,7 @@ def placar_presidente(unidades, geral, numeros, info):
     sub_t = (f"{n(tun['pst'], 1)}% das seções apuradas em Tuntum · " + diferenca(
         tun["votos"].get(na, 0), tun["votos"].get(nb, 0))) if tun else ""
     st.markdown(f"""
-<div class="pl-legenda">🇧🇷 VOTAÇÃO BRASIL</div>
+<div class="pl-legenda">{pc['legenda']}</div>
 <div class="placar-pres">
   {lados[0]}
   <div class="pl-x">✕</div>
@@ -519,8 +540,7 @@ def painel():
     apurado = geral["pst"] if not ensaio else r["apurado_pct_votos"]
     st.caption(f"Fonte: TSE · eleição {info['eleicao']} ({info['ciclo']}) · {r['unidades_com_votos']} de "
                f"{r['unidades']} {cfg['unidade'].lower()}s com votos · atualizado agora")
-    if cfg["disputa"] == "presidente":
-        placar_presidente(unidades, geral, numeros, info)
+    placar_duelo(cfg["disputa"], unidades, geral, numeros, info)
     if r.get("sem_dados"):
         st.metric("Seções apuradas", f"{n(apurado, 1)}%")
         st.info("Ainda há poucos votos apurados para comparar com a projeção. Aguarde os primeiros resultados.")
