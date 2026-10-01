@@ -68,6 +68,16 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 [class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+2) a {background: linear-gradient(160deg, #E0F2E9, #FFFFFF);}
 [class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+3) a {background: linear-gradient(160deg, #EBE6F9, #FFFFFF);}
 [class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+4) a {background: linear-gradient(160deg, #FBE9DC, #FFFFFF);}
+/* menu do topo: espaço até o bloco seguinte; no celular, uma linha só com rolagem lateral */
+[class*="st-key-barra_nav"] {margin-bottom: 16px !important;}
+@media (max-width: 760px) {
+  [class*="st-key-barra_nav"] [data-testid="stHorizontalBlock"] {flex-wrap: nowrap !important; overflow-x: auto;
+      gap: 8px !important; padding: 4px 2px 8px; scrollbar-width: none;}
+  [class*="st-key-barra_nav"] [data-testid="stColumn"] {flex: 0 0 auto !important; width: auto !important;
+      min-width: 0 !important;}
+  [class*="st-key-barra_nav"] [data-testid="stPageLink"] a, .nav-ativa {padding: .3rem .85rem !important;
+      font-size: .85rem !important; white-space: nowrap;}
+}
 .nav-ativa {text-align: center; font: 800 .95rem 'Manrope'; padding: .42rem .7rem; border-radius: 999px; color: #FFFFFF;
     background: linear-gradient(110deg, #0E5A73, #12233F); box-shadow: 0 6px 16px rgba(18,35,63,.25);}
 /* veredito em perguntas e respostas */
@@ -118,7 +128,7 @@ h1, h2, h3, h4 {font-family: 'Montserrat', Arial, sans-serif !important; color: 
 /* separadores entre blocos */
 hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; margin: 18px 0 !important;
     background: linear-gradient(90deg, rgba(201,211,224,0), #C9D3E0 15%, #C9D3E0 85%, rgba(201,211,224,0)) !important;}
-.capa {border-radius: 22px; padding: 22px 26px; color: #fff; margin-bottom: 12px;
+.capa {border-radius: 22px; padding: 22px 26px; color: #fff; margin: 8px 0 12px;
        box-shadow: 0 14px 40px rgba(27,42,65,.18);}
 .capa .selo {font: 800 .72rem 'Manrope'; letter-spacing: .12em; opacity: .9;}
 .capa .titulo {font: 900 2.3rem/1.05 'Montserrat'; margin: 6px 0;}
