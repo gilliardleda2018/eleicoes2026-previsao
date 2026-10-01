@@ -228,6 +228,65 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 @media (max-width: 900px) {.marca-topo {grid-template-columns: 1fr; text-align: center; gap: 10px;}
   .marca-topo .mt-logo img {margin: 0 auto; height: 52px;} .marca-topo .mt-slogan {font-size: 1.45rem;}
   .marca-topo .mt-contato {align-items: center;}}
+/* apuração: Assembleia MA em destaque no seletor (1º botão) */
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type {
+    border: 1.5px solid #E02597 !important; background: linear-gradient(120deg, #FDE7F3, #FFFFFF) !important;
+    box-shadow: 0 4px 14px rgba(224,37,151,.18);}
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type p {
+    color: #B0127A !important; font-weight: 800 !important;}
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type[kind*="Active"],
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type[aria-checked="true"] {
+    background: linear-gradient(120deg, #E02597, #8E1B7A) !important; border-color: #E02597 !important;}
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type[kind*="Active"] p,
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type[aria-checked="true"] p {
+    color: #FFFFFF !important;}
+.st-key-seletor_apuracao [data-testid="stColumn"]:first-child [data-testid="stButtonGroup"] button:first-of-type::after {
+    content: "DESTAQUE"; font: 800 .56rem 'Manrope'; letter-spacing: .1em; color: #FFFFFF; background: #E02597;
+    border-radius: 999px; padding: 2px 7px; margin-left: 6px;}
+/* apuração: chamada da Assembleia nas páginas de Senado e Câmara */
+.st-key-destaque_assembleia {padding: 16px 20px; border-radius: 20px; margin: 4px 0 14px; color: #FFFFFF;
+    background: radial-gradient(circle at 100% 0%, rgba(255,255,255,.18), transparent 45%), linear-gradient(110deg, #B0127A, #E02597 55%, #8E1B7A);
+    box-shadow: 0 10px 26px rgba(176,18,122,.28);}
+.st-key-destaque_assembleia .da-selo {font: 800 .72rem 'Manrope'; letter-spacing: .16em; opacity: .9;}
+.st-key-destaque_assembleia .da-titulo {font: 900 1.45rem/1.15 'Montserrat'; margin: 2px 0 4px;}
+.st-key-destaque_assembleia .da-texto {font: 600 .92rem 'Manrope'; opacity: .92;}
+.st-key-destaque_assembleia [data-testid="stBaseButton-primary"] {background: #FFFFFF !important; border: 0 !important;
+    border-radius: 14px !important;}
+.st-key-destaque_assembleia [data-testid="stBaseButton-primary"] p {color: #B0127A !important; font-weight: 800 !important;}
+/* apuração: ranking de Senado e Câmara Federal */
+.rk {border: 1.5px solid #D6DEE9; border-radius: 22px; overflow: hidden; background: #FFFFFF;
+    box-shadow: 0 8px 22px rgba(27,42,65,.07); margin: 10px 0 8px;}
+.rk-cab {display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; color: #FFFFFF;
+    font: 900 1.05rem 'Montserrat'; letter-spacing: .04em; background: linear-gradient(110deg, #0B1628, #16304F);}
+.rk.senador .rk-cab {background: linear-gradient(110deg, #0B3F8C, #12233F);}
+.rk-cab span {font: 800 .75rem 'Manrope'; letter-spacing: .12em; background: rgba(255,255,255,.15);
+    border-radius: 999px; padding: 4px 12px;}
+.rk-linha {display: grid; grid-template-columns: 44px 48px 1fr 110px 90px 112px; align-items: center; gap: 12px;
+    padding: 10px 18px; border-top: 1px solid #EDF1F6;}
+.rk-linha:nth-child(even) {background: #FAFBFD;}
+.rk-linha.dentro {background: linear-gradient(90deg, #EAF6EF, #FFFFFF 60%);}
+.rk-linha.eleito {background: linear-gradient(90deg, #DDF3E6, #FFFFFF 70%);}
+.rk-pos {font: 900 1.05rem 'Montserrat'; color: #5B6477; text-align: center;}
+.rk-linha.dentro .rk-pos {color: #0F5132;}
+.rk-foto img, .rk-foto span {width: 46px; height: 46px; border-radius: 50%; object-fit: cover; display: flex;
+    align-items: center; justify-content: center; background: linear-gradient(135deg, #DCE5F2, #F4F7FB);
+    font: 800 .9rem 'Montserrat'; color: #1B2A41; border: 2px solid #FFFFFF; box-shadow: 0 3px 8px rgba(27,42,65,.15);}
+.rk-info b {display: block; font: 800 .98rem 'Montserrat'; color: #1B2A41;}
+.rk-info small {font: 700 .76rem 'Manrope'; color: #5B6477; letter-spacing: .03em;}
+.rk-barra {height: 6px; border-radius: 6px; background: #EDF1F6; margin-top: 6px; overflow: hidden;}
+.rk-barra i {display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #22D3EE, #1F6FB2);}
+.rk.senador .rk-barra i {background: linear-gradient(90deg, #3B82F6, #0B3F8C);}
+.rk-num {text-align: right;} .rk-num b {display: block; font: 900 1.02rem 'Montserrat'; color: #1B2A41;}
+.rk-num small {font: 700 .75rem 'Manrope'; color: #5B6477;}
+.rk-tun b {color: #B0127A;}
+.rk-st {font-style: normal; font: 800 .66rem 'Manrope'; letter-spacing: .08em; text-transform: uppercase; color: #3A4458;
+    background: #EDF1F6; border-radius: 999px; padding: 4px 10px; white-space: nowrap;}
+.rk-st {justify-self: end;} .rk-st.vazio {visibility: hidden;} .rk-st.dentro {color: #0F5132; background: #E0F2E9;} .rk-st.eleito {color: #FFFFFF; background: #0F5132;}
+.rk-corte {position: relative; text-align: center; padding: 6px 0; border-top: 2px dashed #0F5132;
+    background: #F4FAF6;}
+.rk-corte span {font: 800 .7rem 'Manrope'; letter-spacing: .1em; color: #0F5132; text-transform: uppercase;}
+@media (max-width: 760px) {.rk-linha {grid-template-columns: 28px 38px 1fr 76px 58px; gap: 7px; padding: 9px 10px;}
+  .rk-foto img, .rk-foto span {width: 36px; height: 36px;} .rk-st {display: none;} .rk-info b {font-size: .86rem;}}
 /* seletor da apuração: cartão com botões segmentados */
 .st-key-seletor_apuracao {background: linear-gradient(160deg, #E3EDFB, #F1F6FD); border: 1.5px solid #C9D3E0; border-radius: 18px; padding: 14px 20px 6px;
     margin: 4px 0 14px; box-shadow: 0 1px 2px rgba(27,42,65,.05), 0 10px 28px rgba(27,42,65,.06);}

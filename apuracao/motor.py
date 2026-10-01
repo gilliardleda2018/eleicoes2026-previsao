@@ -53,7 +53,9 @@ NOMES_2026 = {"presidente": {"lula": ["LULA"], "flavio": ["FLÁVIO BOLSONARO", "
 # números de urna de 2026 (candidaturas deferidas): Bruna Pessoa 15800 (MDB), Abigail Cunha 15200 (MDB),
 # Eric Costa 10800 (Republicanos). Se o número não aparecer na lista do TSE, procura pelo nome.
 NUMEROS_FIXOS = {"deputado": {"bruna": "15800", "abigail": "15200", "eric": "10800"}}
-CARGO = {"presidente": 1, "governador": 3, "deputado": 7}
+CARGO = {"presidente": 1, "governador": 3, "deputado": 7, "senador": 5, "federal": 6}
+# Senado e Câmara (MA): mesma eleição estadual do governador/deputados; vagas em 2026
+VAGAS = {"senador": 2, "federal": 18}
 MUNICIPIOS = {"governador": RAIZ / "resultados" / "municipios_previsao.csv",
               "deputado": RAIZ / "apuracao" / "deputados_previsao.csv"}
 REFERENCIAS_ALEMA = {"menor eleito em 2022": 24800, "último eleito da chapa do governo em 2022": 38329,
@@ -132,7 +134,7 @@ def _url_total_unificado(ciclo, ele, abrang, cargo):
 
 def _ler_unificado(t, cargo):
     """Leiaute unificado (-u.json), usado no município e, em 2026, também no total do estado/Brasil."""
-    votos, nomes, situacao, sq = {}, {}, {}, {}
+    votos, nomes, situacao, sq, partido = {}, {}, {}, {}, {}
     for carg in t.get("carg", []):
         if str(carg.get("cd")) != str(cargo):
             continue
@@ -144,9 +146,10 @@ def _ler_unificado(t, cargo):
                     nomes[n_] = c.get("nmu") or c.get("nm", "")
                     situacao[n_] = c.get("st", "")
                     sq[n_] = str(c.get("sqcand", ""))
+                    partido[n_] = par.get("sg") or par.get("sgp") or agr.get("nm", "") or ""
     s_, v_ = t.get("s", {}), t.get("v", {})
     return {"pst": _num(s_.get("pst", "0")), "vv": _num(v_.get("vv", 0)), "votos": votos, "nomes": nomes,
-            "situacao": situacao, "sqcand": sq,
+            "situacao": situacao, "sqcand": sq, "partido": partido,
             "eleito": {k: _sem_acento(v).lower().startswith("eleit") for k, v in situacao.items()},
             "totalizado": str(t.get("tf", "")).lower() == "s"}
 
@@ -166,6 +169,7 @@ def ler_total(ciclo, ele, abrang, cargo):
                     "votos": {str(c["n"]): _num(c["vap"]) for c in t.get("cand", [])},
                     "nomes": {str(c["n"]): c.get("nm", "") for c in t.get("cand", [])},
                     "sqcand": {str(c["n"]): str(c.get("sqcand", "")) for c in t.get("cand", [])},
+                    "partido": {str(c["n"]): c.get("cc", "") for c in t.get("cand", [])},
                     # situação ao fim da totalização (ex.: "Eleito por QP", "Suplente")
                     "situacao": {str(c["n"]): c.get("st", "") for c in t.get("cand", [])},
                     "eleito": {str(c["n"]): _sem_acento(c.get("st", "")).lower().startswith("eleit")
@@ -252,6 +256,74 @@ def foto_tse(ciclo, ele, abrang, sqcand, timeout=10):
         return r.read()
 
 
+# ------------------------------------------------------------------ Senado e Câmara Federal (MA): ranking
+def cd_tuntum():
+    mun = pd.read_csv(MUNICIPIOS["deputado"])
+    return int(mun.loc[mun.municipio.astype(str).str.lower() == "tuntum", "CD_MUNICIPIO"].iloc[0])
+
+
+def ranking(disputa, ensaio=False, fracao=1.0):
+    """Senador ou deputado federal no Maranhão: todos os candidatos com votos no estado e em Tuntum.
+    Retorna (tabela ordenada por votos, info) ou (None, info com 'erro')."""
+    if ensaio:
+        return _ranking_2022(disputa, fracao)
+    cod = descobrir_2026()
+    ele = (cod.get("deputado") or {}).get(1) or (cod.get("governador") or {}).get(1)
+    if not ele:
+        return None, {"erro": "Os códigos da eleição de 2026 ainda não foram publicados pelo TSE."}
+    ciclo, cargo = cod["ciclo"], CARGO[disputa]
+    g = ler_total(ciclo, ele, "ma", cargo)
+    tun = {"votos": {}, "pst": 0.0}
+    if g["pst"] > 0:
+        try:
+            tun = ler_municipio(ciclo, ele, "ma", f"{cd_tuntum():05d}", cargo)
+        except Exception:  # noqa: BLE001
+            pass
+    df = pd.DataFrame({"numero": list(g["nomes"])})
+    df["nome"] = df.numero.map(g["nomes"])
+    df["partido"] = df.numero.map(g.get("partido", {})).fillna("")
+    df["votos"] = df.numero.map(g["votos"]).fillna(0).astype(float)
+    df["tuntum"] = df.numero.map(tun["votos"]).fillna(0).astype(float)
+    df["situacao"] = df.numero.map(g.get("situacao", {})).fillna("")
+    df["sqcand"] = df.numero.map(g.get("sqcand", {})).fillna("")
+    df = df.sort_values(["votos", "nome"], ascending=[False, True]).reset_index(drop=True)
+    return df, {"pst": g["pst"], "vv": g["vv"] or float(df.votos.sum()), "pst_tuntum": tun["pst"],
+                "totalizado": g.get("totalizado", False), "ciclo": ciclo, "eleicao": ele, "ensaio": False}
+
+
+def _ranking_2022(disputa, fracao=1.0, semente=11):
+    """Ensaio offline: Senado e Câmara Federal no Maranhão em 2022 (votos por município do TSE, base do modelo)."""
+    rng = np.random.default_rng(semente)
+    v = pd.read_csv(RAIZ / "dados" / "tse" / "votos_2022_municipio.csv")
+    v["NR_VOTAVEL"] = v.NR_VOTAVEL.astype(str)
+    siglas = {"10": "REPUBLICANOS", "11": "PP", "12": "PDT", "13": "PT", "14": "PTB", "15": "MDB", "16": "PSTU",
+              "18": "REDE", "19": "PODE", "20": "PSC", "21": "PCB", "22": "PL", "23": "CIDADANIA", "27": "DC",
+              "28": "PRTB", "29": "PCO", "30": "NOVO", "35": "PMB", "36": "AGIR", "40": "PSB", "43": "PV",
+              "44": "UNIÃO", "45": "PSDB", "50": "PSOL", "51": "PATRIOTA", "55": "PSD", "65": "PCdoB",
+              "70": "AVANTE", "77": "SOLIDARIEDADE", "80": "UP", "90": "PROS"}
+    c = v[v.DS_CARGO == ("Senador" if disputa == "senador" else "Deputado Federal")]
+    c = c[~c.NR_VOTAVEL.isin(["95", "96", "97"])]
+    vv = float(c.QT_VOTOS.sum())  # válidos (inclui legenda no caso da Câmara)
+    c = c[c.NR_VOTAVEL.str.len() > 2]
+    tun = cd_tuntum()
+    df = c.groupby(["NR_VOTAVEL", "NM_VOTAVEL"]).QT_VOTOS.sum().rename("votos").reset_index()
+    t = c[c.CD_MUNICIPIO == tun].groupby("NR_VOTAVEL").QT_VOTOS.sum()
+    df = df.rename(columns={"NR_VOTAVEL": "numero", "NM_VOTAVEL": "nome"})
+    df["tuntum"] = df.numero.map(t).fillna(0)
+    if fracao < 1:  # apuração parcial: cada candidato com seu ritmo (sorteado) de contagem
+        ruido = rng.lognormal(0, 0.10, len(df))
+        df["votos"] = np.round(df.votos * fracao * ruido)
+        df["tuntum"] = np.round(df.tuntum * min(1, fracao * 1.3))
+        vv *= fracao
+    df["partido"] = df.numero.str[:2].map(siglas).fillna("")
+    df["situacao"], df["sqcand"] = "", ""
+    df = df.sort_values(["votos", "nome"], ascending=[False, True]).reset_index(drop=True)
+    if fracao >= 1 and disputa == "senador":
+        df.loc[0, "situacao"] = "Eleito"  # 2022: uma vaga
+    return df, {"pst": 100 * fracao, "vv": vv, "pst_tuntum": min(100, 130 * fracao), "totalizado": fracao >= 1,
+                "ciclo": "ele2022", "eleicao": "546 (offline)", "ensaio": True}
+
+
 # ------------------------------------------------------------------ diagnóstico (antes do domingo)
 def diagnostico():
     """Testa, deste servidor, cada peça da apuração ao vivo. Retorna lista de (etapa, ok, detalhe)."""
@@ -282,6 +354,11 @@ def diagnostico():
             lei = {"r": "simplificado", "u": "unificado"}.get(_LEIAUTE.get((cod["ciclo"], str(cod[disputa][1]))), "?")
             return True, (f"arquivo OK ({lei}) · {len(t['nomes'])} candidatos · {t['pst']:.2f}% apurado · {achou or '—'}")
         passo(f"Total {disputa} ({abr.upper()})", f)
+    for disputa, rot in (("senador", "senador"), ("federal", "deputado federal")):
+        def f(disputa=disputa):
+            t = ler_total(cod["ciclo"], cod["deputado"][1], "ma", CARGO[disputa])
+            return True, f"arquivo OK · {len(t['nomes'])} candidatos · {t['pst']:.2f}% apurado"
+        passo(f"Total {rot} (MA)", f)
     mun = pd.read_csv(MUNICIPIOS["deputado"])
     tun = mun[mun.municipio.astype(str).str.lower() == "tuntum"]
     if len(tun):

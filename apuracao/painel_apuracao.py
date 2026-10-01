@@ -23,7 +23,9 @@ if __name__ == "__main__":
     st.set_page_config(page_title="Apuração ao vivo", page_icon="🗳️", layout="wide")
     st.markdown(CSS, unsafe_allow_html=True)
 
+# a Assembleia MA (Bruna Pessoa) vem primeiro e em destaque
 DISPUTAS = {
+    "Assembleia MA · Bruna, Abigail e Eric": dict(disputa="deputado", unidade="Município"),
     "Presidente · Lula × Flávio": dict(disputa="presidente", a="lula", b="flavio", nome_a="Lula", nome_b="Flávio",
                                       cor_a="#C8102E", cor_b="#1D4E89", unidade="Estado", chave="uf",
                                       previsao=RAIZ / "nacional" / "resultados" / "ufs_previsao.csv",
@@ -34,7 +36,8 @@ DISPUTAS = {
                                              chave="CD_MUNICIPIO", previsao=RAIZ / "resultados" / "municipios_previsao.csv",
                                              geo=RAIZ / "dados" / "ma_leve.geojson", feat="properties.CD_MUN",
                                              loc="cd_ibge", zoom=5.3, centro={"lat": -5.2, "lon": -45.2}),
-    "Assembleia MA · Bruna, Abigail e Eric": dict(disputa="deputado", unidade="Município"),
+    "Senado MA": dict(disputa="senador", unidade="Município"),
+    "Câmara Federal MA": dict(disputa="federal", unidade="Município"),
 }
 # Deputados estaduais acompanhados (em votos): nome, cor e coluna da projeção
 DEPUTADOS = {"bruna": ("Bruna Pessoa", "#E02597", "votos_projetados", "projeção do modelo"),
@@ -53,7 +56,9 @@ st.markdown("""
 
 # ---- seletor moderno (botões segmentados); clicar de novo no selecionado não deixa a página sem escolha
 ROTULO_DISPUTA = {"Presidente · Lula × Flávio": "🇧🇷 Presidente", "Governador MA · Braide × Orleans": "🏛️ Governador MA",
-                  "Assembleia MA · Bruna, Abigail e Eric": "💗 Assembleia MA"}
+                  "Assembleia MA · Bruna, Abigail e Eric": "💗 Assembleia MA", "Senado MA": "⭐ Senado MA",
+                  "Câmara Federal MA": "🏢 Dep. Federal MA"}
+UMA_RODADA = ("deputado", "senador", "federal")  # sem 2º turno
 MODOS = ["Ao vivo (2026)", "Ensaio com a apuração de 2022"]
 
 
@@ -68,13 +73,14 @@ def _segmentado(rotulo, opcoes, chave, formato=str, padrao=None):
 
 
 with st.container(key="seletor_apuracao"):
-    c = st.columns([2.3, 1.1, 1.6], gap="large")
+    c = st.columns([3.6, 1, 1.4], gap="large")
     with c[0]:
         escolha = _segmentado("Disputa", list(DISPUTAS), "ap_disputa", lambda d: ROTULO_DISPUTA.get(d, d))
     cfg = DISPUTAS[escolha]
     deputados = cfg["disputa"] == "deputado"
+    rodada_unica = cfg["disputa"] in UMA_RODADA
     with c[1]:
-        if deputados:  # deputado estadual: só 1º turno
+        if rodada_unica:  # deputados e senado: só 1º turno
             turno = 1
             st.segmented_control("Turno", ["1º turno"], default="1º turno", key="ap_turno_dep", disabled=True)
         else:
@@ -163,7 +169,12 @@ document.getElementById("insta").addEventListener("click", async () => {{
 
 
 compartilhar(cfg["disputa"])
-if ensaio and deputados:
+if ensaio and cfg["disputa"] in ("senador", "federal"):
+    fracao = st.slider("Ensaio: quanto da apuração simular", 2, 100, 25, 1, format="%d%%") / 100
+    st.info("🧪 **Ensaio:** usa os votos reais de 2022 no Maranhão "
+            f"({'Senado: 1 vaga em 2022' if cfg['disputa'] == 'senador' else 'Câmara Federal'}). Serve para testar a "
+            "página; os nomes e números são de 2022.")
+elif ensaio and deputados:
     fracao = st.slider("Ensaio: quanto da apuração simular", 2, 100, 25, 1, format="%d%%") / 100
     st.info("🧪 **Ensaio:** Abigail Cunha e Eric Costa com os votos reais de 2022 por município; a Bruna não disputou em "
             "2022, então os votos dela são sorteados em torno da projeção do modelo. Serve para testar a página; os "
@@ -792,8 +803,130 @@ Hoje, <b>{lider}</b> termina à frente em <b>{pct(prob)}</b> das projeções.{te
                "apurações simuladas de 2022 (com 15% ou mais apurado, contém o resultado real em mais de 80% das vezes).")
 
 
+# ------------------------------------------------------------------ Senado e Câmara Federal (MA)
+@st.cache_data(ttl=90, show_spinner="Baixando a apuração do TSE…")
+def baixar_ranking(disputa, ensaio_, fracao_):
+    return motor.ranking(disputa, ensaio_, fracao_)
+
+
+@st.cache_data(ttl=None, show_spinner=False)
+def foto_candidato(ciclo, ele, sqcand):
+    import base64
+    try:
+        return "data:image/jpeg;base64," + base64.b64encode(motor.foto_tse(ciclo, ele, "ma", sqcand)).decode()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _ir_assembleia():
+    alvo = next(k for k, v in DISPUTAS.items() if v["disputa"] == "deputado")
+    st.session_state["ap_disputa"] = alvo
+    st.session_state["_ap_disputa_ok"] = alvo
+
+
+def destaque_assembleia():
+    """Chamada fixa para a Assembleia MA nas páginas de Senado e Câmara Federal."""
+    with st.container(key="destaque_assembleia"):
+        c = st.columns([3, 1.2], vertical_alignment="center")
+        c[0].markdown("""<div class="da-selo">💗 DESTAQUE DA APURAÇÃO</div>
+<div class="da-titulo">Assembleia Legislativa do Maranhão</div>
+<div class="da-texto">Bruna Pessoa, Abigail Cunha e Eric Costa voto a voto, com Tuntum em destaque e projeção do final.</div>""",
+                      unsafe_allow_html=True)
+        c[1].button("Ver a Assembleia MA →", key="ir_assembleia", on_click=_ir_assembleia, width="stretch",
+                    type="primary")
+
+
+def _nome_bonito(nm):
+    nm = str(nm)
+    if not nm.isupper():
+        return nm
+    t = " " + nm.title() + " "
+    for p in ("De", "Da", "Do", "Dos", "Das", "E"):
+        t = t.replace(f" {p} ", f" {p.lower()} ")
+    return t.strip()
+
+
+def _iniciais(nm):
+    p = [x for x in str(nm).split() if len(x) > 2] or [str(nm)]
+    return (p[0][0] + (p[-1][0] if len(p) > 1 else "")).upper()
+
+
+def painel_ranking(disputa):
+    vagas = motor.VAGAS[disputa]
+    titulo = "Senado · Maranhão" if disputa == "senador" else "Câmara dos Deputados · Maranhão"
+    destaque_assembleia()
+    try:
+        df, info = baixar_ranking(disputa, ensaio, fracao if ensaio else 1.0)
+    except Exception as e:  # noqa: BLE001
+        st.error(f"Não foi possível acessar o TSE agora ({e}). A página tenta de novo sozinha.")
+        return
+    if df is None:
+        st.warning(f"⏳ {info['erro']}")
+        return
+    if not ensaio and info["pst"] <= 0:
+        st.warning(f"⏳ A apuração para {'o Senado' if disputa == 'senador' else 'deputado federal'} "
+                   f"começa no domingo, 4 de outubro, a partir das 17h (horário de Brasília). O TSE já publicou "
+                   f"{len(df)} candidaturas; a página atualiza sozinha a cada 90 segundos. Enquanto isso, use o "
+                   "**modo ensaio**.")
+        return
+    st.caption(f"Fonte: TSE · {titulo} · eleição {info['eleicao']} ({info['ciclo']}) · atualizado agora")
+    k = st.columns(3)
+    k[0].metric("Seções apuradas no Maranhão", f"{n(info['pst'], 1)}%")
+    k[1].metric("Votos válidos apurados", n(info["vv"]))
+    k[2].metric("Seções apuradas em Tuntum", f"{n(info['pst_tuntum'], 1)}%")
+
+    mostrar = 6 if disputa == "senador" else 30
+    vv = max(info["vv"], 1)
+    topo = df.head(mostrar)
+    linhas = []
+    for i, r in topo.iterrows():
+        foto = foto_candidato(info["ciclo"], info["eleicao"], r.sqcand) if r.sqcand and not ensaio else ""
+        avatar = f'<img src="{foto}" alt="">' if foto else f"<span>{_iniciais(r.nome)}</span>"
+        p_ = 100 * r.votos / vv
+        larg = 100 * r.votos / max(topo.votos.max(), 1)
+        st_ = str(r.situacao or "")
+        eleito = st_.lower().startswith("eleit")
+        chip = (f'<em class="rk-st eleito">{st_}</em>' if eleito else f'<em class="rk-st">{st_}</em>' if st_ else
+                ('<em class="rk-st dentro">nas vagas</em>' if i < vagas else '<em class="rk-st vazio"></em>'))
+        linhas.append(f"""<div class="rk-linha{' dentro' if i < vagas else ''}{' eleito' if eleito else ''}">
+<span class="rk-pos">{i + 1}º</span><span class="rk-foto">{avatar}</span>
+<div class="rk-info"><b>{_nome_bonito(r.nome)}</b><small>{r.partido or 'partido'} · nº {r.numero}</small>
+<div class="rk-barra"><i style="width:{larg:.1f}%"></i></div></div>
+<div class="rk-num"><b>{n(r.votos)}</b><small>{n(p_, 1)}%</small></div>
+<div class="rk-num rk-tun"><b>{n(r.tuntum)}</b><small>Tuntum</small></div>{chip}</div>""")
+        if i == vagas - 1 and len(topo) > vagas:
+            corte = ("linha das 2 vagas de 2026" if disputa == "senador" else
+                     "18 primeiros · as cadeiras dependem do quociente partidário")
+            linhas.append(f'<div class="rk-corte"><span>{corte}</span></div>')
+    st.markdown(f"""<div class="rk {disputa}"><div class="rk-cab">{'⭐' if disputa == 'senador' else '🏢'} {titulo.upper()}
+<span>{vagas} {'vagas' if vagas > 1 else 'vaga'}</span></div>{''.join(linhas)}</div>""", unsafe_allow_html=True)
+    if disputa == "federal":
+        st.caption("Na Câmara, as 18 cadeiras do Maranhão são distribuídas entre partidos e federações pelo quociente "
+                   "eleitoral; por isso a ordem por votos é indicativa até a totalização do TSE (a coluna situação "
+                   "mostra eleito por QP, por média ou suplente quando o TSE divulgar).")
+    else:
+        st.caption("Em 2026 o Maranhão elege 2 senadores (cada eleitor vota em dois): os dois mais votados ficam com as "
+                   "vagas.")
+    with st.expander(f"Todos os {len(df)} candidatos" + (" · procurar por nome" if disputa == "federal" else "")):
+        busca = st.text_input("Procurar candidato", key=f"busca_{disputa}", placeholder="nome, partido ou número")
+        t = df.assign(pos=range(1, len(df) + 1), pct=100 * df.votos / vv, nome=df.nome.map(_nome_bonito))
+        if busca:
+            b = motor._sem_acento(busca)
+            t = t[t.apply(lambda r: b in motor._sem_acento(f"{r.nome} {r.partido} {r.numero}"), axis=1)]
+        tabela(t[["pos", "nome", "partido", "numero", "votos", "pct", "tuntum", "situacao"]].rename(columns={
+            "pos": "Posição", "nome": "Candidato", "partido": "Partido", "numero": "Número", "votos": "Votos",
+            "pct": "% válidos", "tuntum": "Votos em Tuntum", "situacao": "Situação"}))
+
+
+@st.fragment(run_every=None if ensaio else "90s")
+def painel_ranking_vivo():
+    painel_ranking(cfg["disputa"])
+
+
 if deputados:
     painel_deputados()
+elif cfg["disputa"] in ("senador", "federal"):
+    painel_ranking_vivo()
 else:
     painel()
 
