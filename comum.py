@@ -61,8 +61,15 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 .desenvolvedor span {color: rgba(255,255,255,.8); font: 600 .78rem 'Manrope', sans-serif; letter-spacing: .08em;}
 .desenvolvedor img {height: 54px;}
 @media (max-width: 760px) {.desenvolvedor {flex-direction: column; gap: 6px;} .desenvolvedor img {height: 46px;}}
-[class*="st-key-barra_nav"] [data-testid="stPageLink"] a {background: #FFFFFF; border: 1px solid #D9E1EC;
-    border-radius: 999px; justify-content: center; padding: .2rem .6rem;}
+[class*="st-key-barra_nav"] [data-testid="stPageLink"] a {border: 1.5px solid #C9D3E0; border-radius: 999px;
+    justify-content: center; padding: .25rem .7rem; box-shadow: 0 4px 12px rgba(27,42,65,.06); transition: transform .15s;}
+[class*="st-key-barra_nav"] [data-testid="stPageLink"] a:hover {transform: translateY(-1px); box-shadow: 0 8px 18px rgba(27,42,65,.10);}
+[class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+1) a {background: linear-gradient(160deg, #E3EDFB, #FFFFFF);}
+[class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+2) a {background: linear-gradient(160deg, #E0F2E9, #FFFFFF);}
+[class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+3) a {background: linear-gradient(160deg, #EBE6F9, #FFFFFF);}
+[class*="st-key-barra_nav"] [data-testid="stColumn"]:nth-child(4n+4) a {background: linear-gradient(160deg, #FBE9DC, #FFFFFF);}
+.nav-ativa {text-align: center; font: 800 .95rem 'Manrope'; padding: .42rem .7rem; border-radius: 999px; color: #FFFFFF;
+    background: linear-gradient(110deg, #0E5A73, #12233F); box-shadow: 0 6px 16px rgba(18,35,63,.25);}
 /* veredito em perguntas e respostas */
 .respostas {display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px;}
 .resp {background: #FFFFFF; border: 1px solid #D9E1EC; border-top: 5px solid var(--cor, #1B2A41); border-radius: 16px;
@@ -89,6 +96,23 @@ h1, h2, h3, h4 {font-family: 'Montserrat', Arial, sans-serif !important; color: 
     #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 18px; padding: 16px 14px 10px; overflow: hidden;
     outline: 1px solid #E3E9F1; outline-offset: -7px;
     box-shadow: 0 1px 2px rgba(27,42,65,.05), 0 10px 28px rgba(27,42,65,.07); margin: 6px 0 14px;}
+/* tons suaves por caixa (degradê do tom para o branco), alternando */
+[class*="st-key-caixa_azul"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
+    linear-gradient(180deg, #E3EDFB 0%, #F1F6FD 100%);}
+[class*="st-key-caixa_menta"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
+    linear-gradient(180deg, #E0F2E9 0%, #EFF8F3 100%);}
+[class*="st-key-caixa_lilas"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
+    linear-gradient(180deg, #EBE6F9 0%, #F5F2FC 100%);}
+[class*="st-key-caixa_pessego"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
+    linear-gradient(180deg, #FBE9DC 0%, #FDF4EE 100%);}
+[class*="st-key-caixa_areia"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
+    linear-gradient(180deg, #F4EDDC 0%, #FAF6EC 100%);}
+/* métricas: cada coluna com um tom suave */
+[data-testid="stColumn"]:nth-child(5n+1) [data-testid="stMetric"] {background: linear-gradient(160deg, #E3EDFB, #FFFFFF);}
+[data-testid="stColumn"]:nth-child(5n+2) [data-testid="stMetric"] {background: linear-gradient(160deg, #E0F2E9, #FFFFFF);}
+[data-testid="stColumn"]:nth-child(5n+3) [data-testid="stMetric"] {background: linear-gradient(160deg, #EBE6F9, #FFFFFF);}
+[data-testid="stColumn"]:nth-child(5n+4) [data-testid="stMetric"] {background: linear-gradient(160deg, #FBE9DC, #FFFFFF);}
+[data-testid="stColumn"]:nth-child(5n+5) [data-testid="stMetric"] {background: linear-gradient(160deg, #F4EDDC, #FFFFFF);}
 /* tabela dentro da concha: contorno próprio, cantos arredondados */
 [class*="st-key-caixa_"] [data-testid="stDataFrame"] {border: 1px solid #C9D3E0; border-radius: 12px; overflow: hidden;}
 /* separadores entre blocos */
@@ -104,12 +128,14 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .placar .nome {font: 900 1.2rem 'Montserrat';}
 .placar .prob {font: 900 2.6rem/1.1 'Montserrat';}
 .placar .leg {font: 600 .8rem 'Manrope'; opacity: .9;}
-.cartao {border-radius: 16px; padding: 14px 18px; background: #FFFFFF; border: 1.5px solid #C9D3E0;
+.cartao {border-radius: 16px; padding: 14px 18px; background: linear-gradient(160deg, #EAF0F8, #FFFFFF); border: 1.5px solid #C9D3E0;
          box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 8px 24px rgba(27,42,65,.05);
          border-left: 6px solid #1B2A41; margin-bottom: 10px;}
 .cartao.azul {border-left-color: #1F6FB2;} .cartao.laranja {border-left-color: #E07B1F;}
 .cartao.vermelho {border-left-color: #C8102E;} .cartao.verde {border-left-color: #1F7A4D;}
 .cartao.alerta {border-left-color: #C0392B; background: #FFF6F4;}
+.cartao.azul {background: linear-gradient(160deg, #E3EDFB, #FFFFFF);} .cartao.laranja {background: linear-gradient(160deg, #FBE9DC, #FFFFFF);}
+.cartao.vermelho {background: linear-gradient(160deg, #FAE4E8, #FFFFFF);} .cartao.verde {background: linear-gradient(160deg, #E0F2E9, #FFFFFF);}
 .cartao h4 {margin: 0 0 4px 0;}
 .pequeno {font-size: .85rem; opacity: .75;}
 /* cabeçalho da marca (apuração) */
@@ -131,7 +157,7 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
   .marca-topo .mt-logo img {margin: 0 auto; height: 52px;} .marca-topo .mt-slogan {font-size: 1.45rem;}
   .marca-topo .mt-contato {align-items: center;}}
 /* seletor da apuração: cartão com botões segmentados */
-.st-key-seletor_apuracao {background: #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 18px; padding: 14px 20px 6px;
+.st-key-seletor_apuracao {background: linear-gradient(160deg, #E3EDFB, #F1F6FD); border: 1.5px solid #C9D3E0; border-radius: 18px; padding: 14px 20px 6px;
     margin: 4px 0 14px; box-shadow: 0 1px 2px rgba(27,42,65,.05), 0 10px 28px rgba(27,42,65,.06);}
 .st-key-seletor_apuracao [data-testid="stWidgetLabel"] p {font: 800 .72rem 'Manrope' !important; letter-spacing: .14em;
     text-transform: uppercase; color: #5B6477 !important;}
@@ -170,7 +196,8 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .pl-legenda {text-align: center; font: 900 1.7rem/1.1 'Montserrat'; letter-spacing: .08em; color: #1B2A41;
     margin: 18px 0 6px;}
 .placar-tuntum {display: flex; align-items: stretch; justify-content: center; gap: 18px;}
-.pt-quadro {flex: 1; max-width: 460px; border-radius: 18px; padding: 14px 18px; text-align: center; background: #FFFFFF;
+.pt-quadro {flex: 1; max-width: 460px; border-radius: 18px; padding: 14px 18px; text-align: center;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--cor) 14%, #FFFFFF), #FFFFFF);
     border: 1.5px solid #C9D3E0; border-top: 6px solid var(--cor); box-shadow: 0 8px 22px rgba(27,42,65,.08);}
 .pt-nome {font: 800 .82rem 'Manrope'; letter-spacing: .12em; color: var(--cor);}
 .pt-votos {font: 900 2.4rem/1.1 'Montserrat'; color: #1B2A41; margin: 4px 0 2px;}
@@ -191,7 +218,7 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .tuntum .tt-leg {font: 600 1rem 'Manrope'; color: #5B6477;}
 .tuntum .tt-outros {flex: 0 0 auto; margin: 0 auto; display: flex; gap: 14px; align-items: stretch;}  /* centralizados no espaço livre */
 .tuntum .tt-outro {width: 210px; border: 1px solid #E3E9F1; border-top: 4px solid var(--cor); border-radius: 14px;
-    padding: 10px 12px; background: #FAFBFD;}
+    padding: 10px 12px; background: linear-gradient(160deg, color-mix(in srgb, var(--cor) 14%, #FFFFFF), #FFFFFF);}
 .tuntum .tt-nome2 {font: 800 .85rem 'Manrope'; color: var(--cor);}
 .tuntum .tt-num2 {font: 900 1.6rem/1.1 'Montserrat'; color: #1B2A41; margin: 4px 0 2px;}
 .tuntum .tt-leg2 {font: 600 .78rem 'Manrope'; color: #5B6477;}
@@ -235,9 +262,12 @@ def pct(x, casas=0):
 _cont = [0]
 
 
+TONS_CAIXA = ("azul", "menta", "lilas", "pessego", "areia")  # tons suaves que se alternam entre as caixas
+
+
 def caixa():
     _cont[0] += 1
-    return st.container(key=f"caixa_{_cont[0]}")
+    return st.container(key=f"caixa_{TONS_CAIXA[(_cont[0] - 1) % len(TONS_CAIXA)]}_{_cont[0]}")
 
 
 def grafico(fig, **kw):
@@ -390,7 +420,7 @@ def barra_navegacao(atual):
                 if chave != atual:
                     col.page_link(arq, label=rotulo, width="stretch")
                 else:
-                    col.markdown(f"<div style='text-align:center;font-weight:800;padding:.35rem'>{rotulo}</div>",
+                    col.markdown(f"<div class='nav-ativa'>{rotulo}</div>",
                                  unsafe_allow_html=True)
     except Exception:  # página rodando sozinha (streamlit run <página>): sem atalhos
         pass
