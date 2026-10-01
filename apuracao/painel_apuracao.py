@@ -105,20 +105,21 @@ def compartilhar(disputa):
              "A apuração está AO VIVO e a Aggilli Intelligence acompanha voto a voto: Bruna Pessoa na Assembleia, "
              "a disputa pelo Governo do Maranhão e a corrida presidencial, com Tuntum em destaque e atualização "
              "a cada 90 segundos.\n\n👉 Acompanhe aqui:")
-    arte = RAIZ / "assets" / "compartilhar" / (
-        "apuracao_brasil_stories.jpg" if disputa == "presidente" else "apuracao_maranhao_stories.jpg")
+    nome_arte = "apuracao_brasil_stories.jpg" if disputa == "presidente" else "apuracao_maranhao_stories.jpg"
+    wa = f"https://wa.me/?text={quote(texto + chr(10) + url)}"
     with st.container(key="compartilhar_apuracao"):
-        c1, c2, c3 = st.columns([1.2, 1.2, 2])
-        c1.link_button("📲 Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto + chr(10) + url)}",
-                       width="stretch", type="primary")
-        if arte.exists():
-            c2.download_button("📸 Arte para o Instagram", arte.read_bytes(), file_name=arte.name, mime="image/jpeg",
-                               width="stretch", key="arte_insta",
-                               help="Baixe e poste no Stories; use o adesivo 'Link' com o endereço ao lado.")
-        with c3:
-            st.code(url, language=None)  # tem botão de copiar
-        st.caption("Instagram: baixe a arte, publique no Stories e cole o link no adesivo **Link** (o ícone de copiar "
-                   "fica no canto do quadro acima).")
+        st.markdown(f"""
+<div class="compartilhe">
+  <div class="cp-titulo">Compartilhe com seus amigos</div>
+  <div class="cp-icones">
+    <a href="{wa}" target="_blank" title="Compartilhar no WhatsApp"><img src="/app/static/icones/whatsapp.png" alt="WhatsApp"></a>
+    <a href="/app/static/compartilhar/{nome_arte}" download="{nome_arte}" target="_blank"
+       title="Baixar a arte para o Stories do Instagram"><img src="/app/static/icones/instagram.png" alt="Instagram"></a>
+  </div>
+</div>""", unsafe_allow_html=True)
+        st.code(url, language=None)  # tem botão de copiar
+        st.caption("Instagram: toque no ícone para baixar a arte, publique no Stories e cole o link acima no adesivo "
+                   "**Link**.")
 
 
 compartilhar(cfg["disputa"])

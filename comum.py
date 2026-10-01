@@ -169,6 +169,14 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
     box-shadow: 0 6px 16px rgba(18,35,63,.25);}
 .st-key-seletor_apuracao [data-testid="stButtonGroup"] button[kind*="Active"] p,
 .st-key-seletor_apuracao [data-testid="stButtonGroup"] button[aria-checked="true"] p {color: #FFFFFF !important;}
+/* compartilhar com ícones */
+.compartilhe {text-align: center; margin: 4px 0 6px;}
+.compartilhe .cp-titulo {font: 800 1.15rem 'Montserrat'; color: #1B2A41; letter-spacing: .02em; margin-bottom: 10px;}
+.compartilhe .cp-icones {display: flex; justify-content: center; gap: 26px;}
+.compartilhe .cp-icones img {width: 64px; height: 64px; transition: transform .15s; filter: drop-shadow(0 6px 12px rgba(27,42,65,.18));}
+.compartilhe .cp-icones a:hover img {transform: translateY(-3px) scale(1.06);}
+.st-key-compartilhar_apuracao {max-width: 560px; margin: 0 auto 12px; padding: 14px 18px; border-radius: 18px;
+    border: 1.5px solid #C9D3E0; background: linear-gradient(160deg, #E0F2E9, #FBE9DC);}
 /* compartilhar a apuração: WhatsApp verde, Instagram em degradê */
 .st-key-compartilhar_apuracao [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
     color: #FFFFFF !important; font-weight: 800; border-radius: 14px;}
