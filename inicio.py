@@ -132,7 +132,6 @@ with st.container(key="compartilhar_inicio"):
     logo = _logo_base64()
     st.markdown(f"""
 <div class="compartilhe">
-  {f'<img class="cp-logo" src="data:image/webp;base64,{logo}" alt="Aggilli Intelligence">' if logo else ''}
   <div class="cp-titulo">Compartilhe com seus amigos</div>
 </div>""", unsafe_allow_html=True)
     # miniatura + ícones num componente: o Instagram abre o menu de compartilhar do celular com a miniatura e o link;

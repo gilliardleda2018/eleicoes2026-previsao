@@ -36,5 +36,5 @@ paginas = [
 ]
 pagina = st.navigation(paginas, position="hidden")  # navegação pelos cards e pela barra
 pagina.run()
-if getattr(pagina, "url_path", "") != "inicio":  # a página inicial já tem o bloco completo de créditos
+if getattr(pagina, "title", "") != "Início" and getattr(pagina, "url_path", "") not in ("", "inicio"):  # a página inicial já tem o bloco completo de créditos
     rodape_desenvolvedor()
