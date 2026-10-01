@@ -395,3 +395,18 @@ def rodape_desenvolvedor():
     if logo:
         st.markdown(f'''<div class="desenvolvedor"><span>DESENVOLVIDO POR</span>
 <img src="data:image/webp;base64,{logo}" alt="Aggilli Intelligence"></div>''', unsafe_allow_html=True)
+
+
+def cabecalho_marca():
+    """Faixa da marca no topo das páginas: logo, slogan e contato da Aggilli Intelligence."""
+    _logo = _logo_base64()
+    st.markdown(f"""
+<div class="marca-topo">
+  <div class="mt-logo">{f'<img src="data:image/webp;base64,{_logo}" alt="Aggilli Intelligence">' if _logo else '<b>AGGILLI</b>'}</div>
+  <div class="mt-slogan">Transformando dados em <span>inteligência</span></div>
+  <div class="mt-contato">
+    <a href="mailto:adi@aggillintelligence.com.br">✉️ adi@aggillintelligence.com.br</a>
+    <a href="https://wa.me/5599991722200" target="_blank">💬 (99) 99172-2200</a>
+    <span class="mt-nome">G. C. Léda</span>
+  </div>
+</div>""", unsafe_allow_html=True)

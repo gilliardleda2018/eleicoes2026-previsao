@@ -15,7 +15,7 @@ import streamlit as st
 
 RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ))
-from comum import CSS, barra_navegacao, caixa, grafico, n, pct, tabela, veredito_simples  # noqa: E402,F401
+from comum import CSS, barra_navegacao, cabecalho_marca, caixa, grafico, n, pct, tabela, veredito_simples  # noqa: E402,F401
 
 RES, DADOS = RAIZ / "resultados", RAIZ / "dados"
 AZUL, LARANJA, VERMELHO, VERDE, CINZA, TINTA = "#1F6FB2", "#E07B1F", "#C0392B", "#2E8B57", "#8A8F98", "#1B2A41"
@@ -45,6 +45,7 @@ pb, po = FIM["prob_braide_governador"], FIM["prob_orleans_governador"]
 CX = SIM.get("cenario_ex_prefeito")
 HI = SIM.get("erro_historico") or {}
 
+cabecalho_marca()
 barra_navegacao("ma")
 st.markdown(f"""
 <div class="capa" style="background: linear-gradient(100deg, #1F6FB2 0%, #1B2A41 50%, #E07B1F 100%);">
