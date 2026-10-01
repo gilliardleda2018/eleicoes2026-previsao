@@ -10,6 +10,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
@@ -102,15 +103,54 @@ def compartilhar(disputa):
 <div class="compartilhe">
   {f'<img class="cp-logo" src="data:image/webp;base64,{_logo_base64()}" alt="Aggilli Intelligence">' if _logo_base64() else ''}
   <div class="cp-titulo">Compartilhe com seus amigos</div>
-  <div class="cp-icones">
-    <a href="{wa}" target="_blank" title="Compartilhar no WhatsApp"><img src="/app/static/icones/whatsapp.png" alt="WhatsApp"></a>
-    <a href="/app/static/compartilhar/{nome_arte}" download="{nome_arte}" target="_blank"
-       title="Baixar a arte para o Stories do Instagram"><img src="/app/static/icones/instagram.png" alt="Instagram"></a>
-  </div>
 </div>""", unsafe_allow_html=True)
+        # ícones num componente: o do Instagram abre o menu de compartilhar do celular (com a arte + o link),
+        # onde aparece o app do Instagram (Stories, Feed ou Direct); no computador, baixa a arte e abre o Instagram
+        components.html(f"""
+<style>
+  body {{margin: 0; font-family: Manrope, Arial, sans-serif;}}
+  .ic {{display: flex; justify-content: center; gap: 28px; padding: 6px 0;}}
+  .ic a, .ic button {{background: none; border: 0; padding: 0; cursor: pointer;}}
+  .ic img {{width: 64px; height: 64px; transition: transform .15s; filter: drop-shadow(0 6px 12px rgba(27,42,65,.18));}}
+  .ic a:hover img, .ic button:hover img {{transform: translateY(-3px) scale(1.06);}}
+  #msg {{text-align: center; font-size: 12px; color: #3A4458; min-height: 16px;}}
+</style>
+<div class="ic">
+  <a href="{wa}" target="_blank" rel="noopener" title="Compartilhar no WhatsApp">
+    <img src="/app/static/icones/whatsapp.png" alt="WhatsApp"></a>
+  <button id="insta" title="Compartilhar no Instagram"><img src="/app/static/icones/instagram.png" alt="Instagram"></button>
+</div>
+<div id="msg"></div>
+<script>
+const URL_LINK = {json.dumps(url)};
+const TEXTO = {json.dumps(texto + chr(10) + url)};
+const ARTE = "/app/static/compartilhar/{nome_arte}";
+const msg = t => document.getElementById("msg").textContent = t;
+async function copiar(t) {{
+  try {{ await (window.parent.navigator.clipboard || navigator.clipboard).writeText(t); return true; }} catch (e) {{ return false; }}
+}}
+document.getElementById("insta").addEventListener("click", async () => {{
+  const nav = (window.parent && window.parent.navigator && window.parent.navigator.share) ? window.parent.navigator : navigator;
+  const copiado = await copiar(URL_LINK);
+  try {{
+    const blob = await (await fetch(ARTE)).blob();
+    const arquivo = new File([blob], "{nome_arte}", {{type: "image/jpeg"}});
+    if (nav.canShare && nav.canShare({{files: [arquivo]}})) {{
+      await nav.share({{files: [arquivo], text: TEXTO}});
+      msg(copiado ? "Link copiado: no Stories, cole no adesivo Link." : "");
+      return;
+    }}
+  }} catch (e) {{ if (e && e.name === "AbortError") return; }}
+  // sem menu de compartilhar (computador): baixa a arte e abre o Instagram
+  const a = document.createElement("a"); a.href = ARTE; a.download = "{nome_arte}"; document.body.appendChild(a); a.click(); a.remove();
+  const celular = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  window.open(celular ? "instagram://story-camera" : "https://www.instagram.com/", "_blank");
+  msg("Arte baixada" + (copiado ? " e link copiado" : "") + ": publique no Stories e cole o link no adesivo Link.");
+}});
+</script>""", height=100)
         st.code(url, language=None)  # tem botão de copiar
-        st.caption("Instagram: toque no ícone para baixar a arte, publique no Stories e cole o link acima no adesivo "
-                   "**Link**.")
+        st.caption("Instagram: no celular, toque no ícone e escolha **Instagram** (Stories, Feed ou Direct); o link já fica "
+                   "copiado para colar no adesivo **Link**.")
 
 
 compartilhar(cfg["disputa"])
