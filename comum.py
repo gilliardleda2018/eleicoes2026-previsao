@@ -130,6 +130,19 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 @media (max-width: 900px) {.marca-topo {grid-template-columns: 1fr; text-align: center; gap: 10px;}
   .marca-topo .mt-logo img {margin: 0 auto; height: 52px;} .marca-topo .mt-slogan {font-size: 1.45rem;}
   .marca-topo .mt-contato {align-items: center;}}
+/* seletor da apuração: cartão com botões segmentados */
+.st-key-seletor_apuracao {background: #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 18px; padding: 14px 20px 6px;
+    margin: 4px 0 14px; box-shadow: 0 1px 2px rgba(27,42,65,.05), 0 10px 28px rgba(27,42,65,.06);}
+.st-key-seletor_apuracao [data-testid="stWidgetLabel"] p {font: 800 .72rem 'Manrope' !important; letter-spacing: .14em;
+    text-transform: uppercase; color: #5B6477 !important;}
+.st-key-seletor_apuracao [data-testid="stButtonGroup"] button {border-radius: 999px !important; padding: .35rem .95rem;
+    font-weight: 700; border: 1.5px solid #D5DCE6;}
+.st-key-seletor_apuracao [data-testid="stButtonGroup"] button[kind*="Active"],
+.st-key-seletor_apuracao [data-testid="stButtonGroup"] button[aria-checked="true"] {
+    background: linear-gradient(110deg, #0E5A73, #12233F) !important; color: #FFFFFF !important; border-color: #12233F !important;
+    box-shadow: 0 6px 16px rgba(18,35,63,.25);}
+.st-key-seletor_apuracao [data-testid="stButtonGroup"] button[kind*="Active"] p,
+.st-key-seletor_apuracao [data-testid="stButtonGroup"] button[aria-checked="true"] p {color: #FFFFFF !important;}
 /* compartilhar a apuração: WhatsApp verde, Instagram em degradê */
 .st-key-compartilhar_apuracao [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
     color: #FFFFFF !important; font-weight: 800; border-radius: 14px;}

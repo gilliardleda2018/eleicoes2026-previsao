@@ -49,16 +49,36 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-c = st.columns([2, 1, 2])
-escolha = c[0].radio("Disputa", list(DISPUTAS), horizontal=True, key="ap_disputa")
-cfg = DISPUTAS[escolha]
-deputados = cfg["disputa"] == "deputado"
-if deputados:  # deputado estadual: só 1º turno
-    turno = 1
-    c[1].markdown("**Turno**<br>1º turno (único)", unsafe_allow_html=True)
-else:
-    turno = c[1].radio("Turno", [1, 2], format_func=lambda t: f"{t}º turno", horizontal=True, key="ap_turno")
-modo = c[2].radio("Modo", ["Ao vivo (2026)", "Ensaio com a apuração de 2022"], horizontal=True, key="ap_modo")
+# ---- seletor moderno (botões segmentados); clicar de novo no selecionado não deixa a página sem escolha
+ROTULO_DISPUTA = {"Presidente · Lula × Flávio": "🇧🇷 Presidente", "Governador MA · Braide × Orleans": "🏛️ Governador MA",
+                  "Assembleia MA · Bruna, Abigail e Eric": "💗 Assembleia MA"}
+MODOS = ["Ao vivo (2026)", "Ensaio com a apuração de 2022"]
+
+
+def _segmentado(rotulo, opcoes, chave, formato=str, padrao=None):
+    padrao = opcoes[0] if padrao is None else padrao
+    if st.session_state.get(chave) not in opcoes:  # desmarcado ou inválido: volta ao último válido
+        st.session_state[chave] = st.session_state.get(f"_{chave}_ok", padrao)
+    v = st.segmented_control(rotulo, opcoes, format_func=formato, key=chave, selection_mode="single")
+    v = v if v in opcoes else st.session_state.get(f"_{chave}_ok", padrao)
+    st.session_state[f"_{chave}_ok"] = v
+    return v
+
+
+with st.container(key="seletor_apuracao"):
+    c = st.columns([2.3, 1.1, 1.6], gap="large")
+    with c[0]:
+        escolha = _segmentado("Disputa", list(DISPUTAS), "ap_disputa", lambda d: ROTULO_DISPUTA.get(d, d))
+    cfg = DISPUTAS[escolha]
+    deputados = cfg["disputa"] == "deputado"
+    with c[1]:
+        if deputados:  # deputado estadual: só 1º turno
+            turno = 1
+            st.segmented_control("Turno", ["1º turno"], default="1º turno", key="ap_turno_dep", disabled=True)
+        else:
+            turno = _segmentado("Turno", [1, 2], "ap_turno", lambda t: f"{t}º turno")
+    with c[2]:
+        modo = _segmentado("Modo", MODOS, "ap_modo", lambda m: "🔴 Ao vivo" if m.startswith("Ao vivo") else "🧪 Ensaio 2022")
 ensaio = modo.startswith("Ensaio")
 
 
