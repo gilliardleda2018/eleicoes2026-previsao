@@ -495,3 +495,18 @@ if deputados:
     painel_deputados()
 else:
     painel()
+
+with st.expander("🔧 Verificar conexão com o TSE (diagnóstico)"):
+    st.caption("Testa, a partir deste servidor, se o site de resultados do TSE responde e se os arquivos de presidente, "
+               "governador, deputados e do município de Tuntum são lidos. Antes das 17h do domingo é normal aparecer "
+               "0% apurado; o que importa é cada etapa estar ✅.")
+    if st.button("Rodar diagnóstico agora", key="diag_tse"):
+        with st.spinner("Consultando o TSE…"):
+            res = motor.diagnostico()
+        for etapa, ok, detalhe in res:
+            st.markdown(f"{'✅' if ok else '❌'} **{etapa}** — {detalhe}")
+        if all(ok for _, ok, _ in res):
+            st.success("Tudo certo: a apuração ao vivo consegue ler o TSE a partir deste servidor.")
+        else:
+            st.error("Há etapas com falha. Se o erro for de acesso (403/timeout), o TSE pode estar bloqueando este "
+                     "servidor: no domingo, rode o painel num computador no Brasil (streamlit run app.py).")

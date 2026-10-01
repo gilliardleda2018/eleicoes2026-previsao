@@ -1,6 +1,11 @@
 """Motor da apuração ao vivo: baixa resultados parciais do TSE e projeta o resultado final.
 
-Fonte: API pública de divulgação do TSE (resultados.tse.jus.br) — a mesma usada para 2022.
+Fonte: API pública de divulgação do TSE (resultados.tse.jus.br). Leiaute conferido com a documentação técnica do
+TSE para 2026 ("modelo de dados bastante semelhante ao da eleição anterior") e com arquivos reais:
+- estado/Brasil: dados-simplificados/<uf>/<uf>-c<cargo>-e<eleição>-r.json  (pst, vv, cand[n, nm, vap, st])
+- município:     dados/<uf>/<uf><mun 5 dígitos>-c<cargo>-e<eleição>-u.json  (s.pst, v.vv, carg[].agr[].par[].cand[])
+Códigos 2026 (TSE): pleito 3220; eleição federal 6257 (presidente) e estadual 6259 (governador, deputados).
+Ambiente de teste do TSE (simulado): TSE_AMBIENTE=simulado → resultados-sim.tse.jus.br (eleições 21270 / 21272).
 - Nacional (presidente, cargo 1): um arquivo por UF (27) + Brasil.
 - Estadual (governador MA, cargo 3): um arquivo por município (217) + estado.
 - Assembleia (deputado estadual MA, cargo 7): mesmo formato; acompanha só Bruna Pessoa, Abigail Cunha e Eric Costa,
@@ -12,6 +17,7 @@ modelo (em logit, ponderado pelos votos já contados); esse desvio é aplicado a
 A incerteza vem de reamostrar as unidades apuradas (bootstrap) + a dispersão dos desvios entre unidades.
 """
 import json
+import os
 import re
 import unicodedata
 import urllib.request
@@ -22,7 +28,16 @@ import numpy as np
 import pandas as pd
 from scipy.special import expit, logit
 
-BASE = "https://resultados.tse.jus.br/oficial"
+AMBIENTE = os.environ.get("TSE_AMBIENTE", "oficial").strip().lower()
+BASES = {"oficial": "https://resultados.tse.jus.br/oficial",
+         "simulado": "https://resultados-sim.tse.jus.br/simulado/simulado2026"}
+BASE = BASES.get(AMBIENTE, BASES["oficial"])
+# códigos publicados pelo TSE (página "Informações técnicas sobre a divulgação de resultados 2026"); usados quando o
+# config ainda não lista a eleição (em 30/09 o config oficial ainda trazia só o ciclo de 2024)
+CODIGOS_2026 = {"oficial": {"ciclo": "ele2026", "presidente": {1: "6257"}, "governador": {1: "6259"},
+                            "deputado": {1: "6259"}},
+                "simulado": {"ciclo": "ele2026", "presidente": {1: "21270"}, "governador": {1: "21272"},
+                             "deputado": {1: "21272"}}}
 RAIZ = Path(__file__).resolve().parent.parent
 UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ",
        "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]
@@ -34,7 +49,9 @@ NOMES_2026 = {"presidente": {"lula": ["LULA"], "flavio": ["FLÁVIO BOLSONARO", "
               # do nome mais específico para o mais genérico (o primeiro que casar vale)
               "deputado": {"bruna": ["BRUNA PESSOA", "BRUNA"], "abigail": ["ABIGAIL CUNHA", "ABIGAIL"],
                            "eric": ["ERIC COSTA", "ERIC"]}}
-NUMEROS_FIXOS = {"deputado": {"bruna": "15800"}}  # número de urna já conhecido
+# números de urna de 2026 (candidaturas deferidas): Bruna Pessoa 15800 (MDB), Abigail Cunha 15200 (MDB),
+# Eric Costa 10800 (Republicanos). Se o número não aparecer na lista do TSE, procura pelo nome.
+NUMEROS_FIXOS = {"deputado": {"bruna": "15800", "abigail": "15200", "eric": "10800"}}
 CARGO = {"presidente": 1, "governador": 3, "deputado": 7}
 MUNICIPIOS = {"governador": RAIZ / "resultados" / "municipios_previsao.csv",
               "deputado": RAIZ / "apuracao" / "deputados_previsao.csv"}
@@ -61,8 +78,8 @@ def _sem_acento(s):
 
 # ------------------------------------------------------------------ descoberta das eleições de 2026
 def descobrir_2026():
-    """Lê a configuração pública do TSE e procura as eleições gerais de 2026 (presidente e governador).
-    Retorna {"ciclo": "ele2026", "presidente": {1: cod, 2: cod}, "governador": {1: cod, 2: cod}} ou None."""
+    """Códigos das eleições de 2026: arquivo manual → config do TSE → códigos publicados pelo TSE.
+    Retorna {"ciclo": "ele2026", "presidente": {1: cod, 2: cod}, "governador": {...}, "deputado": {...}, "origem": ...}."""
     manual = RAIZ / "apuracao" / "codigos_2026.json"
     if manual.exists():  # permite fixar os códigos à mão, se necessário
         m = json.loads(manual.read_text(encoding="utf-8"))
@@ -70,27 +87,33 @@ def descobrir_2026():
             m[k] = {int(t): c for t, c in m.get(k, {}).items() if c}
         if not m["deputado"] and m["governador"].get(1):  # deputados saem na mesma eleição do governador (1º turno)
             m["deputado"] = {1: m["governador"][1]}
+        m["origem"] = "codigos_2026.json"
         return m
+    achado = {"ciclo": "ele2026", "presidente": {}, "governador": {}, "deputado": {}, "origem": "config do TSE"}
     try:
         cfg = _get(f"{BASE}/comum/config/ele-c.json")
-    except Exception:
-        return None
-    if "2026" not in str(cfg.get("c", "")):
-        return None
-    achado = {"ciclo": cfg["c"], "presidente": {}, "governador": {}, "deputado": {}}
-    for pl in cfg.get("pl", []):
-        for e in pl.get("e", []):
-            cargos = {c.get("cd") for a in e.get("abr", []) for c in a.get("cp", [])}
-            turno = int(e.get("t", 1))
-            if "1" in cargos:
-                achado["presidente"][turno] = e["cd"]
-            if "3" in cargos:
-                achado["governador"][turno] = e["cd"]
-            if "7" in cargos:
-                achado["deputado"][turno] = e["cd"]
-    if not achado["deputado"] and achado["governador"].get(1):
-        achado["deputado"] = {1: achado["governador"][1]}
-    return achado if achado["presidente"] or achado["governador"] else None
+        for pl in cfg.get("pl", []):
+            if not str(pl.get("dt", "")).endswith("2026"):
+                continue
+            for e in pl.get("e", []):
+                nome = _sem_acento(e.get("nm", "")).lower()
+                if "suplementar" in nome or "consulta" in nome or str(e.get("tp")) in ("4", "7"):
+                    continue
+                cargos = {str(c.get("cd")) for a in e.get("abr", []) for c in a.get("cp", [])}
+                turno = int(e.get("t", 1) or 1)
+                for disputa, cargo in (("presidente", "1"), ("governador", "3"), ("deputado", "7")):
+                    if cargo in cargos:
+                        achado[disputa][turno] = str(e["cd"])
+                        if e.get("cdt2") and disputa != "deputado":
+                            achado[disputa][2] = str(e["cdt2"])
+    except Exception:  # noqa: BLE001  (sem config: usa os códigos publicados)
+        pass
+    padrao = CODIGOS_2026.get(AMBIENTE, CODIGOS_2026["oficial"])
+    for disputa in ("presidente", "governador", "deputado"):
+        if not achado[disputa].get(1):
+            achado[disputa][1] = padrao[disputa][1]
+            achado["origem"] = "códigos publicados pelo TSE (config ainda sem 2026)"
+    return achado
 
 
 # ------------------------------------------------------------------ leitura dos arquivos
@@ -99,7 +122,7 @@ def _url_simplificado(ciclo, ele, uf, cargo):
 
 
 def _url_municipio(ciclo, ele, uf, cdmun, cargo):
-    return f"{BASE}/{ciclo}/{ele}/dados/{uf.lower()}/{uf.lower()}{cdmun}-c{cargo:04d}-e{int(ele):06d}-v.json"
+    return f"{BASE}/{ciclo}/{ele}/dados/{uf.lower()}/{uf.lower()}{cdmun}-c{cargo:04d}-e{int(ele):06d}-u.json"
 
 
 def ler_total(ciclo, ele, abrang, cargo):
@@ -110,15 +133,24 @@ def ler_total(ciclo, ele, abrang, cargo):
             "nomes": {c["n"]: c.get("nm", "") for c in t.get("cand", [])},
             # situação publicada pelo TSE ao fim da totalização (ex.: "Eleito por QP", "Suplente"); "e" = "s" se eleito
             "situacao": {c["n"]: c.get("st", "") for c in t.get("cand", [])},
-            "eleito": {c["n"]: str(c.get("e", "")).lower() == "s" for c in t.get("cand", [])},
+            # "e" = "s" também marca quem vai ao 2º turno; eleito é quem tem situação "Eleito…"
+            "eleito": {c["n"]: _sem_acento(c.get("st", "")).lower().startswith("eleit") for c in t.get("cand", [])},
             "totalizado": str(t.get("tf", "")).lower() == "s"}
 
 
 def ler_municipio(ciclo, ele, uf, cdmun, cargo):
+    """Arquivo do município (leiaute -u.json): seções em s, votos em v, candidatos em carg[].agr[].par[].cand[]."""
     t = _get(_url_municipio(ciclo, ele, uf, cdmun, cargo))
-    a = next(x for x in t["abr"] if x.get("tpabr") == "MU")
-    return {"cd": cdmun, "pst": _num(a.get("pst", "0")), "vv": _num(a.get("vv", 0)),
-            "votos": {c["n"]: _num(c["vap"]) for c in a.get("cand", [])}}
+    votos = {}
+    for carg in t.get("carg", []):
+        if str(carg.get("cd")) != str(cargo):
+            continue
+        for agr in carg.get("agr", []):
+            for par in agr.get("par", []):
+                for c in par.get("cand", []):
+                    votos[str(c.get("n"))] = _num(c.get("vap", 0))
+    s_, v_ = t.get("s", {}), t.get("v", {})
+    return {"cd": cdmun, "pst": _num(s_.get("pst", "0")), "vv": _num(v_.get("vv", 0)), "votos": votos}
 
 
 def identificar_numeros(nomes, disputa):
@@ -126,6 +158,9 @@ def identificar_numeros(nomes, disputa):
     achados = {}
     for chave, padroes in NOMES_2026[disputa].items():
         fixo = NUMEROS_FIXOS.get(disputa, {}).get(chave)
+        if fixo and not nomes:  # lista ainda vazia (antes da apuração): usa o número conhecido
+            achados[chave] = fixo
+            continue
         if fixo and fixo in nomes:
             achados[chave] = fixo
             continue
@@ -159,6 +194,10 @@ def baixar(disputa, turno, ensaio=False):
         geral = ler_total(ciclo, ele, "ma", cargo)
         mun = pd.read_csv(MUNICIPIOS[disputa])
         cods = mun.CD_MUNICIPIO.astype(int).map(lambda c: f"{c:05d}")
+        if geral["pst"] <= 0 and not ensaio:  # nada apurado: não pede 217 arquivos (evita bloqueio por excesso de 404)
+            unidades = pd.DataFrame({"unidade": cods.astype(int), "pst": 0.0, "vv": 0.0})
+            numeros = identificar_numeros(geral["nomes"], disputa)
+            return unidades, geral, numeros, {"ciclo": ciclo, "eleicao": ele, "ensaio": ensaio}
 
         def pega(c):
             try:
@@ -172,6 +211,43 @@ def baixar(disputa, turno, ensaio=False):
                                   **{f"v_{k}": v for k, v in d["votos"].items()}} for d in partes])
     numeros = ENSAIO_CAND[disputa] if ensaio else identificar_numeros(geral["nomes"], disputa)
     return unidades.fillna(0), geral, numeros, {"ciclo": ciclo, "eleicao": ele, "ensaio": ensaio}
+
+
+# ------------------------------------------------------------------ diagnóstico (antes do domingo)
+def diagnostico():
+    """Testa, deste servidor, cada peça da apuração ao vivo. Retorna lista de (etapa, ok, detalhe)."""
+    out = []
+
+    def passo(nome, f):
+        try:
+            ok, det = f()
+        except Exception as e:  # noqa: BLE001
+            ok, det = False, f"{type(e).__name__}: {e}"
+        out.append((nome, ok, det))
+        return ok
+
+    passo("Ambiente", lambda: (True, f"{AMBIENTE} · {BASE}"))
+    passo("Config do TSE (ele-c.json)", lambda: (True, f"ciclo {_get(f'{BASE}/comum/config/ele-c.json').get('c')}"))
+    cod = descobrir_2026()
+    passo("Códigos de 2026", lambda: (True, f"presidente {cod['presidente']} · governador {cod['governador']} · "
+                                            f"deputado {cod['deputado']} ({cod['origem']})"))
+    for disputa, abr in (("presidente", "br"), ("governador", "ma"), ("deputado", "ma")):
+        def f(disputa=disputa, abr=abr):
+            t = ler_total(cod["ciclo"], cod[disputa][1], abr, CARGO[disputa])
+            nums = identificar_numeros(t["nomes"], disputa)
+            achou = ", ".join(f"{k}={v}" + ("" if v in t["nomes"] else " (não está na lista)") for k, v in nums.items())
+            return True, (f"arquivo OK · {len(t['nomes'])} candidatos · {t['pst']:.2f}% apurado · {achou or '—'}")
+        passo(f"Total {disputa} ({abr.upper()})", f)
+    mun = pd.read_csv(MUNICIPIOS["deputado"])
+    tun = mun[mun.municipio.astype(str).str.lower() == "tuntum"]
+    if len(tun):
+        cd = f"{int(tun.CD_MUNICIPIO.iloc[0]):05d}"
+        passo(f"Município Tuntum ({cd}) · deputado",
+              lambda: (True, (lambda m: f"arquivo OK · {len(m['votos'])} candidatos · {m['pst']:.2f}% apurado")(
+                  ler_municipio(cod["ciclo"], cod["deputado"][1], "ma", cd, 7))))
+    passo("Ensaio de 2022 (governador MA, Tuntum)", lambda: (True, (lambda m: f"arquivo OK · {m['pst']:.0f}% · "
+          f"{len(m['votos'])} candidatos")(ler_municipio("ele2022", "546", "ma", cd, 3))) if len(tun) else (False, "—"))
+    return out
 
 
 def ensaio_deputados(semente=7):
