@@ -74,7 +74,7 @@ else:
 st.markdown(f"""
 <div class="capa-inicio">
   <div class="ci-selo">ELEIÇÕES 2026 · 4 DE OUTUBRO</div>
-  <div class="ci-titulo">Previsão <span>&amp;</span> Apuração</div>
+  <div class="ci-titulo">Modelo Preditivo <span>&amp;</span><br>Apuração em Tempo Real</div>
   <div class="ci-texto">Modelo independente com pesquisas registradas, histórico oficial do TSE e 20 mil cenários
   simulados — e, no domingo, os votos do TSE em tempo real.</div>
   <div class="ci-contagem"><i></i>{contagem}</div>
@@ -123,8 +123,8 @@ if agora < INICIO_APURACAO:
               "Salve o link!")
 else:
     quando = "A apuração está AO VIVO, com atualização a cada 90 segundos."
-texto = ("🗳️ Eleições 2026 com a Aggilli Intelligence: previsão para Presidente (Lula × Flávio) e Governo do "
-         "Maranhão (Braide × Orleans).\n\n💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! "
+texto = ("🗳️ Eleições 2026 com a Aggilli Intelligence: modelo preditivo para Presidente (Lula × Flávio) e Governo do "
+         "Maranhão (Braide × Orleans) e apuração em tempo real.\n\n💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! "
          + quando + "\n\n👉 Acompanhe aqui:\n" + LINK)
 ARTE = "inicio_aggilli.jpg"  # miniatura da Aggilli (gerada por apuracao/arte_inicio.py)
 wa = f"https://wa.me/?text={quote(texto)}"
@@ -150,7 +150,7 @@ with st.container(key="compartilhar_inicio"):
   #msg {{text-align: center; font-size: 12px; color: #3A4458; min-height: 16px; margin-top: 4px;}}
 </style>
 <a href="{wa}" target="_blank" rel="noopener"><img class="mini" src="/app/static/compartilhar/{ARTE}"
-   alt="Eleições 2026 · Previsão & Apuração · Aggilli Intelligence"></a>
+   alt="Eleições 2026 · Modelo Preditivo & Apuração em Tempo Real · Aggilli Intelligence"></a>
 <div class="ic">
   <a href="{wa}" target="_blank" rel="noopener" title="Compartilhar no WhatsApp">
     <img src="/app/static/icones/whatsapp.png" alt="WhatsApp"><span>WhatsApp</span></a>
