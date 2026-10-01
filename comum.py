@@ -16,7 +16,7 @@ pio.templates["painel"].layout.plot_bgcolor = "rgba(0,0,0,0)"
 # tom moderno e sóbrio: tinta azul-ardósia, grade quase invisível, barras com cantos arredondados
 _lay = pio.templates["painel"].layout
 _lay.font = dict(family="Manrope, Arial, sans-serif", size=13, color="#3A4458")
-_lay.title = dict(font=dict(family="Archivo, Arial, sans-serif", size=16, color="#1B2A41"), x=0, xanchor="left")
+_lay.title = dict(font=dict(family="Montserrat, Arial, sans-serif", size=16, color="#1B2A41"), x=0, xanchor="left")
 for _eixo in (_lay.xaxis, _lay.yaxis):
     _eixo.gridcolor = "#E9EEF5"
     _eixo.linecolor = "#D5DCE6"
@@ -33,7 +33,10 @@ px.defaults.template = "painel"
 
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=Manrope:wght@400;600;800&display=swap');
+/* fontes modernas servidas pelo próprio app (static/fonts, licença OFL), com o Google Fonts como reserva */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;600;700;800;900&family=Manrope:wght@400;600;800&display=swap');
+@font-face {font-family: 'Montserrat'; src: url('/app/static/fonts/Montserrat.ttf') format('truetype'); font-weight: 100 900; font-display: swap;}
+@font-face {font-family: 'Manrope'; src: url('/app/static/fonts/Manrope.ttf') format('truetype'); font-weight: 200 800; font-display: swap;}
 html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-serif;}
 /* não sobrescrever a fonte dos ícones do Streamlit (senão aparece o nome do ícone, ex.: "double_arrow_right") */
 [data-testid="stIconMaterial"], [class*="material-symbols"], [class*="material-icons"] {
@@ -43,9 +46,9 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
     box-shadow: 0 6px 22px rgba(27,42,65,.08); height: 100%;}
 [class*="st-key-card_"] .card-icone {font-size: 2.6rem; line-height: 1;}
 [class*="st-key-card_"] .card-selo {font: 800 .72rem 'Manrope'; letter-spacing: .14em; color: #5B6477; margin-top: 10px;}
-[class*="st-key-card_"] .card-titulo {font: 900 1.7rem/1.1 'Archivo'; color: #1B2A41; margin: 4px 0 8px;}
+[class*="st-key-card_"] .card-titulo {font: 900 1.7rem/1.1 'Montserrat'; color: #1B2A41; margin: 4px 0 8px;}
 [class*="st-key-card_"] .card-texto {font: 600 .95rem 'Manrope'; color: #3A4458;}
-[class*="st-key-card_"] .card-numero {font: 900 2rem 'Archivo'; margin-top: 10px;}
+[class*="st-key-card_"] .card-numero {font: 900 2rem 'Montserrat'; margin-top: 10px;}
 [class*="st-key-card_"] [data-testid="stPageLink"] a {background: #1B2A41; border-radius: 12px; justify-content: center;
     padding: .55rem 1rem;}
 [class*="st-key-card_"] [data-testid="stPageLink"] a p {color: #FFFFFF !important; font-weight: 800;}
@@ -65,11 +68,11 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 .resp {background: #FFFFFF; border: 1px solid #D9E1EC; border-top: 5px solid var(--cor, #1B2A41); border-radius: 16px;
        padding: 12px 16px;}
 .resp .perg {font: 700 .9rem 'Manrope'; color: #5B6477;}
-.resp .fala {font: 900 1.45rem/1.15 'Archivo'; color: var(--cor, #1B2A41); margin: 6px 0 4px;}
+.resp .fala {font: 900 1.45rem/1.15 'Montserrat'; color: var(--cor, #1B2A41); margin: 6px 0 4px;}
 .resp .obs {font: 600 .85rem/1.35 'Manrope'; color: #3A4458;}
 @media (max-width: 900px) {.respostas {grid-template-columns: repeat(2, 1fr);}}
 @media (max-width: 520px) {.respostas {grid-template-columns: 1fr;}}
-h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B2A41;}
+h1, h2, h3, h4 {font-family: 'Montserrat', Arial, sans-serif !important; color: #1B2A41;}
 .block-container {padding-top: 4.2rem; max-width: 1400px;}
 /* ---- tom moderno: superfícies brancas, sombras suaves, filete em degradê ---- */
 .stApp {background: radial-gradient(1200px 500px at 100% -10%, #EEF1FB 0%, rgba(238,241,251,0) 60%),
@@ -79,7 +82,7 @@ h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B
 [data-testid="stMetric"]:hover {box-shadow: 0 2px 4px rgba(27,42,65,.06), 0 14px 32px rgba(27,42,65,.09); transform: translateY(-1px);}
 [data-testid="stMetricLabel"] p {font: 700 .78rem 'Manrope', sans-serif !important; letter-spacing: .04em; color: #5B6477 !important;
     text-transform: uppercase;}
-[data-testid="stMetricValue"] {font-family: 'Archivo', Arial, sans-serif; font-weight: 900; color: #1B2A41;}
+[data-testid="stMetricValue"] {font-family: 'Montserrat', Arial, sans-serif; font-weight: 900; color: #1B2A41;}
 [data-testid="stMetricDelta"] {font-weight: 700;}
 /* "concha": cada gráfico e tabela dentro de uma moldura com contorno nítido + anel interno claro */
 [class*="st-key-caixa_"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
@@ -94,12 +97,12 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .capa {border-radius: 22px; padding: 22px 26px; color: #fff; margin-bottom: 12px;
        box-shadow: 0 14px 40px rgba(27,42,65,.18);}
 .capa .selo {font: 800 .72rem 'Manrope'; letter-spacing: .12em; opacity: .9;}
-.capa .titulo {font: 900 2.3rem/1.05 'Archivo'; margin: 6px 0;}
+.capa .titulo {font: 900 2.3rem/1.05 'Montserrat'; margin: 6px 0;}
 .capa .sub {font: 600 .95rem 'Manrope'; opacity: .92;}
 .placar {display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap;}
 .placar .lado {flex: 1; min-width: 220px; background: rgba(255,255,255,.14); border-radius: 16px; padding: 12px 16px;}
-.placar .nome {font: 900 1.2rem 'Archivo';}
-.placar .prob {font: 900 2.6rem/1.1 'Archivo';}
+.placar .nome {font: 900 1.2rem 'Montserrat';}
+.placar .prob {font: 900 2.6rem/1.1 'Montserrat';}
 .placar .leg {font: 600 .8rem 'Manrope'; opacity: .9;}
 .cartao {border-radius: 16px; padding: 14px 18px; background: #FFFFFF; border: 1.5px solid #C9D3E0;
          box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 8px 24px rgba(27,42,65,.05);
@@ -116,7 +119,7 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
                 linear-gradient(110deg, #0B1628 0%, #12233F 55%, #16304F 100%);
     border: 1.5px solid #22324D; box-shadow: 0 16px 40px rgba(11,22,40,.28);}
 .marca-topo .mt-logo img {height: 92px; display: block; margin: -8px 0;}
-.marca-topo .mt-slogan {font: 900 2rem/1.1 'Archivo'; letter-spacing: -.01em; text-align: center;}
+.marca-topo .mt-slogan {font: 700 2rem/1.15 'Montserrat'; letter-spacing: .01em; text-align: center;}
 .marca-topo .mt-slogan span {background: linear-gradient(90deg, #22D3EE, #67E8F9); -webkit-background-clip: text;
     background-clip: text; color: transparent;}
 .marca-topo .mt-contato {display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
@@ -141,23 +144,23 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
     border: 5px solid #FFFFFF; box-shadow: 0 0 0 3px var(--cor), 0 10px 24px rgba(27,42,65,.18); background: #FFFFFF;}
 .pl-foto img {width: 100%; height: 100%; object-fit: cover; object-position: top;}
 .pl-ini {width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #FFFFFF;
-    font: 900 2.6rem 'Archivo';}
+    font: 900 2.6rem 'Montserrat';}
 .pl-quadro {width: 100%; border-radius: 22px; padding: 52px 18px 18px; text-align: center; color: #FFFFFF;
     box-shadow: 0 14px 34px rgba(27,42,65,.20);}
 .pl-nome {font: 800 .9rem 'Manrope'; letter-spacing: .12em; opacity: .92;}
-.pl-votos {font: 900 3.4rem/1.05 'Archivo'; margin: 6px 0 2px; letter-spacing: -.02em;}
+.pl-votos {font: 900 3.4rem/1.05 'Montserrat'; margin: 6px 0 2px; letter-spacing: -.02em;}
 .pl-pct {font: 700 1.05rem 'Manrope'; opacity: .95;}
 .pl-x {align-self: center; margin-top: 70px; width: 56px; height: 56px; border-radius: 50%; background: #FFFFFF;
     border: 1.5px solid #C9D3E0; display: flex; align-items: center; justify-content: center;
-    font: 900 1.6rem 'Archivo'; color: #1B2A41; box-shadow: 0 6px 16px rgba(27,42,65,.12); flex: 0 0 auto;}
+    font: 900 1.6rem 'Montserrat'; color: #1B2A41; box-shadow: 0 6px 16px rgba(27,42,65,.12); flex: 0 0 auto;}
 .pl-dif {text-align: center; font: 800 .95rem 'Manrope'; color: #3A4458; margin: 10px 0 14px;}
-.pl-legenda {text-align: center; font: 900 1.7rem/1.1 'Archivo'; letter-spacing: .08em; color: #1B2A41;
+.pl-legenda {text-align: center; font: 900 1.7rem/1.1 'Montserrat'; letter-spacing: .08em; color: #1B2A41;
     margin: 18px 0 6px;}
 .placar-tuntum {display: flex; align-items: stretch; justify-content: center; gap: 18px;}
 .pt-quadro {flex: 1; max-width: 460px; border-radius: 18px; padding: 14px 18px; text-align: center; background: #FFFFFF;
     border: 1.5px solid #C9D3E0; border-top: 6px solid var(--cor); box-shadow: 0 8px 22px rgba(27,42,65,.08);}
 .pt-nome {font: 800 .82rem 'Manrope'; letter-spacing: .12em; color: var(--cor);}
-.pt-votos {font: 900 2.4rem/1.1 'Archivo'; color: #1B2A41; margin: 4px 0 2px;}
+.pt-votos {font: 900 2.4rem/1.1 'Montserrat'; color: #1B2A41; margin: 4px 0 2px;}
 .pt-pct {font: 700 .9rem 'Manrope'; color: #5B6477;}
 .pl-x.pequeno-x {margin-top: 0; font-size: 1.2rem;}
 @media (max-width: 640px) {.pl-votos {font-size: 2.1rem;} .pl-foto {width: 96px; height: 96px; margin-bottom: -30px;}
@@ -171,13 +174,13 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .tuntum .tt-corpo {display: flex; gap: 24px 48px; align-items: center; margin-top: 8px; flex-wrap: wrap;}
 .tuntum .tt-bruna {flex: 0 1 auto; min-width: 280px; border-left: 7px solid #E02597; padding: 6px 0 6px 18px;}
 .tuntum .tt-nome {font: 800 1.25rem 'Manrope'; color: #E02597;}
-.tuntum .tt-num {font: 900 5.6rem/1 'Archivo'; color: #1B2A41; margin: 6px 0 4px; letter-spacing: -.02em;}
+.tuntum .tt-num {font: 900 5.6rem/1 'Montserrat'; color: #1B2A41; margin: 6px 0 4px; letter-spacing: -.02em;}
 .tuntum .tt-leg {font: 600 1rem 'Manrope'; color: #5B6477;}
 .tuntum .tt-outros {flex: 0 0 auto; margin: 0 auto; display: flex; gap: 14px; align-items: stretch;}  /* centralizados no espaço livre */
 .tuntum .tt-outro {width: 210px; border: 1px solid #E3E9F1; border-top: 4px solid var(--cor); border-radius: 14px;
     padding: 10px 12px; background: #FAFBFD;}
 .tuntum .tt-nome2 {font: 800 .85rem 'Manrope'; color: var(--cor);}
-.tuntum .tt-num2 {font: 900 1.6rem/1.1 'Archivo'; color: #1B2A41; margin: 4px 0 2px;}
+.tuntum .tt-num2 {font: 900 1.6rem/1.1 'Montserrat'; color: #1B2A41; margin: 4px 0 2px;}
 .tuntum .tt-leg2 {font: 600 .78rem 'Manrope'; color: #5B6477;}
 @media (max-width: 760px) {.tuntum .tt-num {font-size: 4rem;} .tuntum .tt-outros {margin: 0; width: 100%;}
   .tuntum .tt-outro {flex: 1; width: auto;}}

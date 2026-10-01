@@ -345,7 +345,7 @@ def narrador(r, geral, numeros, ensaio, apurado):
     st.markdown(f"""
 <div class="cartao" style="border-left-color:#E02597; background:#FDF1F8">
 <h4>🎙️ Narrador da apuração</h4>
-{''.join(f'<div style="font:900 1.15rem Archivo;color:#E02597;margin-bottom:6px">{a}</div>' for a in avisos)}
+{''.join(f'<div style="font:800 1.15rem Montserrat;color:#E02597;margin-bottom:6px">{a}</div>' for a in avisos)}
 <div style="font-size:1.05rem">{base}</div>
 {f'<div style="margin-top:6px">{marco}</div>' if marco else ''}
 <div class="pequeno" style="margin-top:8px">{difs} (votos apurados até agora)</div>
@@ -388,7 +388,7 @@ def painel_deputados():
         col.markdown(f"""
 <div class="cartao" style="border-left-color:{cor}"><h4 style="color:{cor}">{nome}
 <span style="font-size:.8rem;opacity:.7">nº {num if str(num).isdigit() else '—'}</span></h4>
-<div style="font:900 2rem Archivo">{n(c['contado'])} <span style="font-size:1rem">votos</span></div>
+<div style="font:800 2rem Montserrat">{n(c['contado'])} <span style="font-size:1rem">votos</span></div>
 <div class="pequeno">{texto_ritmo} · esperado até agora {n(c['esperado_ate_agora'])}</div>
 <div style="margin-top:8px"><b>Projeção do final: {mil(c['final'][1])}</b><br>
 <span class="pequeno">faixa provável {mil(c['final'][0])} a {mil(c['final'][2])} · antes da apuração: {mil(c['previsto'])}

@@ -25,7 +25,7 @@ ma = ler("resultados/simulacao.json")
 st.markdown("""
 <div style="text-align:center; margin: 1.2rem 0 1.6rem;">
   <div style="font: 800 .8rem 'Manrope'; letter-spacing: .16em; color:#5B6477;">ELEIÇÕES 2026 · 4 DE OUTUBRO</div>
-  <div style="font: 900 2.4rem/1.1 'Archivo'; color:#1B2A41; margin:.4rem 0;">Previsão eleitoral</div>
+  <div style="font: 900 2.4rem/1.1 'Montserrat'; color:#1B2A41; margin:.4rem 0;">Previsão eleitoral</div>
   <div style="font: 600 1rem 'Manrope'; color:#3A4458;">Modelo independente · pesquisas, histórico oficial do TSE e
   simulação de 20 mil cenários. Escolha um cenário.</div>
 </div>
