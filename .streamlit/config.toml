@@ -5,6 +5,11 @@ backgroundColor = "#F7F8FB"
 secondaryBackgroundColor = "#FFFFFF"
 textColor = "#1B2A41"
 font = "sans-serif"
+# cabeçalho e bordas das tabelas no mesmo tom suave do painel
+dataframeHeaderBackgroundColor = "#F3F5F9"
+dataframeBorderColor = "#E6EBF2"
+borderColor = "#E6EBF2"
+baseRadius = "medium"
 
 [server]
 # Serve a pasta static/ em /app/static/ (miniatura do link no WhatsApp).

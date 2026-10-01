@@ -13,6 +13,21 @@ import streamlit as st
 pio.templates["painel"] = go.layout.Template(pio.templates["plotly_white"])
 pio.templates["painel"].layout.paper_bgcolor = "rgba(0,0,0,0)"
 pio.templates["painel"].layout.plot_bgcolor = "rgba(0,0,0,0)"
+# tom moderno e sóbrio: tinta azul-ardósia, grade quase invisível, barras com cantos arredondados
+_lay = pio.templates["painel"].layout
+_lay.font = dict(family="Manrope, Arial, sans-serif", size=13, color="#3A4458")
+_lay.title = dict(font=dict(family="Archivo, Arial, sans-serif", size=16, color="#1B2A41"), x=0, xanchor="left")
+for _eixo in (_lay.xaxis, _lay.yaxis):
+    _eixo.gridcolor = "#E9EEF5"
+    _eixo.linecolor = "#D5DCE6"
+    _eixo.zeroline = False
+    _eixo.tickfont = dict(color="#5B6477", size=12)
+    _eixo.title = dict(font=dict(color="#5B6477", size=12))
+_lay.hoverlabel = dict(bgcolor="#FFFFFF", bordercolor="#D5DCE6", font=dict(family="Manrope, Arial", color="#1B2A41"))
+_lay.legend = dict(font=dict(color="#3A4458", size=12), bgcolor="rgba(0,0,0,0)")
+_lay.barcornerradius = 4
+_lay.bargap = 0.28
+_lay.bargroupgap = 0.08
 pio.templates.default = "painel"
 px.defaults.template = "painel"
 
@@ -56,11 +71,21 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 @media (max-width: 520px) {.respostas {grid-template-columns: 1fr;}}
 h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B2A41;}
 .block-container {padding-top: 4.2rem; max-width: 1400px;}
-[data-testid="stMetric"] {background: #FFFFFF; border: 1px solid #D9E1EC; border-radius: 14px; padding: 10px 14px;}
+/* ---- tom moderno: superfícies brancas, sombras suaves, filete em degradê ---- */
+.stApp {background: radial-gradient(1200px 500px at 100% -10%, #EEF1FB 0%, rgba(238,241,251,0) 60%),
+                    radial-gradient(900px 400px at -10% 0%, #F1F6F4 0%, rgba(241,246,244,0) 55%), #F6F8FB;}
+[data-testid="stMetric"] {background: #FFFFFF; border: 1px solid #E6EBF2; border-radius: 16px; padding: 12px 16px;
+    box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 8px 24px rgba(27,42,65,.05); transition: box-shadow .2s, transform .2s;}
+[data-testid="stMetric"]:hover {box-shadow: 0 2px 4px rgba(27,42,65,.06), 0 14px 32px rgba(27,42,65,.09); transform: translateY(-1px);}
+[data-testid="stMetricLabel"] p {font: 700 .78rem 'Manrope', sans-serif !important; letter-spacing: .04em; color: #5B6477 !important;
+    text-transform: uppercase;}
 [data-testid="stMetricValue"] {font-family: 'Archivo', Arial, sans-serif; font-weight: 900; color: #1B2A41;}
-[class*="st-key-caixa_"] {background: linear-gradient(180deg, #EEF3FA 0px, #FFFFFF 180px); border: 1px solid #D9E1EC;
-    border-top: 4px solid #1B2A41; border-radius: 14px; padding: 10px 10px 8px;}
-.capa {border-radius: 22px; padding: 22px 26px; color: #fff; margin-bottom: 12px;}
+[data-testid="stMetricDelta"] {font-weight: 700;}
+[class*="st-key-caixa_"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
+    #FFFFFF; border: 1px solid #E6EBF2; border-radius: 16px; padding: 14px 12px 8px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 10px 30px rgba(27,42,65,.06);}
+.capa {border-radius: 22px; padding: 22px 26px; color: #fff; margin-bottom: 12px;
+       box-shadow: 0 14px 40px rgba(27,42,65,.18);}
 .capa .selo {font: 800 .72rem 'Manrope'; letter-spacing: .12em; opacity: .9;}
 .capa .titulo {font: 900 2.3rem/1.05 'Archivo'; margin: 6px 0;}
 .capa .sub {font: 600 .95rem 'Manrope'; opacity: .92;}
@@ -69,7 +94,8 @@ h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B
 .placar .nome {font: 900 1.2rem 'Archivo';}
 .placar .prob {font: 900 2.6rem/1.1 'Archivo';}
 .placar .leg {font: 600 .8rem 'Manrope'; opacity: .9;}
-.cartao {border-radius: 14px; padding: 14px 18px; background: #FFFFFF; border: 1px solid #D9E1EC;
+.cartao {border-radius: 16px; padding: 14px 18px; background: #FFFFFF; border: 1px solid #E6EBF2;
+         box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 8px 24px rgba(27,42,65,.05);
          border-left: 6px solid #1B2A41; margin-bottom: 10px;}
 .cartao.azul {border-left-color: #1F6FB2;} .cartao.laranja {border-left-color: #E07B1F;}
 .cartao.vermelho {border-left-color: #C8102E;} .cartao.verde {border-left-color: #1F7A4D;}
@@ -125,12 +151,90 @@ def grafico(fig, **kw):
         st.plotly_chart(fig, width="stretch", **kw)
 
 
-def tabela(df, **kw):
+# ---------------------------------------------------------------- tabelas com vida (cores suaves)
+# cor de cada candidato (identidade; a mesma dos gráficos) — nas tabelas entra só como tinta clara
+CORES_CANDIDATOS = {"lula": "#C8102E", "flavio": "#1D4E89", "braide": "#1F6FB2", "orleans": "#E07B1F",
+                    "camarao": "#B83A4B", "rocha": "#6B4FA0", "bruna": "#E02597", "abigail": "#E8702A",
+                    "eric": "#3B6FB6"}
+_ZEBRA = ("#FFFFFF", "#F7F9FC")
+_POSITIVO, _NEGATIVO, _NEUTRO, _AZUL = "#1F9D74", "#D0546A", "#8A94A6", "#3A6FB0"
+_SINAIS = ("diferença", "desvio", "saldo", "vantagem", "vs.", "variação")
+
+
+def _sem_acento(txt):
+    import unicodedata
+    return unicodedata.normalize("NFKD", str(txt)).encode("ascii", "ignore").decode().lower()
+
+
+def _mistura(cor, fundo, t):
+    """Mistura cor sobre o fundo (t = 0 → só fundo; 1 → só a cor)."""
+    a = [int(cor[k:k + 2], 16) for k in (1, 3, 5)]
+    b = [int(fundo[k:k + 2], 16) for k in (1, 3, 5)]
+    return "#" + "".join(f"{round(y + (x - y) * t):02x}" for x, y in zip(a, b))
+
+
+def _candidato(txt):
+    t = _sem_acento(txt)
+    return next((c for c in CORES_CANDIDATOS if c in t), None)
+
+
+def _estilo_tabela(df, modo="auto"):
+    """Fundo de cada célula: zebra suave + tinta pelo papel da coluna (identidade, magnitude ou sinal).
+    modo="identidade": linhas de unidades diferentes (ex.: placar) — só a tinta fixa do candidato em cada coluna."""
+    estilos = pd.DataFrame("", index=df.index, columns=df.columns)
+    zebra = [_ZEBRA[i % 2] for i in range(len(df))]
+    for col in df.columns:
+        nome = _sem_acento(col)
+        serie = df[col]
+        cand = _candidato(col)
+        if modo == "identidade":
+            cores = [_mistura(CORES_CANDIDATOS[cand], z, .10) if cand else None for z in zebra]
+        elif pd.api.types.is_numeric_dtype(serie) and not pd.api.types.is_bool_dtype(serie):
+            v = pd.to_numeric(serie, errors="coerce")
+            sinal = any(k in nome for k in _SINAIS) or (v.min() < 0 < v.max())
+            if sinal:  # divergente: verde-água (positivo) × rosado (negativo), intensidade pelo tamanho
+                m = v.abs().max() or 1
+                cores = [None if pd.isna(x) else _mistura(_POSITIVO if x >= 0 else _NEGATIVO, z, .08 + .22 * abs(x) / m)
+                         for x, z in zip(v, zebra)]
+            elif cand or any(k in nome for k in ("%", "prob", "chance")):  # magnitude: uma só cor, clara → média
+                base = CORES_CANDIDATOS[cand] if cand else _AZUL
+                lo, hi = v.min(), v.max()
+                rng = (hi - lo) or 1
+                cores = [None if pd.isna(x) else _mistura(base, z, .05 + .23 * (x - lo) / rng) for x, z in zip(v, zebra)]
+            else:
+                cores = [None] * len(v)
+        else:  # texto: situação (acima/abaixo/dentro) ou nome de candidato
+            cores = []
+            for x, z in zip(serie, zebra):
+                t = _sem_acento(x)
+                if "acima" in t or t.startswith("sim"):
+                    cores.append(_mistura(_POSITIVO, z, .16))
+                elif "abaixo" in t:
+                    cores.append(_mistura(_NEGATIVO, z, .16))
+                elif any(k in t for k in ("dentro do esperado", "neutro", "empate", "indefinido")):
+                    cores.append(_mistura(_NEUTRO, z, .12))
+                elif _candidato(t) and len(t.split()) <= 3:  # a célula É um nome (não uma frase que cita alguém)
+                    cores.append(_mistura(CORES_CANDIDATOS[_candidato(t)], z, .16))
+                else:
+                    cores.append(None)
+        estilos[col] = [f"background-color: {c or z}; color: #1B2A41" for c, z in zip(cores, zebra)]
+    return estilos
+
+
+def tabela(df, modo="auto", **kw):
+    """st.dataframe com números no padrão brasileiro e cores suaves: zebra, tinta do candidato nas colunas dele,
+    verde-água/rosado para diferenças (+/−) e para situações acima/abaixo do esperado."""
     df = df.reset_index(drop=True)
     fmt = {c: (lambda v, c=c: "" if pd.isna(v) else n(v, 1 if any(t in str(c) for t in ("%", "Prob", "pts")) else 0))
            for c in df.columns if pd.api.types.is_numeric_dtype(df[c])}
-    est = df.style.format(fmt).apply(
-        lambda l: [f"background-color: {'#EEF3FA' if l.name % 2 else '#FFFFFF'}"] * len(l), axis=1)
+    for c in df.columns:  # probabilidade guardada de 0 a 1 aparece como porcentagem
+        if "prob" in _sem_acento(c) and pd.api.types.is_numeric_dtype(df[c]) and df[c].max() <= 1:
+            fmt[c] = lambda v: "" if pd.isna(v) else pct(v)
+    try:
+        est = df.style.format(fmt).apply(lambda _: _estilo_tabela(df, modo), axis=None)
+    except Exception:  # noqa: BLE001  (nunca derruba a página por causa de cor)
+        est = df.style.format(fmt).apply(
+            lambda l: [f"background-color: {_ZEBRA[l.name % 2]}"] * len(l), axis=1)
     kw.setdefault("hide_index", True)
     kw.setdefault("width", "stretch")
     with caixa():

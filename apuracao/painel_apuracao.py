@@ -188,7 +188,7 @@ def estatisticas(d, r, apurado):
         {"Indicador": "Diferença da Bruna na projeção (votos)", "Bruna": None, "Abigail": fb - fa, "Eric": fb - fe},
         {"Indicador": "Municípios em que a Bruna está à frente", "Bruna": None, "Abigail": ganha_a, "Eric": ganha_e},
     ])
-    tabela(tab.astype({"Bruna": float, "Abigail": float, "Eric": float}))  # vazio (e não "None") onde não se aplica
+    tabela(tab.astype({"Bruna": float, "Abigail": float, "Eric": float}), modo="identidade")  # vazio (e não "None") onde não se aplica
     melhor = ap.assign(vant=ap.real_bruna - ap.real_abigail).sort_values("real_bruna", ascending=False).head(1)
     if len(melhor):
         m = melhor.iloc[0]
