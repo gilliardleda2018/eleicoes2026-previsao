@@ -39,7 +39,7 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 [data-testid="stIconMaterial"], [class*="material-symbols"], [class*="material-icons"] {
     font-family: 'Material Symbols Rounded', 'Material Icons' !important;}
 /* página inicial: cards de navegação */
-[class*="st-key-card_"] {background: #FFFFFF; border: 1px solid #D9E1EC; border-radius: 22px; padding: 22px 22px 14px;
+[class*="st-key-card_"] {background: #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 22px; padding: 22px 22px 14px;
     box-shadow: 0 6px 22px rgba(27,42,65,.08); height: 100%;}
 [class*="st-key-card_"] .card-icone {font-size: 2.6rem; line-height: 1;}
 [class*="st-key-card_"] .card-selo {font: 800 .72rem 'Manrope'; letter-spacing: .14em; color: #5B6477; margin-top: 10px;}
@@ -74,16 +74,23 @@ h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B
 /* ---- tom moderno: superfícies brancas, sombras suaves, filete em degradê ---- */
 .stApp {background: radial-gradient(1200px 500px at 100% -10%, #EEF1FB 0%, rgba(238,241,251,0) 60%),
                     radial-gradient(900px 400px at -10% 0%, #F1F6F4 0%, rgba(241,246,244,0) 55%), #F6F8FB;}
-[data-testid="stMetric"] {background: #FFFFFF; border: 1px solid #E6EBF2; border-radius: 16px; padding: 12px 16px;
+[data-testid="stMetric"] {background: #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 16px; padding: 12px 16px;
     box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 8px 24px rgba(27,42,65,.05); transition: box-shadow .2s, transform .2s;}
 [data-testid="stMetric"]:hover {box-shadow: 0 2px 4px rgba(27,42,65,.06), 0 14px 32px rgba(27,42,65,.09); transform: translateY(-1px);}
 [data-testid="stMetricLabel"] p {font: 700 .78rem 'Manrope', sans-serif !important; letter-spacing: .04em; color: #5B6477 !important;
     text-transform: uppercase;}
 [data-testid="stMetricValue"] {font-family: 'Archivo', Arial, sans-serif; font-weight: 900; color: #1B2A41;}
 [data-testid="stMetricDelta"] {font-weight: 700;}
+/* "concha": cada gráfico e tabela dentro de uma moldura com contorno nítido + anel interno claro */
 [class*="st-key-caixa_"] {background: linear-gradient(90deg, #1F6FB2, #6D5BA8 50%, #C2477F) top / 100% 3px no-repeat,
-    #FFFFFF; border: 1px solid #E6EBF2; border-radius: 16px; padding: 14px 12px 8px; overflow: hidden;
-    box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 10px 30px rgba(27,42,65,.06);}
+    #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 18px; padding: 16px 14px 10px; overflow: hidden;
+    outline: 1px solid #E3E9F1; outline-offset: -7px;
+    box-shadow: 0 1px 2px rgba(27,42,65,.05), 0 10px 28px rgba(27,42,65,.07); margin: 6px 0 14px;}
+/* tabela dentro da concha: contorno próprio, cantos arredondados */
+[class*="st-key-caixa_"] [data-testid="stDataFrame"] {border: 1px solid #C9D3E0; border-radius: 12px; overflow: hidden;}
+/* separadores entre blocos */
+hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; margin: 18px 0 !important;
+    background: linear-gradient(90deg, rgba(201,211,224,0), #C9D3E0 15%, #C9D3E0 85%, rgba(201,211,224,0)) !important;}
 .capa {border-radius: 22px; padding: 22px 26px; color: #fff; margin-bottom: 12px;
        box-shadow: 0 14px 40px rgba(27,42,65,.18);}
 .capa .selo {font: 800 .72rem 'Manrope'; letter-spacing: .12em; opacity: .9;}
@@ -94,7 +101,7 @@ h1, h2, h3, h4 {font-family: 'Archivo', Arial, sans-serif !important; color: #1B
 .placar .nome {font: 900 1.2rem 'Archivo';}
 .placar .prob {font: 900 2.6rem/1.1 'Archivo';}
 .placar .leg {font: 600 .8rem 'Manrope'; opacity: .9;}
-.cartao {border-radius: 16px; padding: 14px 18px; background: #FFFFFF; border: 1px solid #E6EBF2;
+.cartao {border-radius: 16px; padding: 14px 18px; background: #FFFFFF; border: 1.5px solid #C9D3E0;
          box-shadow: 0 1px 2px rgba(27,42,65,.04), 0 8px 24px rgba(27,42,65,.05);
          border-left: 6px solid #1B2A41; margin-bottom: 10px;}
 .cartao.azul {border-left-color: #1F6FB2;} .cartao.laranja {border-left-color: #E07B1F;}

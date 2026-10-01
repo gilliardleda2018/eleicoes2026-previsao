@@ -7,8 +7,8 @@ textColor = "#1B2A41"
 font = "sans-serif"
 # cabeçalho e bordas das tabelas no mesmo tom suave do painel
 dataframeHeaderBackgroundColor = "#F3F5F9"
-dataframeBorderColor = "#E6EBF2"
-borderColor = "#E6EBF2"
+dataframeBorderColor = "#D3DBE6"
+borderColor = "#C9D3E0"
 baseRadius = "medium"
 
 [server]
