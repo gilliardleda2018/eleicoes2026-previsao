@@ -109,6 +109,13 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .cartao.alerta {border-left-color: #C0392B; background: #FFF6F4;}
 .cartao h4 {margin: 0 0 4px 0;}
 .pequeno {font-size: .85rem; opacity: .75;}
+/* compartilhar a apuração: WhatsApp verde, Instagram em degradê */
+.st-key-compartilhar_apuracao [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
+    color: #FFFFFF !important; font-weight: 800; border-radius: 14px;}
+.st-key-compartilhar_apuracao [data-testid="stDownloadButton"] button {border: none !important; border-radius: 14px;
+    color: #FFFFFF !important; font-weight: 800;
+    background: linear-gradient(45deg, #F58529, #DD2A7B 45%, #8134AF 75%, #515BD4) !important;}
+.st-key-compartilhar_apuracao [data-testid="stDownloadButton"] button p {color: #FFFFFF !important; font-weight: 800;}
 /* placar da apuração de presidente: Lula (vermelho) × Flávio (azul), fotos acima dos quadros */
 .placar-pres {display: flex; align-items: flex-end; justify-content: center; gap: 18px; margin: 8px 0 4px;}
 .pl-lado {flex: 1; max-width: 460px; display: flex; flex-direction: column; align-items: center;}

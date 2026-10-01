@@ -1,6 +1,8 @@
 """Página — Apuração ao vivo (domingo): apuração parcial do TSE × projeção do modelo, e para onde aponta o final."""
 import json
+import os
 import sys
+from urllib.parse import quote
 from pathlib import Path
 
 import numpy as np
@@ -57,6 +59,49 @@ else:
     turno = c[1].radio("Turno", [1, 2], format_func=lambda t: f"{t}º turno", horizontal=True, key="ap_turno")
 modo = c[2].radio("Modo", ["Ao vivo (2026)", "Ensaio com a apuração de 2022"], horizontal=True, key="ap_modo")
 ensaio = modo.startswith("Ensaio")
+
+
+def link_apuracao():
+    """Link direto para esta página. LINK_APURACAO (variável do Render) tem prioridade; senão, o endereço do servidor."""
+    if os.environ.get("LINK_APURACAO"):
+        return os.environ["LINK_APURACAO"]
+    base = os.environ.get("RENDER_EXTERNAL_URL", "")
+    if not base:
+        try:
+            from urllib.parse import urlparse
+            u = urlparse(st.context.url)
+            base = f"{u.scheme}://{u.netloc}" if u.netloc else ""
+        except Exception:  # noqa: BLE001
+            base = ""
+    return f"{base.rstrip('/')}/apuracao" if base else "https://aggillintelligence.com.br/eleicoes_2026"
+
+
+def compartilhar(disputa):
+    """Botões de compartilhar só a apuração: WhatsApp (mensagem pronta) e Instagram (arte para o Stories + link)."""
+    url = link_apuracao()
+    if disputa == "presidente":
+        texto = ("📡 Apuração ao vivo — Lula × Flávio Bolsonaro, voto a voto, com Tuntum em destaque. "
+                 "Atualiza sozinho a cada 90 segundos. Acompanhe com a Aggilli Intelligence:")
+        arte = RAIZ / "assets" / "compartilhar" / "apuracao_brasil_stories.jpg"
+    else:
+        texto = ("📡 Apuração ao vivo — Bruna Pessoa e a disputa pelo Governo do Maranhão, com Tuntum em destaque. "
+                 "Atualiza sozinho a cada 90 segundos. Acompanhe com a Aggilli Intelligence:")
+        arte = RAIZ / "assets" / "compartilhar" / "apuracao_maranhao_stories.jpg"
+    with st.container(key="compartilhar_apuracao"):
+        c1, c2, c3 = st.columns([1.2, 1.2, 2])
+        c1.link_button("📲 Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto + chr(10) + url)}",
+                       width="stretch", type="primary")
+        if arte.exists():
+            c2.download_button("📸 Arte para o Instagram", arte.read_bytes(), file_name=arte.name, mime="image/jpeg",
+                               width="stretch", key="arte_insta",
+                               help="Baixe e poste no Stories; use o adesivo 'Link' com o endereço ao lado.")
+        with c3:
+            st.code(url, language=None)  # tem botão de copiar
+        st.caption("Instagram: baixe a arte, publique no Stories e cole o link no adesivo **Link** (o ícone de copiar "
+                   "fica no canto do quadro acima).")
+
+
+compartilhar(cfg["disputa"])
 if ensaio and deputados:
     fracao = st.slider("Ensaio: quanto da apuração simular", 2, 100, 25, 1, format="%d%%") / 100
     st.info("🧪 **Ensaio:** Abigail Cunha e Eric Costa com os votos reais de 2022 por município; a Bruna não disputou em "

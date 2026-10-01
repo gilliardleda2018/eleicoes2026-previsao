@@ -75,7 +75,6 @@ if url:
     with c[1], st.container(key="compartilhar"):
         st.link_button("📲 Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto)}", width="stretch",
                        type="primary")
-        st.caption("O link abre o painel com senha: compartilhe só com quem deve ter acesso.")
 
 st.markdown("<div style='text-align:center; margin-top:1.4rem; color:#5B6477; font: 600 .85rem Manrope;'>"
             "Painel de uso interno · as probabilidades mudam a cada nova pesquisa</div>", unsafe_allow_html=True)
