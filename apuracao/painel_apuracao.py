@@ -15,7 +15,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "apuracao"))
 import motor  # noqa: E402
-from comum import CSS, barra_navegacao, cabecalho_marca, grafico, n, pct, tabela  # noqa: E402
+from comum import CSS, _logo_base64, barra_navegacao, cabecalho_marca, grafico, n, pct, tabela  # noqa: E402
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Apuração ao vivo", page_icon="🗳️", layout="wide")
@@ -83,18 +83,8 @@ ensaio = modo.startswith("Ensaio")
 
 
 def link_apuracao():
-    """Link direto para esta página. LINK_APURACAO (variável do Render) tem prioridade; senão, o endereço do servidor."""
-    if os.environ.get("LINK_APURACAO"):
-        return os.environ["LINK_APURACAO"]
-    base = os.environ.get("RENDER_EXTERNAL_URL", "")
-    if not base:
-        try:
-            from urllib.parse import urlparse
-            u = urlparse(st.context.url)
-            base = f"{u.scheme}://{u.netloc}" if u.netloc else ""
-        except Exception:  # noqa: BLE001
-            base = ""
-    return f"{base.rstrip('/')}/apuracao" if base else "https://aggillintelligence.com.br/eleicoes_2026"
+    """Link divulgado: o endereço da Aggilli (LINK_APURACAO no Render pode trocar)."""
+    return os.environ.get("LINK_APURACAO", "https://aggillintelligence.com.br/eleicoes_2026")
 
 
 def compartilhar(disputa):
@@ -110,6 +100,7 @@ def compartilhar(disputa):
     with st.container(key="compartilhar_apuracao"):
         st.markdown(f"""
 <div class="compartilhe">
+  {f'<img class="cp-logo" src="data:image/webp;base64,{_logo_base64()}" alt="Aggilli Intelligence">' if _logo_base64() else ''}
   <div class="cp-titulo">Compartilhe com seus amigos</div>
   <div class="cp-icones">
     <a href="{wa}" target="_blank" title="Compartilhar no WhatsApp"><img src="/app/static/icones/whatsapp.png" alt="WhatsApp"></a>

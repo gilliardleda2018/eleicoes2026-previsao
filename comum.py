@@ -171,6 +171,8 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .st-key-seletor_apuracao [data-testid="stButtonGroup"] button[aria-checked="true"] p {color: #FFFFFF !important;}
 /* compartilhar com ícones */
 .compartilhe {text-align: center; margin: 4px 0 6px;}
+.compartilhe .cp-logo {height: 58px; display: block; margin: 0 auto 10px; padding: 4px 16px; border-radius: 14px;
+    background: linear-gradient(110deg, #0B1628, #16304F); box-shadow: 0 6px 16px rgba(11,22,40,.25);}
 .compartilhe .cp-titulo {font: 800 1.15rem 'Montserrat'; color: #1B2A41; letter-spacing: .02em; margin-bottom: 10px;}
 .compartilhe .cp-icones {display: flex; justify-content: center; gap: 26px;}
 .compartilhe .cp-icones img {width: 64px; height: 64px; transition: transform .15s; filter: drop-shadow(0 6px 12px rgba(27,42,65,.18));}
