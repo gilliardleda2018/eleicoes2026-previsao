@@ -92,10 +92,18 @@ def compartilhar(disputa):
     """Botões de compartilhar só a apuração: WhatsApp (mensagem pronta) e Instagram (arte para o Stories + link)."""
     url = link_apuracao()
     # chamada única (contratantes: Bruna Pessoa e o time do Fernando); só convida a acompanhar, sem pedir voto
-    texto = ("💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! 🗳️\n\n"
-             "A apuração está AO VIVO e a Aggilli Intelligence acompanha voto a voto: Bruna Pessoa na Assembleia, "
-             "a disputa pelo Governo do Maranhão e a corrida presidencial, com Tuntum em destaque e atualização "
-             "a cada 90 segundos.\n\n👉 Acompanhe aqui:")
+    # antes de domingo 17h: convite com data e hora; depois: "está ao vivo"
+    from datetime import datetime, timedelta, timezone
+    agora = datetime.now(timezone(timedelta(hours=-3)))
+    inicio = datetime(2026, 10, 4, 17, 0, tzinfo=timezone(timedelta(hours=-3)))
+    if agora < inicio:
+        quando = ("A apuração AO VIVO começa no *domingo, 4 de outubro, a partir das 17h* (horário de Brasília), "
+                  "quando as urnas fecham. Salve o link! A Aggilli Intelligence vai acompanhar voto a voto")
+    else:
+        quando = "A apuração está AO VIVO e a Aggilli Intelligence acompanha voto a voto"
+    texto = ("💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! 🗳️\n\n" + quando +
+             ": Bruna Pessoa na Assembleia, a disputa pelo Governo do Maranhão e a corrida presidencial, "
+             "com Tuntum em destaque e atualização a cada 90 segundos.\n\n👉 Acompanhe aqui:")
     nome_arte = "apuracao_brasil_stories.jpg" if disputa == "presidente" else "apuracao_maranhao_stories.jpg"
     wa = f"https://wa.me/?text={quote(texto + chr(10) + url)}"
     with st.container(key="compartilhar_apuracao"):
