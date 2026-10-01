@@ -164,3 +164,85 @@ document.getElementById("ig").addEventListener("click", async () => {{
   msg("Imagem baixada e link copiado: publique no Instagram e cole o link no adesivo Link.");
 }});
 </script>""", height=altura)
+
+
+def _hex(c):
+    c = c.lstrip("#")
+    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _circulo(foto, d, cor):
+    out = Image.new("RGBA", (d + 24, d + 24), (0, 0, 0, 0))
+    od = ImageDraw.Draw(out)
+    od.ellipse((0, 0, d + 24, d + 24), fill=cor + (255,))
+    od.ellipse((7, 7, d + 17, d + 17), fill=(255, 255, 255, 255))
+    if foto and Path(foto).exists():
+        f = Image.open(foto).convert("RGBA")
+        w, h = f.size
+        q = min(w, h)
+        f = f.crop(((w - q) // 2, 0, (w - q) // 2 + q, q)).resize((d, d), Image.LANCZOS)
+        m = Image.new("L", (d, d), 0)
+        ImageDraw.Draw(m).ellipse((0, 0, d, d), fill=255)
+        out.paste(f, (12, 12), m)
+    return out
+
+
+def arte_duelo(selo, titulo, frase, a, b, destaque=None, fmt=lambda x: f"{x:,.0f}".replace(",", ".")):
+    """Imagem 1080x1350 do resultado do turno. a/b = (nome, votos, % válidos, cor hex, caminho da foto).
+    destaque = índice (0/1) do vencedor, ou None (2º turno)."""
+    w, h = 1080, 1350
+    img = Image.new("RGB", (w, h), NAVY)
+    g = Image.new("RGB", (w, h), (0, 0, 0))
+    d = ImageDraw.Draw(g)
+    d.ellipse((-300, 300, 520, 1100), fill=_hex(a[3]))
+    d.ellipse((560, 300, 1380, 1100), fill=_hex(b[3]))
+    g = g.filter(ImageFilter.GaussianBlur(170))
+    img = Image.blend(img, g, .55).convert("RGBA")
+    d = ImageDraw.Draw(img)
+    fs = _f(28, 700)
+    lw = d.textlength(selo, font=fs) + 70
+    ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    ImageDraw.Draw(ov).rounded_rectangle(((w - lw) / 2, 70, (w + lw) / 2, 128), radius=29, fill=(255, 255, 255, 34),
+                                         outline=(255, 255, 255, 160), width=2)
+    img.alpha_composite(ov)
+    d = ImageDraw.Draw(img)
+    d.text(((w - lw) / 2 + 35, 82), selo, font=fs, fill="white")
+    y = 165
+    for ln in _quebra(d, _sem_emoji(titulo), _f(64, 900), 940)[:2]:
+        d.text(((w - d.textlength(ln, font=_f(64, 900))) / 2, y), ln, font=_f(64, 900), fill="white")
+        y += 76
+    y += 8
+    for ln in _quebra(d, _sem_emoji(frase), _f(30, 600), 900)[:4]:
+        d.text(((w - d.textlength(ln, font=_f(30, 600))) / 2, y), ln, font=_f(30, 600), fill=(225, 232, 242))
+        y += 42
+    yc = max(y + 30, 560)
+    for i, (nome, votos, pct, cor, foto) in enumerate((a, b)):
+        cx = 270 if i == 0 else 810
+        dd = 300 if destaque in (None, i) else 230
+        c = _circulo(foto, dd, _hex(cor))
+        img.alpha_composite(c, (int(cx - c.width / 2), yc + (0 if destaque in (None, i) else 50)))
+        d = ImageDraw.Draw(img)
+        ytxt = yc + 340
+        for txt, fonte, cc in ((nome.upper(), _f(34, 800), "white"), (fmt(votos), _f(56, 900), "white"),
+                               (f"{pct:.2f}% dos válidos".replace(".", ","), _f(28, 600), (225, 232, 242))):
+            d.text((cx - d.textlength(txt, font=fonte) / 2, ytxt), txt, font=fonte, fill=cc)
+            ytxt += 62
+        if destaque == i:
+            t = "ELEITO"
+            fonte = _f(30, 900)
+            tw = d.textlength(t, font=fonte) + 40
+            d.rounded_rectangle((cx - tw / 2, yc - 30, cx + tw / 2, yc + 14), radius=22, fill=(255, 210, 60))
+            d.text((cx - tw / 2 + 20, yc - 26), t, font=fonte, fill=NAVY)
+    if destaque is None:
+        fx = _f(70, 900)
+        d.text((w / 2 - d.textlength("×", font=fx) / 2, yc + 110), "×", font=fx, fill="white")
+    if LOGO.exists():
+        lg = Image.open(LOGO).convert("RGBA")
+        lg.thumbnail((260, 110), Image.LANCZOS)
+        img.alpha_composite(lg, (62, h - lg.height - 50))
+    fl = _f(30, 700)
+    t = LINK.replace("https://", "")
+    d.text((w - 70 - d.textlength(t, font=fl), h - 100), t, font=fl, fill="white")
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, "JPEG", quality=90)
+    return buf.getvalue()

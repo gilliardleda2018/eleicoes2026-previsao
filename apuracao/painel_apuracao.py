@@ -633,6 +633,73 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
 <div class="pl-dif">{sub_t}</div>""", unsafe_allow_html=True)
 
 
+CARGO_TXT = {"presidente": ("presidente do Brasil", "O Brasil"), "governador": ("governador do Maranhão", "O Maranhão")}
+
+
+def resultado_turno(disputa, turno, unidades, geral, numeros, info, ensaio_):
+    """Fim do turno: parabeniza o eleito; se houver 2º turno, recado bem-humorado. Com imagem para compartilhar."""
+    pc = PLACAR[disputa]
+    (ka, nome_a, curto_a, cor_a, _), (kb, nome_b, curto_b, cor_b, _) = pc["a"], pc["b"]
+    na, nb = numeros.get(ka), numeros.get(kb)
+    if geral.get("votos"):
+        va, vb, vv = geral["votos"].get(na, 0), geral["votos"].get(nb, 0), geral.get("vv", 0)
+    else:
+        va, vb = (float(unidades[f"v_{x}"].sum()) if f"v_{x}" in unidades else 0.0 for x in (na, nb))
+        vv = float(unidades.vv.sum())
+    pa, pb = (100 * va / vv, 100 * vb / vv) if vv else (0, 0)
+    vencedor, segundo = None, False
+    if ensaio_:  # no ensaio, decide pelo resultado de 2022 quando a barra chega a 100%
+        if globals().get("fracao", 0) < 1:
+            return
+        if turno == 2 or max(pa, pb) > 50:
+            vencedor = 0 if pa >= pb else 1
+        else:
+            segundo = True
+    else:
+        sit = geral.get("situacao", {})
+        eleitos = [k for k, v in sit.items() if str(v).lower().startswith("eleit")]
+        no_2t = [k for k, v in sit.items() if "turno" in str(v).lower()]
+        if eleitos:
+            vencedor = 0 if eleitos[0] == na else 1 if eleitos[0] == nb else eleitos[0]
+        elif no_2t and turno == 1:
+            segundo = True
+        else:
+            return
+    cargo, lugar = CARGO_TXT[disputa]
+    foto = lambda k: str(RAIZ / "assets" / "fotos" / f"{k}.jpg")  # noqa: E731
+    A = (nome_a, va, pa, cor_a, foto(ka))
+    B = (nome_b, vb, pb, cor_b, foto(kb))
+    if segundo:
+        selo = f"1º TURNO ENCERRADO{' · ENSAIO' if ensaio_ else ''}"
+        titulo = "Ainda não foi dessa vez!"
+        frase = (f"{lugar} pediu prorrogação: {curto_a} e {curto_b} voltam a campo no 2º turno, em 25 de outubro. "
+                 + ("Pega a pipoca que tem mais um capítulo! 🍿" if disputa == "presidente"
+                    else "Segura o coração que tem mais emoção! 💓"))
+        destaque, cor_capa = None, "#3B2A6B"
+    else:
+        if isinstance(vencedor, int):
+            nome_v, destaque, cor_capa = (nome_a, 0, cor_a) if vencedor == 0 else (nome_b, 1, cor_b)
+        else:
+            nome_v, destaque, cor_capa = geral.get("nomes", {}).get(vencedor, "Candidato"), None, "#1F7A4D"
+        selo = f"{turno}º TURNO · RESULTADO{' · ENSAIO' if ensaio_ else ''}"
+        titulo = f"{nome_v} eleito {cargo}!"
+        frase = (f"Parabéns a {nome_v}, eleito {cargo}" + (" já no 1º turno" if turno == 1 else "")
+                 + ". Que venha um mandato à altura da confiança de cada eleitor! 🎉")
+    st.markdown(f"""
+<div class="capa" style="text-align:center; background: radial-gradient(circle at 85% 15%, {cor_capa}cc, transparent 60%),
+     linear-gradient(160deg, #0E1B33 20%, #12233F 60%, #3B2A6B);">
+  <div class="selo">{selo}</div>
+  <div class="titulo">{'🍿 ' if segundo else '🎉 '}{titulo}</div>
+  <div class="sub">{frase}</div>
+</div>""", unsafe_allow_html=True)
+    imagem = momento.arte_duelo(selo, titulo, frase, A, B, destaque=destaque, fmt=n)
+    c = st.columns([1, 2, 1])
+    c[1].image(imagem, width="stretch")
+    texto = (f"{'🍿' if segundo else '🎉'} {titulo}\n\n{frase}\n\n{curto_a}: {n(va)} votos ({n(pa, 2)}%) · "
+             f"{curto_b}: {n(vb)} votos ({n(pb, 2)}%)\n\nAcompanhe com a Aggilli Intelligence 👉 {momento.LINK}")
+    momento.botoes(texto, imagem, f"resultado_{disputa}_{turno}turno.jpg")
+
+
 @st.fragment(run_every=None if ensaio else "90s")
 def painel():
     if ensaio and cfg["disputa"] == "governador" and turno == 2:
@@ -660,6 +727,7 @@ def painel():
     st.caption(f"Fonte: TSE · eleição {info['eleicao']} ({info['ciclo']}) · {r['unidades_com_votos']} de "
                f"{r['unidades']} {cfg['unidade'].lower()}s com votos · atualizado agora")
     placar_duelo(cfg["disputa"], unidades, geral, numeros, info)
+    resultado_turno(cfg["disputa"], turno, unidades, geral, numeros, info, ensaio)
     if r.get("sem_dados"):
         st.metric("Seções apuradas", f"{n(apurado, 1)}%")
         st.info("Ainda há poucos votos apurados para comparar com a projeção. Aguarde os primeiros resultados.")
