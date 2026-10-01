@@ -1,0 +1,8 @@
+Fotos do placar da apuracao (presidente).
+
+Coloque aqui as fotos oficiais de campanha com estes nomes (jpg, png ou webp):
+  lula.jpg
+  flavio.jpg
+De preferencia quadradas ou retrato, rosto no alto da imagem.
+Sem arquivo aqui, o painel usa a foto oficial do candidato publicada pelo TSE (a mesma da urna);
+sem acesso ao TSE, mostra as iniciais.

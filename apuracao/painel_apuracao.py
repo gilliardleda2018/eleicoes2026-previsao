@@ -401,6 +401,61 @@ menor eleito 24,8 mil · último eleito da chapa do governo 38,3 mil · mediana 
                "acima ou abaixo de 2022.")
 
 
+FOTOS = RAIZ / "assets" / "fotos"  # coloque aqui lula.jpg / flavio.jpg (fotos de campanha) para usar no placar
+
+
+@st.cache_data(ttl=6 * 3600, show_spinner=False)
+def foto_base64(chave, ciclo, ele, sqcand):
+    """Foto do placar: arquivo em assets/fotos/<chave>.(jpg|png|webp) → foto oficial do TSE → vazio (iniciais)."""
+    import base64
+    for ext, mime in (("jpg", "jpeg"), ("jpeg", "jpeg"), ("png", "png"), ("webp", "webp")):
+        arq = FOTOS / f"{chave}.{ext}"
+        if arq.exists():
+            return f"data:image/{mime};base64," + base64.b64encode(arq.read_bytes()).decode()
+    if sqcand:
+        try:
+            return "data:image/jpeg;base64," + base64.b64encode(motor.foto_tse(ciclo, ele, "br", sqcand)).decode()
+        except Exception:  # noqa: BLE001
+            pass
+    return ""
+
+
+def placar_presidente(unidades, geral, numeros, info):
+    """Placar grande: Lula (vermelho) × Flávio (azul), com as fotos acima de cada quadro."""
+    na, nb = numeros.get("lula"), numeros.get("flavio")
+    if geral.get("votos"):
+        va, vb, vv = geral["votos"].get(na, 0), geral["votos"].get(nb, 0), geral.get("vv", 0)
+    else:  # ensaio: soma das UFs
+        va, vb = (float(unidades[f"v_{x}"].sum()) if f"v_{x}" in unidades else 0.0 for x in (na, nb))
+        vv = float(unidades.vv.sum())
+    pa, pb = (100 * va / vv, 100 * vb / vv) if vv else (0, 0)
+    sq = geral.get("sqcand", {})
+    lados = []
+    for chave, nome, num, votos, p, cor, escuro in (("lula", "Lula", na, va, pa, "#C8102E", "#8E0B20"),
+                                                    ("flavio", "Flávio Bolsonaro", nb, vb, pb, "#1D4E89", "#123563")):
+        foto = foto_base64(chave, info.get("ciclo"), info.get("eleicao"), sq.get(num, ""))
+        img = (f'<img src="{foto}" alt="{nome}">' if foto
+               else f'<div class="pl-ini" style="background:{cor}">{"".join(w[0] for w in nome.split()[:2])}</div>')
+        lados.append(f"""
+<div class="pl-lado">
+  <div class="pl-foto" style="--cor:{cor}">{img}</div>
+  <div class="pl-quadro" style="background: linear-gradient(160deg, {cor}, {escuro});">
+    <div class="pl-nome">{nome.upper()} · {num or '—'}</div>
+    <div class="pl-votos">{n(votos)}</div>
+    <div class="pl-pct">{n(p, 2)}% dos votos válidos</div>
+  </div>
+</div>""")
+    lider = "Lula" if va > vb else "Flávio" if vb > va else ""
+    dif = f"{lider} à frente por {n(abs(va - vb))} votos" if lider else "empate"
+    st.markdown(f"""
+<div class="placar-pres">
+  {lados[0]}
+  <div class="pl-x">✕</div>
+  {lados[1]}
+</div>
+<div class="pl-dif">{dif}</div>""", unsafe_allow_html=True)
+
+
 @st.fragment(run_every=None if ensaio else "90s")
 def painel():
     if ensaio and cfg["disputa"] == "governador" and turno == 2:
@@ -427,6 +482,8 @@ def painel():
     apurado = geral["pst"] if not ensaio else r["apurado_pct_votos"]
     st.caption(f"Fonte: TSE · eleição {info['eleicao']} ({info['ciclo']}) · {r['unidades_com_votos']} de "
                f"{r['unidades']} {cfg['unidade'].lower()}s com votos · atualizado agora")
+    if cfg["disputa"] == "presidente":
+        placar_presidente(unidades, geral, numeros, info)
     if r.get("sem_dados"):
         st.metric("Seções apuradas", f"{n(apurado, 1)}%")
         st.info("Ainda há poucos votos apurados para comparar com a projeção. Aguarde os primeiros resultados.")

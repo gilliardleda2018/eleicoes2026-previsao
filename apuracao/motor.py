@@ -132,7 +132,7 @@ def _url_total_unificado(ciclo, ele, abrang, cargo):
 
 def _ler_unificado(t, cargo):
     """Leiaute unificado (-u.json), usado no município e, em 2026, também no total do estado/Brasil."""
-    votos, nomes, situacao = {}, {}, {}
+    votos, nomes, situacao, sq = {}, {}, {}, {}
     for carg in t.get("carg", []):
         if str(carg.get("cd")) != str(cargo):
             continue
@@ -143,9 +143,10 @@ def _ler_unificado(t, cargo):
                     votos[n_] = _num(c.get("vap", 0))
                     nomes[n_] = c.get("nmu") or c.get("nm", "")
                     situacao[n_] = c.get("st", "")
+                    sq[n_] = str(c.get("sqcand", ""))
     s_, v_ = t.get("s", {}), t.get("v", {})
     return {"pst": _num(s_.get("pst", "0")), "vv": _num(v_.get("vv", 0)), "votos": votos, "nomes": nomes,
-            "situacao": situacao,
+            "situacao": situacao, "sqcand": sq,
             "eleito": {k: _sem_acento(v).lower().startswith("eleit") for k, v in situacao.items()},
             "totalizado": str(t.get("tf", "")).lower() == "s"}
 
@@ -164,6 +165,7 @@ def ler_total(ciclo, ele, abrang, cargo):
             return {"pst": _num(t.get("pst", "0")), "vv": _num(t.get("vv", 0)),
                     "votos": {str(c["n"]): _num(c["vap"]) for c in t.get("cand", [])},
                     "nomes": {str(c["n"]): c.get("nm", "") for c in t.get("cand", [])},
+                    "sqcand": {str(c["n"]): str(c.get("sqcand", "")) for c in t.get("cand", [])},
                     # situação ao fim da totalização (ex.: "Eleito por QP", "Suplente")
                     "situacao": {str(c["n"]): c.get("st", "") for c in t.get("cand", [])},
                     "eleito": {str(c["n"]): _sem_acento(c.get("st", "")).lower().startswith("eleit")
@@ -240,6 +242,14 @@ def baixar(disputa, turno, ensaio=False):
                                   **{f"v_{k}": v for k, v in d["votos"].items()}} for d in partes])
     numeros = ENSAIO_CAND[disputa] if ensaio else identificar_numeros(geral["nomes"], disputa)
     return unidades.fillna(0), geral, numeros, {"ciclo": ciclo, "eleicao": ele, "ensaio": ensaio}
+
+
+def foto_tse(ciclo, ele, abrang, sqcand, timeout=10):
+    """Foto oficial do candidato publicada pelo TSE (a mesma da urna): .../fotos/<abr>/<sqcand>.jpeg"""
+    url = f"{BASE}/{ciclo}/{ele}/fotos/{abrang.lower()}/{sqcand}.jpeg"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
 
 
 # ------------------------------------------------------------------ diagnóstico (antes do domingo)

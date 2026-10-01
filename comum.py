@@ -109,6 +109,25 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .cartao.alerta {border-left-color: #C0392B; background: #FFF6F4;}
 .cartao h4 {margin: 0 0 4px 0;}
 .pequeno {font-size: .85rem; opacity: .75;}
+/* placar da apuração de presidente: Lula (vermelho) × Flávio (azul), fotos acima dos quadros */
+.placar-pres {display: flex; align-items: flex-end; justify-content: center; gap: 18px; margin: 8px 0 4px;}
+.pl-lado {flex: 1; max-width: 460px; display: flex; flex-direction: column; align-items: center;}
+.pl-foto {width: 132px; height: 132px; border-radius: 50%; overflow: hidden; margin-bottom: -40px; z-index: 2;
+    border: 5px solid #FFFFFF; box-shadow: 0 0 0 3px var(--cor), 0 10px 24px rgba(27,42,65,.18); background: #FFFFFF;}
+.pl-foto img {width: 100%; height: 100%; object-fit: cover; object-position: top;}
+.pl-ini {width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #FFFFFF;
+    font: 900 2.6rem 'Archivo';}
+.pl-quadro {width: 100%; border-radius: 22px; padding: 52px 18px 18px; text-align: center; color: #FFFFFF;
+    box-shadow: 0 14px 34px rgba(27,42,65,.20);}
+.pl-nome {font: 800 .9rem 'Manrope'; letter-spacing: .12em; opacity: .92;}
+.pl-votos {font: 900 3.4rem/1.05 'Archivo'; margin: 6px 0 2px; letter-spacing: -.02em;}
+.pl-pct {font: 700 1.05rem 'Manrope'; opacity: .95;}
+.pl-x {align-self: center; margin-top: 70px; width: 56px; height: 56px; border-radius: 50%; background: #FFFFFF;
+    border: 1.5px solid #C9D3E0; display: flex; align-items: center; justify-content: center;
+    font: 900 1.6rem 'Archivo'; color: #1B2A41; box-shadow: 0 6px 16px rgba(27,42,65,.12); flex: 0 0 auto;}
+.pl-dif {text-align: center; font: 800 .95rem 'Manrope'; color: #3A4458; margin: 10px 0 14px;}
+@media (max-width: 640px) {.pl-votos {font-size: 2.1rem;} .pl-foto {width: 96px; height: 96px; margin-bottom: -30px;}
+  .pl-quadro {padding-top: 38px;} .placar-pres {gap: 8px;} .pl-x {width: 40px; height: 40px; font-size: 1.1rem;}}
 /* cartão de Tuntum (apuração dos deputados): Bruna grande; Abigail e Eric menores, do mesmo tamanho */
 .tuntum {border: 1.5px solid #C9D3E0; border-radius: 20px; padding: 16px 20px; margin: 4px 0 12px; color: #1B2A41;
     background: radial-gradient(600px 220px at 0% 0%, rgba(224,37,151,.10), rgba(224,37,151,0) 70%), #FFFFFF;
