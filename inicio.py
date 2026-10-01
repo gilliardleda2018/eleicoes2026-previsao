@@ -4,8 +4,10 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ))
@@ -124,6 +126,8 @@ else:
 texto = ("🗳️ Eleições 2026 com a Aggilli Intelligence: previsão para Presidente (Lula × Flávio) e Governo do "
          "Maranhão (Braide × Orleans).\n\n💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! "
          + quando + "\n\n👉 Acompanhe aqui:\n" + LINK)
+ARTE = "inicio_aggilli.jpg"  # miniatura da Aggilli (gerada por apuracao/arte_inicio.py)
+wa = f"https://wa.me/?text={quote(texto)}"
 with st.container(key="compartilhar_inicio"):
     logo = _logo_base64()
     st.markdown(f"""
@@ -131,12 +135,55 @@ with st.container(key="compartilhar_inicio"):
   {f'<img class="cp-logo" src="data:image/webp;base64,{logo}" alt="Aggilli Intelligence">' if logo else ''}
   <div class="cp-titulo">Compartilhe com seus amigos</div>
 </div>""", unsafe_allow_html=True)
-    try:
-        import momento
-        momento.botoes(texto, (RAIZ / "static" / "og-eleicoes.jpg").read_bytes(), "eleicoes2026_aggilli.jpg")
-    except Exception:
-        from urllib.parse import quote
-        st.link_button("Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto)}", width="stretch")
+    # miniatura + ícones num componente: o Instagram abre o menu de compartilhar do celular com a miniatura e o link;
+    # no computador, baixa a miniatura e abre o Instagram
+    components.html(f"""
+<style>
+  body {{margin: 0; font-family: Manrope, Arial, sans-serif;}}
+  .mini {{display: block; width: 100%; max-width: 440px; margin: 0 auto 12px; border-radius: 16px;
+         box-shadow: 0 10px 24px rgba(11,22,40,.25); border: 1px solid rgba(27,42,65,.12);}}
+  .ic {{display: flex; justify-content: center; gap: 30px; padding: 4px 0;}}
+  .ic a, .ic button {{background: none; border: 0; padding: 0; cursor: pointer; text-align: center; text-decoration: none;}}
+  .ic img {{width: 64px; height: 64px; transition: transform .15s; filter: drop-shadow(0 6px 12px rgba(27,42,65,.18));}}
+  .ic a:hover img, .ic button:hover img {{transform: translateY(-3px) scale(1.06);}}
+  .ic span {{display: block; font: 800 12px Manrope, Arial; color: #3A4458; margin-top: 4px;}}
+  #msg {{text-align: center; font-size: 12px; color: #3A4458; min-height: 16px; margin-top: 4px;}}
+</style>
+<a href="{wa}" target="_blank" rel="noopener"><img class="mini" src="/app/static/compartilhar/{ARTE}"
+   alt="Eleições 2026 · Previsão & Apuração · Aggilli Intelligence"></a>
+<div class="ic">
+  <a href="{wa}" target="_blank" rel="noopener" title="Compartilhar no WhatsApp">
+    <img src="/app/static/icones/whatsapp.png" alt="WhatsApp"><span>WhatsApp</span></a>
+  <button id="insta" title="Compartilhar no Instagram">
+    <img src="/app/static/icones/instagram.png" alt="Instagram"><span>Instagram</span></button>
+</div>
+<div id="msg"></div>
+<script>
+const URL_LINK = {json.dumps(LINK)};
+const TEXTO = {json.dumps(texto)};
+const ARTE = "/app/static/compartilhar/{ARTE}";
+const msg = t => document.getElementById("msg").textContent = t;
+async function copiar(t) {{
+  try {{ await (window.parent.navigator.clipboard || navigator.clipboard).writeText(t); return true; }} catch (e) {{ return false; }}
+}}
+document.getElementById("insta").addEventListener("click", async () => {{
+  const nav = (window.parent && window.parent.navigator && window.parent.navigator.share) ? window.parent.navigator : navigator;
+  const copiado = await copiar(URL_LINK);
+  try {{
+    const blob = await (await fetch(ARTE)).blob();
+    const arquivo = new File([blob], "{ARTE}", {{type: "image/jpeg"}});
+    if (nav.canShare && nav.canShare({{files: [arquivo]}})) {{
+      await nav.share({{files: [arquivo], text: TEXTO}});
+      msg(copiado ? "Link copiado: no Stories, cole no adesivo Link." : "");
+      return;
+    }}
+  }} catch (e) {{ if (e && e.name === "AbortError") return; }}
+  const a = document.createElement("a"); a.href = ARTE; a.download = "{ARTE}"; document.body.appendChild(a); a.click(); a.remove();
+  const celular = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  window.open(celular ? "instagram://story-camera" : "https://www.instagram.com/", "_blank");
+  msg("Miniatura baixada" + (copiado ? " e link copiado" : "") + ": publique e cole o link.");
+}});
+</script>""", height=360)
 
 # ---------------------------------------------------------------- créditos
 st.markdown(f"""
