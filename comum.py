@@ -126,8 +126,18 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
     border: 1.5px solid #C9D3E0; display: flex; align-items: center; justify-content: center;
     font: 900 1.6rem 'Archivo'; color: #1B2A41; box-shadow: 0 6px 16px rgba(27,42,65,.12); flex: 0 0 auto;}
 .pl-dif {text-align: center; font: 800 .95rem 'Manrope'; color: #3A4458; margin: 10px 0 14px;}
+.pl-legenda {text-align: center; font: 900 1.7rem/1.1 'Archivo'; letter-spacing: .08em; color: #1B2A41;
+    margin: 18px 0 6px;}
+.placar-tuntum {display: flex; align-items: stretch; justify-content: center; gap: 18px;}
+.pt-quadro {flex: 1; max-width: 460px; border-radius: 18px; padding: 14px 18px; text-align: center; background: #FFFFFF;
+    border: 1.5px solid #C9D3E0; border-top: 6px solid var(--cor); box-shadow: 0 8px 22px rgba(27,42,65,.08);}
+.pt-nome {font: 800 .82rem 'Manrope'; letter-spacing: .12em; color: var(--cor);}
+.pt-votos {font: 900 2.4rem/1.1 'Archivo'; color: #1B2A41; margin: 4px 0 2px;}
+.pt-pct {font: 700 .9rem 'Manrope'; color: #5B6477;}
+.pl-x.pequeno-x {margin-top: 0; font-size: 1.2rem;}
 @media (max-width: 640px) {.pl-votos {font-size: 2.1rem;} .pl-foto {width: 96px; height: 96px; margin-bottom: -30px;}
-  .pl-quadro {padding-top: 38px;} .placar-pres {gap: 8px;} .pl-x {width: 40px; height: 40px; font-size: 1.1rem;}}
+  .pl-quadro {padding-top: 38px;} .placar-pres {gap: 8px;} .pl-x {width: 40px; height: 40px; font-size: 1.1rem;}
+  .pl-legenda {font-size: 1.25rem;} .pt-votos {font-size: 1.7rem;} .placar-tuntum {gap: 8px;}}
 /* cartão de Tuntum (apuração dos deputados): Bruna grande; Abigail e Eric menores, do mesmo tamanho */
 .tuntum {border: 1.5px solid #C9D3E0; border-radius: 20px; padding: 16px 20px; margin: 4px 0 12px; color: #1B2A41;
     background: radial-gradient(600px 220px at 0% 0%, rgba(224,37,151,.10), rgba(224,37,151,0) 70%), #FFFFFF;

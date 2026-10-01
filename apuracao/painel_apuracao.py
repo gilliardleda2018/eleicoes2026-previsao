@@ -420,6 +420,14 @@ def foto_base64(chave, ciclo, ele, sqcand):
     return ""
 
 
+@st.cache_data(ttl=90, show_spinner=False)
+def tuntum_presidente(ciclo, ele):
+    """Votação para presidente em Tuntum (arquivo do município no TSE)."""
+    mun = pd.read_csv(RAIZ / "apuracao" / "deputados_previsao.csv")
+    cd = f"{int(mun.loc[mun.municipio.astype(str).str.lower() == 'tuntum', 'CD_MUNICIPIO'].iloc[0]):05d}"
+    return motor.ler_municipio(ciclo, ele, "ma", cd, 1)
+
+
 def placar_presidente(unidades, geral, numeros, info):
     """Placar grande: Lula (vermelho) × Flávio (azul), com as fotos acima de cada quadro."""
     na, nb = numeros.get("lula"), numeros.get("flavio")
@@ -445,15 +453,44 @@ def placar_presidente(unidades, geral, numeros, info):
     <div class="pl-pct">{n(p, 2)}% dos votos válidos</div>
   </div>
 </div>""")
-    lider = "Lula" if va > vb else "Flávio" if vb > va else ""
-    dif = f"{lider} à frente por {n(abs(va - vb))} votos" if lider else "empate"
+    def diferenca(a, b):
+        lider = "Lula" if a > b else "Flávio" if b > a else ""
+        return f"{lider} à frente por {n(abs(a - b))} votos" if lider else "empate"
+
+    # ---- Tuntum (arquivo do município; no ensaio não há a votação de 2022 de Tuntum para presidente)
+    tun = None
+    if not info.get("ensaio"):
+        try:
+            tun = tuntum_presidente(info.get("ciclo"), info.get("eleicao"))
+        except Exception:  # noqa: BLE001
+            tun = None
+    quadros_t = []
+    for nome, num, cor in (("Lula", na, "#C8102E"), ("Flávio Bolsonaro", nb, "#1D4E89")):
+        if tun:
+            v = tun["votos"].get(num, 0)
+            corpo = (f'<div class="pt-votos">{n(v)}</div>'
+                     f'<div class="pt-pct">{n(100 * v / tun["vv"], 2) if tun["vv"] else "0"}% dos válidos em Tuntum</div>')
+        else:
+            corpo = ('<div class="pt-votos">—</div><div class="pt-pct">'
+                     + ("no ensaio não há dados de Tuntum" if info.get("ensaio") else "aguardando o TSE") + "</div>")
+        quadros_t.append(f'<div class="pt-quadro" style="--cor:{cor}"><div class="pt-nome">{nome.upper()}</div>{corpo}</div>')
+    sub_t = (f"{n(tun['pst'], 1)}% das seções apuradas em Tuntum · " + diferenca(
+        tun["votos"].get(na, 0), tun["votos"].get(nb, 0))) if tun else ""
     st.markdown(f"""
+<div class="pl-legenda">🇧🇷 VOTAÇÃO BRASIL</div>
 <div class="placar-pres">
   {lados[0]}
   <div class="pl-x">✕</div>
   {lados[1]}
 </div>
-<div class="pl-dif">{dif}</div>""", unsafe_allow_html=True)
+<div class="pl-dif">{diferenca(va, vb)}</div>
+<div class="pl-legenda">🏠 VOTAÇÃO TUNTUM</div>
+<div class="placar-tuntum">
+  {quadros_t[0]}
+  <div class="pl-x pequeno-x">✕</div>
+  {quadros_t[1]}
+</div>
+<div class="pl-dif">{sub_t}</div>""", unsafe_allow_html=True)
 
 
 @st.fragment(run_every=None if ensaio else "90s")
