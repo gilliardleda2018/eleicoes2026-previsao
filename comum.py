@@ -42,18 +42,80 @@ html, body, [class*="st-"], .stMarkdown {font-family: 'Manrope', Arial, sans-ser
 [data-testid="stIconMaterial"], [class*="material-symbols"], [class*="material-icons"] {
     font-family: 'Material Symbols Rounded', 'Material Icons' !important;}
 /* página inicial: cards de navegação */
-[class*="st-key-card_"] {background: #FFFFFF; border: 1.5px solid #C9D3E0; border-radius: 22px; padding: 22px 22px 14px;
-    box-shadow: 0 6px 22px rgba(27,42,65,.08); height: 100%;}
-[class*="st-key-card_"] .card-icone {font-size: 2.6rem; line-height: 1;}
-[class*="st-key-card_"] .card-selo {font: 800 .72rem 'Manrope'; letter-spacing: .14em; color: #5B6477; margin-top: 10px;}
-[class*="st-key-card_"] .card-titulo {font: 900 1.7rem/1.1 'Montserrat'; color: #1B2A41; margin: 4px 0 8px;}
-[class*="st-key-card_"] .card-texto {font: 600 .95rem 'Manrope'; color: #3A4458;}
-[class*="st-key-card_"] .card-numero {font: 900 2rem 'Montserrat'; margin-top: 10px;}
-[class*="st-key-card_"] [data-testid="stPageLink"] a {background: #1B2A41; border-radius: 12px; justify-content: center;
-    padding: .55rem 1rem;}
+/* página inicial: capa */
+.capa-inicio {position: relative; overflow: hidden; text-align: center; margin: 4px 0 22px; padding: 34px 22px 28px;
+    border-radius: 26px; color: #FFFFFF; box-shadow: 0 14px 34px rgba(11,22,40,.22);
+    background: radial-gradient(circle at 12% 0%, rgba(34,211,238,.28), transparent 42%),
+                radial-gradient(circle at 92% 100%, rgba(200,16,46,.30), transparent 45%),
+                linear-gradient(120deg, #0B1628, #16304F 55%, #1B2A41);}
+.capa-inicio .ci-selo {font: 800 .78rem 'Manrope'; letter-spacing: .22em; color: #67E8F9;}
+.capa-inicio .ci-titulo {font: 900 2.9rem/1.05 'Montserrat'; margin: 8px 0 10px; letter-spacing: -.01em;}
+.capa-inicio .ci-titulo span {background: linear-gradient(90deg, #22D3EE, #FEDF00); -webkit-background-clip: text;
+    background-clip: text; color: transparent;}
+.capa-inicio .ci-texto {font: 600 1.02rem/1.5 'Manrope'; color: rgba(230,246,251,.88); max-width: 720px; margin: 0 auto;}
+.capa-inicio .ci-contagem {display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 9px 18px;
+    border-radius: 999px; font: 800 .92rem 'Manrope'; background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(6px);}
+.capa-inicio .ci-contagem i {width: 10px; height: 10px; border-radius: 50%; background: #22C55E;
+    box-shadow: 0 0 0 0 rgba(34,197,94,.7); animation: pulso 1.8s infinite;}
+@keyframes pulso {70% {box-shadow: 0 0 0 10px rgba(34,197,94,0);} 100% {box-shadow: 0 0 0 0 rgba(34,197,94,0);}}
+/* página inicial: cards simétricos */
+[data-testid="stHorizontalBlock"]:has(.st-key-card_br) {align-items: stretch;}
+[data-testid="stColumn"]:has([class*="st-key-card_"]) > div {height: 100%;}
+[class*="st-key-card_"] {background: linear-gradient(180deg, #FFFFFF, #F6F9FC); border: 1.5px solid #D6DEE9;
+    border-radius: 24px; padding: 22px 22px 16px; box-shadow: 0 10px 26px rgba(27,42,65,.09); height: 100%;
+    text-align: center; transition: transform .18s, box-shadow .18s; justify-content: space-between;}
+[class*="st-key-card_"]:hover {transform: translateY(-4px); box-shadow: 0 16px 34px rgba(27,42,65,.15);}
+[class*="st-key-card_"] .card-emblema {height: 118px; display: flex; align-items: center; justify-content: center;}
+[class*="st-key-card_"] .bandeira {width: 152px; height: 106px; filter: drop-shadow(0 10px 14px rgba(27,42,65,.25));
+    transform: rotate(-3deg);}
+[class*="st-key-card_"] .emblema-icone {font-size: 5.6rem; line-height: 1; filter: drop-shadow(0 10px 14px rgba(27,42,65,.25));}
+[class*="st-key-card_"] .card-selo {font: 800 .72rem 'Manrope'; letter-spacing: .16em; color: #5B6477; margin-top: 12px;
+    display: flex; justify-content: center; align-items: center; gap: 8px;}
+[class*="st-key-card_"] .card-selo em {font-style: normal; text-transform: uppercase; color: #FFFFFF; background: #0F5132;
+    padding: 2px 9px; border-radius: 999px; font-size: .64rem;}
+[class*="st-key-card_"] .card-titulo {font: 900 1.65rem/1.1 'Montserrat'; color: #1B2A41; margin: 6px 0 6px;}
+[class*="st-key-card_"] .card-texto {font: 600 .93rem 'Manrope'; color: #3A4458; min-height: 2.6em;}
+[class*="st-key-card_"] .card-probs {display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;}
+[class*="st-key-card_"] .card-prob {position: relative; overflow: hidden; padding: 10px 6px 12px; border-radius: 16px;
+    background: #FFFFFF; border: 1px solid #E2E8F0;}
+[class*="st-key-card_"] .card-prob b {display: block; font: 900 1.9rem/1 'Montserrat';}
+[class*="st-key-card_"] .card-prob span {font: 800 .8rem 'Manrope'; color: #3A4458; letter-spacing: .04em;}
+[class*="st-key-card_"] .card-prob i {position: absolute; left: 0; bottom: 0; height: 4px; border-radius: 0 4px 4px 0;}
+[class*="st-key-card_"] .card-chips {display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px;
+    min-height: 4.3rem; align-content: center;}
+[class*="st-key-card_"] .card-chip {font: 800 .85rem 'Manrope'; color: #0F5132; background: #E0F2E9;
+    border: 1px solid #B7DFC9; border-radius: 999px; padding: 6px 13px;}
+[class*="st-key-card_"] .card-legenda {font: 700 .8rem 'Manrope'; color: #5B6477; margin: 8px 0 4px; letter-spacing: .03em;}
+[class*="st-key-card_"] [data-testid="stPageLink"] a {background: #1B2A41; border-radius: 14px; justify-content: center;
+    padding: .6rem 1rem; transition: background .15s;}
+[class*="st-key-card_"] [data-testid="stPageLink"] a:hover {background: #16304F;}
 [class*="st-key-card_"] [data-testid="stPageLink"] a p {color: #FFFFFF !important; font-weight: 800;}
-.st-key-card_br {border-top: 6px solid #C8102E;} .st-key-card_ma {border-top: 6px solid #1F6FB2;}
-.st-key-card_ap {border-top: 6px solid #0F5132;}
+.st-key-card_br {border-top: 6px solid #009B3A !important;} .st-key-card_ma {border-top: 6px solid #D21034 !important;}
+.st-key-card_ap {border-top: 6px solid #0F5132 !important;}
+.st-key-card_ap [data-testid="stPageLink"] a {background: linear-gradient(100deg, #0F5132, #157A4C);}
+@media (max-width: 760px) {.capa-inicio .ci-titulo {font-size: 2.1rem;} .capa-inicio {padding: 26px 16px 22px;}}
+/* página inicial: compartilhar e créditos */
+.st-key-compartilhar_inicio {max-width: 560px; margin: 26px auto 8px; padding: 16px 18px 8px; border-radius: 22px;
+    border: 1.5px solid #C9D3E0; background: linear-gradient(160deg, #E0F2E9, #E6F6FB 55%, #FBE9DC);
+    box-shadow: 0 8px 22px rgba(27,42,65,.07);}
+.creditos-inicio {display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; margin: 26px 0 6px;
+    padding: 22px 26px; border-radius: 24px; color: #FFFFFF; box-shadow: 0 14px 30px rgba(11,22,40,.22);
+    background: radial-gradient(circle at 0% 0%, rgba(34,211,238,.22), transparent 40%), linear-gradient(110deg, #0B1628, #16304F);}
+.creditos-inicio .cr-logo img {height: 86px; display: block;}
+.creditos-inicio .cr-selo {font: 800 .7rem 'Manrope'; letter-spacing: .2em; color: #67E8F9;}
+.creditos-inicio .cr-nome {font: 900 1.5rem 'Montserrat';}
+.creditos-inicio .cr-slogan {font: 700 1rem 'Montserrat'; color: rgba(230,246,251,.92);}
+.creditos-inicio .cr-slogan span {background: linear-gradient(90deg, #22D3EE, #67E8F9); -webkit-background-clip: text;
+    background-clip: text; color: transparent;}
+.creditos-inicio .cr-texto {font: 600 .85rem/1.5 'Manrope'; color: rgba(230,246,251,.78); margin-top: 6px;}
+.creditos-inicio .cr-texto b {color: #67E8F9;}
+.creditos-inicio .cr-contato {display: flex; flex-direction: column; gap: 6px; align-items: flex-end; font: 700 .88rem 'Manrope';}
+.creditos-inicio .cr-contato a {color: #E6F6FB !important; text-decoration: none; opacity: .92;}
+.creditos-inicio .cr-contato a:hover {opacity: 1; text-decoration: underline;}
+.nota-inicio {text-align: center; color: #5B6477; font: 600 .82rem 'Manrope'; margin-top: 8px;}
+@media (max-width: 900px) {.creditos-inicio {grid-template-columns: 1fr; text-align: center; gap: 12px;}
+  .creditos-inicio .cr-logo img {margin: 0 auto; height: 60px;} .creditos-inicio .cr-contato {align-items: center;}}
 .st-key-compartilhar [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
     color: #FFFFFF !important; font-weight: 800; border-radius: 14px;}
 .desenvolvedor {display: flex; align-items: center; justify-content: center; gap: 14px; margin: 28px 0 8px;

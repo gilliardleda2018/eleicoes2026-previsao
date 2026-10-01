@@ -34,5 +34,7 @@ paginas = [
             url_path="maranhao"),
     st.Page(RAIZ / "apuracao" / "painel_apuracao.py", title="Apuração ao vivo", icon="📡", url_path="apuracao"),
 ]
-st.navigation(paginas, position="hidden").run()  # navegação pelos cards e pela barra
-rodape_desenvolvedor()  # créditos em todas as páginas
+pagina = st.navigation(paginas, position="hidden")  # navegação pelos cards e pela barra
+pagina.run()
+if getattr(pagina, "url_path", "") != "inicio":  # a página inicial já tem o bloco completo de créditos
+    rodape_desenvolvedor()
