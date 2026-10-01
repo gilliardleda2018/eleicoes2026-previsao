@@ -20,6 +20,7 @@ import json
 import os
 import re
 import unicodedata
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -125,32 +126,61 @@ def _url_municipio(ciclo, ele, uf, cdmun, cargo):
     return f"{BASE}/{ciclo}/{ele}/dados/{uf.lower()}/{uf.lower()}{cdmun}-c{cargo:04d}-e{int(ele):06d}-u.json"
 
 
-def ler_total(ciclo, ele, abrang, cargo):
-    """Total de uma abrangência (uf ou 'br'): % apurado, válidos e votos por número de candidato + nomes."""
-    t = _get(_url_simplificado(ciclo, ele, abrang, cargo))
-    return {"pst": _num(t.get("pst", "0")), "vv": _num(t.get("vv", 0)),
-            "votos": {c["n"]: _num(c["vap"]) for c in t.get("cand", [])},
-            "nomes": {c["n"]: c.get("nm", "") for c in t.get("cand", [])},
-            # situação publicada pelo TSE ao fim da totalização (ex.: "Eleito por QP", "Suplente"); "e" = "s" se eleito
-            "situacao": {c["n"]: c.get("st", "") for c in t.get("cand", [])},
-            # "e" = "s" também marca quem vai ao 2º turno; eleito é quem tem situação "Eleito…"
-            "eleito": {c["n"]: _sem_acento(c.get("st", "")).lower().startswith("eleit") for c in t.get("cand", [])},
-            "totalizado": str(t.get("tf", "")).lower() == "s"}
+def _url_total_unificado(ciclo, ele, abrang, cargo):
+    return f"{BASE}/{ciclo}/{ele}/dados/{abrang.lower()}/{abrang.lower()}-c{cargo:04d}-e{int(ele):06d}-u.json"
 
 
-def ler_municipio(ciclo, ele, uf, cdmun, cargo):
-    """Arquivo do município (leiaute -u.json): seções em s, votos em v, candidatos em carg[].agr[].par[].cand[]."""
-    t = _get(_url_municipio(ciclo, ele, uf, cdmun, cargo))
-    votos = {}
+def _ler_unificado(t, cargo):
+    """Leiaute unificado (-u.json), usado no município e, em 2026, também no total do estado/Brasil."""
+    votos, nomes, situacao = {}, {}, {}
     for carg in t.get("carg", []):
         if str(carg.get("cd")) != str(cargo):
             continue
         for agr in carg.get("agr", []):
             for par in agr.get("par", []):
                 for c in par.get("cand", []):
-                    votos[str(c.get("n"))] = _num(c.get("vap", 0))
+                    n_ = str(c.get("n"))
+                    votos[n_] = _num(c.get("vap", 0))
+                    nomes[n_] = c.get("nmu") or c.get("nm", "")
+                    situacao[n_] = c.get("st", "")
     s_, v_ = t.get("s", {}), t.get("v", {})
-    return {"cd": cdmun, "pst": _num(s_.get("pst", "0")), "vv": _num(v_.get("vv", 0)), "votos": votos}
+    return {"pst": _num(s_.get("pst", "0")), "vv": _num(v_.get("vv", 0)), "votos": votos, "nomes": nomes,
+            "situacao": situacao,
+            "eleito": {k: _sem_acento(v).lower().startswith("eleit") for k, v in situacao.items()},
+            "totalizado": str(t.get("tf", "")).lower() == "s"}
+
+
+_LEIAUTE = {}  # (ciclo, eleição) → "r" (dados-simplificados) ou "u" (unificado), descoberto na 1ª leitura
+
+
+def ler_total(ciclo, ele, abrang, cargo):
+    """Total de uma abrangência (uf ou 'br'): % apurado, válidos, votos por número de candidato, nomes e situação.
+    Tenta o arquivo simplificado (-r); se não existir (404), usa o unificado (-u) e lembra a escolha."""
+    chave = (ciclo, str(ele))
+    if _LEIAUTE.get(chave) != "u":
+        try:
+            t = _get(_url_simplificado(ciclo, ele, abrang, cargo))
+            _LEIAUTE[chave] = "r"
+            return {"pst": _num(t.get("pst", "0")), "vv": _num(t.get("vv", 0)),
+                    "votos": {str(c["n"]): _num(c["vap"]) for c in t.get("cand", [])},
+                    "nomes": {str(c["n"]): c.get("nm", "") for c in t.get("cand", [])},
+                    # situação ao fim da totalização (ex.: "Eleito por QP", "Suplente")
+                    "situacao": {str(c["n"]): c.get("st", "") for c in t.get("cand", [])},
+                    "eleito": {str(c["n"]): _sem_acento(c.get("st", "")).lower().startswith("eleit")
+                               for c in t.get("cand", [])},
+                    "totalizado": str(t.get("tf", "")).lower() == "s"}
+        except urllib.error.HTTPError as e:
+            if e.code != 404 or _LEIAUTE.get(chave) == "r":
+                raise
+    out = _ler_unificado(_get(_url_total_unificado(ciclo, ele, abrang, cargo)), cargo)
+    _LEIAUTE[chave] = "u"
+    return out
+
+
+def ler_municipio(ciclo, ele, uf, cdmun, cargo):
+    """Arquivo do município (leiaute -u.json): seções em s, votos em v, candidatos em carg[].agr[].par[].cand[]."""
+    d = _ler_unificado(_get(_url_municipio(ciclo, ele, uf, cdmun, cargo)), cargo)
+    return {"cd": cdmun, "pst": d["pst"], "vv": d["vv"], "votos": d["votos"], "nomes": d["nomes"]}
 
 
 def identificar_numeros(nomes, disputa):
@@ -176,13 +206,12 @@ def baixar(disputa, turno, ensaio=False):
     """Baixa a apuração atual. Retorna (tabela por unidade, total geral, números dos candidatos, info)."""
     if ensaio and disputa == "deputado":
         return ensaio_deputados()
-    if ensaio:
-        ciclo, ele = ENSAIO["ciclo"], ENSAIO[disputa][turno]
-    else:
-        cod = descobrir_2026()
-        if not cod or not cod.get(disputa, {}).get(turno):
-            return None, None, None, {"erro": "Os códigos da eleição de 2026 ainda não foram publicados pelo TSE."}
-        ciclo, ele = cod["ciclo"], cod[disputa][turno]
+    if ensaio:  # 2022 sem internet: o TSE não serve mais os arquivos de 2022 no ambiente oficial
+        return ensaio_2022(disputa, turno)
+    cod = descobrir_2026()
+    if not cod or not cod.get(disputa, {}).get(turno):
+        return None, None, None, {"erro": "Os códigos da eleição de 2026 ainda não foram publicados pelo TSE."}
+    ciclo, ele = cod["ciclo"], cod[disputa][turno]
     cargo = CARGO[disputa]
     if disputa == "presidente":
         geral = ler_total(ciclo, ele, "br", cargo)
@@ -227,7 +256,11 @@ def diagnostico():
         return ok
 
     passo("Ambiente", lambda: (True, f"{AMBIENTE} · {BASE}"))
-    passo("Config do TSE (ele-c.json)", lambda: (True, f"ciclo {_get(f'{BASE}/comum/config/ele-c.json').get('c')}"))
+    def _cfg():
+        c = _get(f"{BASE}/comum/config/ele-c.json")
+        anos = sorted({str(p.get("dt", ""))[-4:] for p in c.get("pl", [])})
+        return True, f"gerado {c.get('dg', '?')} {c.get('hg', '')} · pleitos dos anos {', '.join(anos[-3:])}"
+    passo("Config do TSE (ele-c.json)", _cfg)
     cod = descobrir_2026()
     passo("Códigos de 2026", lambda: (True, f"presidente {cod['presidente']} · governador {cod['governador']} · "
                                             f"deputado {cod['deputado']} ({cod['origem']})"))
@@ -236,7 +269,8 @@ def diagnostico():
             t = ler_total(cod["ciclo"], cod[disputa][1], abr, CARGO[disputa])
             nums = identificar_numeros(t["nomes"], disputa)
             achou = ", ".join(f"{k}={v}" + ("" if v in t["nomes"] else " (não está na lista)") for k, v in nums.items())
-            return True, (f"arquivo OK · {len(t['nomes'])} candidatos · {t['pst']:.2f}% apurado · {achou or '—'}")
+            lei = {"r": "simplificado", "u": "unificado"}.get(_LEIAUTE.get((cod["ciclo"], str(cod[disputa][1]))), "?")
+            return True, (f"arquivo OK ({lei}) · {len(t['nomes'])} candidatos · {t['pst']:.2f}% apurado · {achou or '—'}")
         passo(f"Total {disputa} ({abr.upper()})", f)
     mun = pd.read_csv(MUNICIPIOS["deputado"])
     tun = mun[mun.municipio.astype(str).str.lower() == "tuntum"]
@@ -245,9 +279,36 @@ def diagnostico():
         passo(f"Município Tuntum ({cd}) · deputado",
               lambda: (True, (lambda m: f"arquivo OK · {len(m['votos'])} candidatos · {m['pst']:.2f}% apurado")(
                   ler_municipio(cod["ciclo"], cod["deputado"][1], "ma", cd, 7))))
-    passo("Ensaio de 2022 (governador MA, Tuntum)", lambda: (True, (lambda m: f"arquivo OK · {m['pst']:.0f}% · "
-          f"{len(m['votos'])} candidatos")(ler_municipio("ele2022", "546", "ma", cd, 3))) if len(tun) else (False, "—"))
+        passo(f"Município Tuntum ({cd}) · governador",
+              lambda: (True, (lambda m: f"arquivo OK · {len(m['votos'])} candidatos · {m['pst']:.2f}% apurado · "
+                              f"Braide/Orleans: {', '.join(n for n, nm in m['nomes'].items() if any(x in _sem_acento(nm).upper() for x in ('BRAIDE', 'ORLEANS'))) or 'não achei pelo nome'}")(
+                  ler_municipio(cod["ciclo"], cod["governador"][1], "ma", cd, 3))))
+        passo(f"Município Tuntum ({cd}) · nossos deputados",
+              lambda: (lambda m: (all(x in m["votos"] for x in NUMEROS_FIXOS["deputado"].values()),
+                                  " · ".join(f"{k} {v}: {m['nomes'].get(v, 'NÃO ENCONTRADO')}"
+                                             for k, v in NUMEROS_FIXOS["deputado"].items())))(
+                  ler_municipio(cod["ciclo"], cod["deputado"][1], "ma", cd, 7)))
+    passo("Ensaio (offline, 2022)", lambda: (True, (lambda r: f"presidente {len(r[0])} UFs · governador "
+          f"{len(ensaio_2022('governador', 1)[0])} municípios")(ensaio_2022("presidente", 1))))
     return out
+
+
+def ensaio_2022(disputa, turno):
+    """Ensaio offline com o resultado real de 2022 (base do próprio modelo): Lula × Bolsonaro por UF;
+    Lahésio (no lugar de Braide) × Brandão (no lugar de Orleans) por município."""
+    if disputa == "presidente":
+        u = pd.read_csv(RAIZ / "nacional" / "resultados" / "ufs_previsao.csv")
+        t = f"{turno}t"
+        vv = u[f"validos22_{t}"].astype(float)
+        unidades = pd.DataFrame({"unidade": u.uf, "pst": 100.0, "vv": vv, "v_13": vv * u[f"lula22_{t}"] / 100,
+                                 "v_22": vv * u[f"bolsonaro22_{t}"] / 100})
+    else:
+        m = pd.read_csv(MUNICIPIOS["governador"])
+        vv = m.validos22.astype(float)
+        unidades = pd.DataFrame({"unidade": m.CD_MUNICIPIO.astype(int), "pst": 100.0, "vv": vv,
+                                 "v_20": vv * m.lahesio22 / 100, "v_40": vv * m.brandao22 / 100})
+    geral = {"pst": 100.0, "vv": float(unidades.vv.sum()), "votos": {}, "nomes": {}, "situacao": {}, "eleito": {}}
+    return unidades, geral, ENSAIO_CAND[disputa], {"ciclo": "ele2022", "eleicao": "2022 (offline)", "ensaio": True}
 
 
 def ensaio_deputados(semente=7):
