@@ -114,18 +114,19 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
     background: radial-gradient(600px 220px at 0% 0%, rgba(224,37,151,.10), rgba(224,37,151,0) 70%), #FFFFFF;
     outline: 1px solid #E3E9F1; outline-offset: -7px; box-shadow: 0 1px 2px rgba(27,42,65,.05), 0 10px 28px rgba(27,42,65,.07);}
 .tuntum .tt-selo {font: 800 .74rem 'Manrope'; letter-spacing: .12em; color: #5B6477;}
-.tuntum .tt-corpo {display: flex; gap: 18px; align-items: stretch; margin-top: 8px; flex-wrap: wrap;}
-.tuntum .tt-bruna {flex: 1.6; min-width: 240px; border-left: 6px solid #E02597; padding: 4px 0 4px 16px;}
-.tuntum .tt-nome {font: 800 1.05rem 'Manrope'; color: #E02597;}
-.tuntum .tt-num {font: 900 4rem/1 'Archivo'; color: #1B2A41; margin: 4px 0;}
-.tuntum .tt-leg {font: 600 .9rem 'Manrope'; color: #5B6477;}
-.tuntum .tt-outros {flex: 1; min-width: 220px; display: flex; gap: 12px;}
-.tuntum .tt-outro {flex: 1; border: 1px solid #E3E9F1; border-top: 4px solid var(--cor); border-radius: 14px;
+.tuntum .tt-corpo {display: flex; gap: 24px 48px; align-items: center; margin-top: 8px; flex-wrap: wrap;}
+.tuntum .tt-bruna {flex: 0 1 auto; min-width: 280px; border-left: 7px solid #E02597; padding: 6px 0 6px 18px;}
+.tuntum .tt-nome {font: 800 1.25rem 'Manrope'; color: #E02597;}
+.tuntum .tt-num {font: 900 5.6rem/1 'Archivo'; color: #1B2A41; margin: 6px 0 4px; letter-spacing: -.02em;}
+.tuntum .tt-leg {font: 600 1rem 'Manrope'; color: #5B6477;}
+.tuntum .tt-outros {flex: 0 0 auto; margin: 0 auto; display: flex; gap: 14px; align-items: stretch;}  /* centralizados no espaço livre */
+.tuntum .tt-outro {width: 210px; border: 1px solid #E3E9F1; border-top: 4px solid var(--cor); border-radius: 14px;
     padding: 10px 12px; background: #FAFBFD;}
 .tuntum .tt-nome2 {font: 800 .85rem 'Manrope'; color: var(--cor);}
 .tuntum .tt-num2 {font: 900 1.6rem/1.1 'Archivo'; color: #1B2A41; margin: 4px 0 2px;}
 .tuntum .tt-leg2 {font: 600 .78rem 'Manrope'; color: #5B6477;}
-@media (max-width: 760px) {.tuntum .tt-num {font-size: 3rem;}}
+@media (max-width: 760px) {.tuntum .tt-num {font-size: 4rem;} .tuntum .tt-outros {margin: 0; width: 100%;}
+  .tuntum .tt-outro {flex: 1; width: auto;}}
 @media (max-width: 760px) {
   .block-container {padding-left: 1rem; padding-right: 1rem;}
   .capa .titulo {font-size: 1.6rem;} .placar .prob {font-size: 2rem;}
