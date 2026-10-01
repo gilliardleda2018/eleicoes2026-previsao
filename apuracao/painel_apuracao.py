@@ -197,6 +197,31 @@ def estatisticas(d, r, apurado):
                    f"sobre o Eric na cidade). Municípios com votos apurados: {len(ap)} de {len(d)}.")
 
 
+def cartao_tuntum(d):
+    """Cartão de Tuntum: Bruna em destaque (grande); Abigail e Eric menores, do mesmo tamanho."""
+    t = d[d.municipio.astype(str).str.lower() == "tuntum"]
+    if t.empty:
+        return
+    t = t.iloc[0]
+    vb, va, ve, pst = (float(t.get(c, 0) or 0) for c in ("real_bruna", "real_abigail", "real_eric", "pst"))
+    situacao = "sem urnas apuradas ainda" if pst <= 0 else (
+        "apuração encerrada" if pst >= 100 else f"{n(pst, 1)}% das seções apuradas")
+    st.markdown(f"""
+<div class="tuntum">
+  <div class="tt-selo">🏠 TUNTUM · {situacao.upper()}</div>
+  <div class="tt-corpo">
+    <div class="tt-bruna"><div class="tt-nome">Bruna Pessoa</div>
+      <div class="tt-num">{n(vb)}</div><div class="tt-leg">votos em Tuntum</div></div>
+    <div class="tt-outros">
+      <div class="tt-outro" style="--cor:#E8702A"><div class="tt-nome2">Abigail Cunha</div>
+        <div class="tt-num2">{n(va)}</div><div class="tt-leg2">votos · Bruna {_sinal(vb - va)}</div></div>
+      <div class="tt-outro" style="--cor:#3B6FB6"><div class="tt-nome2">Eric Costa</div>
+        <div class="tt-num2">{n(ve)}</div><div class="tt-leg2">votos · Bruna {_sinal(vb - ve)}</div></div>
+    </div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+
 def narrador(r, geral, numeros, ensaio, apurado):
     """Comentários bem-humorados conforme a apuração avança; homenagem quando a Bruna é eleita."""
     c = r["cand"]
@@ -293,6 +318,7 @@ def painel_deputados():
     st.caption(f"Fonte: TSE · deputado estadual MA · eleição {info['eleicao']} ({info['ciclo']}) · "
                f"{r['unidades_com_votos']} de {r['unidades']} municípios com votos · atualizado agora")
     st.metric("Seções apuradas no Maranhão", f"{n(apurado, 1)}%")
+    cartao_tuntum(d)
     narrador(r, geral, numeros, ensaio, apurado)
 
     k = st.columns(3)
