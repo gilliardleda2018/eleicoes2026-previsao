@@ -15,6 +15,7 @@ import streamlit.components.v1 as components
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "apuracao"))
+import momento  # noqa: E402
 import motor  # noqa: E402
 from comum import CSS, _logo_base64, barra_navegacao, cabecalho_marca, grafico, n, pct, tabela  # noqa: E402
 
@@ -362,6 +363,12 @@ def narrador(r, geral, numeros, ensaio, apurado):
       <div class="leg">diferença · Eric {n(ve)}</div></div>
   </div>
 </div>""", unsafe_allow_html=True)
+        frase = ("A filha de Tuntum agora tem cadeira na Assembleia. Obrigado a cada liderança, cabo eleitoral "
+                 "e eleitor que acreditou!")
+        texto = (f"💗 BRUNA PESSOA ELEITA DEPUTADA ESTADUAL! 🎉\n\n{frase}\n\nBruna: {n(vb)} votos · "
+                 f"Abigail: {n(va)} · Eric: {n(ve)}\n\nAcompanhamos tudo com a Aggilli Intelligence 👉 {momento.LINK}")
+        momento.botoes(texto, momento.arte("Bruna Pessoa eleita!", frase, vb, va, ve, apurado, eleita=True, fmt=n),
+                       "bruna_eleita.jpg")
         return
 
     # ---- ultrapassagens (compara com a atualização anterior desta sessão)
@@ -398,6 +405,13 @@ def narrador(r, geral, numeros, ensaio, apurado):
 {f'<div style="margin-top:6px">{marco}</div>' if marco else ''}
 <div class="pequeno" style="margin-top:8px">{difs} (votos apurados até agora)</div>
 </div>""", unsafe_allow_html=True)
+    destaque = avisos[0] if avisos else base
+    frase = destaque + (f" {marco}" if marco and not avisos else "")
+    texto = (f"📡 Apuração ao vivo · {n(apurado, 1)}% apurado\n\n{destaque}\n\n"
+             f"Bruna: {n(vb)} votos · Abigail: {n(va)} · Eric: {n(ve)}\n\n"
+             f"💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! 👉 {momento.LINK}")
+    momento.botoes(texto, momento.arte("Bruna Pessoa ao vivo", frase, vb, va, ve, apurado, fmt=n),
+                   f"apuracao_{int(apurado)}pct.jpg")
 
 
 @st.fragment(run_every=None if ensaio else "90s")
