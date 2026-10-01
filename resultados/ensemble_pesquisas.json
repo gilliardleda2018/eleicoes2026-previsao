@@ -1,7 +1,7 @@
 {
   "fonte": "pesquisas_verificadas.csv + compilação",
-  "n_pesquisas": 28,
-  "n_conferidas": 18,
+  "n_pesquisas": 30,
+  "n_conferidas": 20,
   "institutos": [
     "AtlasIntel",
     "Doxa",
@@ -21,62 +21,62 @@
   "modelos": {
     "braide": {
       "Média ponderada": {
-        "est": 46.05,
-        "dp": 2.43
+        "est": 46.59,
+        "dp": 2.29
       },
       "Mediana robusta (últimos 30 dias)": {
         "est": 47.37,
-        "dp": 4.68
+        "dp": 4.92
       },
       "Regressão com efeito-instituto": {
-        "est": 48.04,
-        "dp": 2.17
+        "est": 47.89,
+        "dp": 2.13
       },
       "Filtro de Kalman": {
-        "est": 47.59,
-        "dp": 1.35
+        "est": 47.48,
+        "dp": 1.23
       },
       "Processo Gaussiano": {
-        "est": 47.5,
-        "dp": 1.22
+        "est": 47.43,
+        "dp": 1.2
       },
       "Bayesiano hierárquico (Gibbs)": {
-        "est": 48.72,
-        "dp": 2.01
+        "est": 48.57,
+        "dp": 1.98
       },
       "_ancora_nacionais": {
-        "est": 49.98,
-        "dp": 2.72
+        "est": 49.86,
+        "dp": 2.71
       }
     },
     "orleans": {
       "Média ponderada": {
-        "est": 37.63,
-        "dp": 2.36
+        "est": 37.47,
+        "dp": 2.11
       },
       "Mediana robusta (últimos 30 dias)": {
         "est": 33.68,
-        "dp": 4.16
+        "dp": 4.27
       },
       "Regressão com efeito-instituto": {
-        "est": 36.59,
-        "dp": 2.13
+        "est": 36.81,
+        "dp": 2.1
       },
       "Filtro de Kalman": {
-        "est": 36.52,
-        "dp": 1.34
+        "est": 36.87,
+        "dp": 1.22
       },
       "Processo Gaussiano": {
-        "est": 36.39,
-        "dp": 1.42
+        "est": 37.09,
+        "dp": 1.45
       },
       "Bayesiano hierárquico (Gibbs)": {
-        "est": 36.2,
-        "dp": 2.23
+        "est": 36.4,
+        "dp": 2.17
       },
       "_ancora_nacionais": {
-        "est": 33.73,
-        "dp": 2.68
+        "est": 33.9,
+        "dp": 2.67
       }
     },
     "braide_2t": {
@@ -108,36 +108,36 @@
   },
   "efeito_instituto": {
     "braide": {
-      "AtlasIntel": 9.42,
-      "Doxa": -6.96,
-      "Econométrica": -4.05,
-      "INOP": -4.22,
-      "IPPI": 5.52,
-      "IPSensus": -7.97,
-      "Paraná Pesquisas": -1.43,
-      "Quaest": 4.93,
-      "Qualitativa": -5.51,
-      "Ranking": -4.08,
-      "Real Time Big Data": -1.03,
-      "Veritá": 15.25,
-      "Viva Voz": 7.2,
-      "Véritas": -7.06
+      "AtlasIntel": 9.48,
+      "Doxa": -6.83,
+      "Econométrica": -3.99,
+      "INOP": -4.12,
+      "IPPI": 5.63,
+      "IPSensus": -7.85,
+      "Paraná Pesquisas": -1.42,
+      "Quaest": 5.02,
+      "Qualitativa": -5.41,
+      "Ranking": -4.7,
+      "Real Time Big Data": -0.93,
+      "Veritá": 15.31,
+      "Viva Voz": 6.77,
+      "Véritas": -6.96
     },
     "orleans": {
-      "AtlasIntel": -9.7,
-      "Doxa": 6.97,
-      "Econométrica": 3.88,
-      "INOP": 6.28,
-      "IPPI": -5.71,
-      "IPSensus": 8.01,
-      "Paraná Pesquisas": 1.16,
-      "Quaest": -4.76,
-      "Qualitativa": 8.15,
-      "Ranking": 2.33,
-      "Real Time Big Data": -3.82,
-      "Veritá": -16.03,
-      "Viva Voz": -6.18,
-      "Véritas": 9.42
+      "AtlasIntel": -9.79,
+      "Doxa": 6.81,
+      "Econométrica": 3.79,
+      "INOP": 6.13,
+      "IPPI": -5.88,
+      "IPSensus": 7.82,
+      "Paraná Pesquisas": 1.11,
+      "Quaest": -4.9,
+      "Qualitativa": 7.98,
+      "Ranking": 3.0,
+      "Real Time Big Data": -3.99,
+      "Veritá": -16.14,
+      "Viva Voz": -5.21,
+      "Véritas": 9.27
     },
     "braide_2t": {
       "AtlasIntel": 10.49,
@@ -152,16 +152,16 @@
   },
   "ensemble": {
     "braide": {
-      "est": 47.54,
-      "dp": 2.72,
-      "min_modelos": 46.05,
-      "max_modelos": 48.72
+      "est": 47.56,
+      "dp": 2.69,
+      "min_modelos": 46.59,
+      "max_modelos": 48.57
     },
     "orleans": {
-      "est": 36.17,
+      "est": 36.39,
       "dp": 2.79,
       "min_modelos": 33.68,
-      "max_modelos": 37.63
+      "max_modelos": 37.47
     },
     "braide_2t": {
       "est": 59.44,
@@ -172,8 +172,8 @@
   },
   "n_pesquisas_2t": 10,
   "outros_validos_recentes": {
-    "camarao": 9.14,
-    "rocha": 4.47,
-    "outros": 2.58
+    "camarao": 8.89,
+    "rocha": 4.61,
+    "outros": 2.49
   }
 }

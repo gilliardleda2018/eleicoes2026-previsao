@@ -441,7 +441,7 @@ elif SECAO == 9:
     st.markdown(f"""
 **Dados.** {ENS['n_pesquisas']} pesquisas de 1º turno registradas (fonte: compilação pública, conferida em portais);
 resultados do TSE para governador em 2018 e 2022 por município; posicionamento público dos 217 prefeitos
-(levantamento de 18/09/2026); 63 itens de mídia classificados.
+(levantamento de 18/09/2026); 67 itens de mídia classificados (inclui o debate da TV Mirante de 29/09).
 
 **1. Agregadores de pesquisas (6).** Média ponderada; mediana robusta; regressão com efeito-instituto; filtro de Kalman;
 processo gaussiano; bayesiano hierárquico (Gibbs). Todos em votos válidos, com indecisos distribuídos proporcionalmente.
