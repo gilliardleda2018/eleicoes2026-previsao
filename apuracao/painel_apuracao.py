@@ -188,7 +188,7 @@ def estatisticas(d, r, apurado):
         {"Indicador": "Diferença da Bruna na projeção (votos)", "Bruna": None, "Abigail": fb - fa, "Eric": fb - fe},
         {"Indicador": "Municípios em que a Bruna está à frente", "Bruna": None, "Abigail": ganha_a, "Eric": ganha_e},
     ])
-    tabela(tab)
+    tabela(tab.astype({"Bruna": float, "Abigail": float, "Eric": float}))  # vazio (e não "None") onde não se aplica
     melhor = ap.assign(vant=ap.real_bruna - ap.real_abigail).sort_values("real_bruna", ascending=False).head(1)
     if len(melhor):
         m = melhor.iloc[0]
@@ -338,7 +338,8 @@ menor eleito 24,8 mil · último eleito da chapa do governo 38,3 mil · mediana 
                                  arrayminus=[0, 0, c["final"][1] - c["final"][0]]))
     for corte, rotulo in [(24800, "menor eleito 2022"), (38329, "último eleito chapa gov. 2022")]:
         fig.add_hline(y=corte, line_dash="dot", line_color="#5B6477", annotation_text=rotulo,
-                      annotation_position="top left")
+                      annotation_position="top right", annotation_font_size=11,
+                      annotation_bgcolor="rgba(255,255,255,.85)")
     fig.update_layout(barmode="group", height=420, yaxis_title="votos", legend=dict(orientation="h", y=-0.15),
                       title="Deputados estaduais: previsão × apuração × projeção final")
     grafico(fig)
@@ -464,4 +465,7 @@ Hoje, <b>{lider}</b> termina à frente em <b>{pct(prob)}</b> das projeções.{te
                "apurações simuladas de 2022 (com 15% ou mais apurado, contém o resultado real em mais de 80% das vezes).")
 
 
-painel_deputados() if deputados else painel()
+if deputados:
+    painel_deputados()
+else:
+    painel()
