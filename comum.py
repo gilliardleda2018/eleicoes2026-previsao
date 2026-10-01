@@ -109,6 +109,24 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .cartao.alerta {border-left-color: #C0392B; background: #FFF6F4;}
 .cartao h4 {margin: 0 0 4px 0;}
 .pequeno {font-size: .85rem; opacity: .75;}
+/* cabeçalho da marca (apuração) */
+.marca-topo {display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px;
+    padding: 18px 26px; margin: 0 0 14px; border-radius: 22px; color: #FFFFFF;
+    background: radial-gradient(700px 220px at 85% 0%, rgba(34,211,238,.22), rgba(34,211,238,0) 70%),
+                linear-gradient(110deg, #0B1628 0%, #12233F 55%, #16304F 100%);
+    border: 1.5px solid #22324D; box-shadow: 0 16px 40px rgba(11,22,40,.28);}
+.marca-topo .mt-logo img {height: 92px; display: block; margin: -8px 0;}
+.marca-topo .mt-slogan {font: 900 2rem/1.1 'Archivo'; letter-spacing: -.01em; text-align: center;}
+.marca-topo .mt-slogan span {background: linear-gradient(90deg, #22D3EE, #67E8F9); -webkit-background-clip: text;
+    background-clip: text; color: transparent;}
+.marca-topo .mt-contato {display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    font: 600 .88rem 'Manrope';}
+.marca-topo .mt-contato a {color: #E6F6FB !important; text-decoration: none; opacity: .92;}
+.marca-topo .mt-contato a:hover {opacity: 1; text-decoration: underline;}
+.marca-topo .mt-nome {font: 800 .8rem 'Manrope'; letter-spacing: .14em; color: #67E8F9; text-transform: uppercase;}
+@media (max-width: 900px) {.marca-topo {grid-template-columns: 1fr; text-align: center; gap: 10px;}
+  .marca-topo .mt-logo img {margin: 0 auto; height: 52px;} .marca-topo .mt-slogan {font-size: 1.45rem;}
+  .marca-topo .mt-contato {align-items: center;}}
 /* compartilhar a apuração: WhatsApp verde, Instagram em degradê */
 .st-key-compartilhar_apuracao [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
     color: #FFFFFF !important; font-weight: 800; border-radius: 14px;}

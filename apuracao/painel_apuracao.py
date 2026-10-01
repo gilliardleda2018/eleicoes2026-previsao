@@ -15,7 +15,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "apuracao"))
 import motor  # noqa: E402
-from comum import CSS, barra_navegacao, grafico, n, pct, tabela  # noqa: E402
+from comum import CSS, _logo_base64, barra_navegacao, grafico, n, pct, tabela  # noqa: E402
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Apuração ao vivo", page_icon="🗳️", layout="wide")
@@ -39,9 +39,21 @@ DEPUTADOS = {"bruna": ("Bruna Pessoa", "#E02597", "votos_projetados", "projeçã
              "abigail": ("Abigail Cunha", "#E8702A", "abigail_2026", "referência: 2022 + 3% de eleitorado"),
              "eric": ("Eric Costa", "#3B6FB6", "eric_2026", "referência: 2022 + 3% de eleitorado")}
 
+# ---- cabeçalho da marca (Aggilli Intelligence)
+_logo = _logo_base64()
+st.markdown(f"""
+<div class="marca-topo">
+  <div class="mt-logo">{f'<img src="data:image/webp;base64,{_logo}" alt="Aggilli Intelligence">' if _logo else '<b>AGGILLI</b>'}</div>
+  <div class="mt-slogan">Transformando dados em <span>inteligência</span></div>
+  <div class="mt-contato">
+    <a href="mailto:adi@aggillintelligence.com.br">✉️ adi@aggillintelligence.com.br</a>
+    <a href="https://wa.me/5599991722200" target="_blank">💬 (99) 99172-2200</a>
+    <span class="mt-nome">G. C. Léda</span>
+  </div>
+</div>""", unsafe_allow_html=True)
 barra_navegacao("ap")
 st.markdown("""
-<div class="capa" style="background: linear-gradient(100deg, #0F5132 0%, #1B2A41 55%, #6D2E8F 100%);">
+<div class="capa" style="background: linear-gradient(100deg, #0E5A73 0%, #12233F 55%, #3B2A6B 100%);">
   <div class="selo">DOMINGO, 4 DE OUTUBRO · APURAÇÃO OFICIAL DO TSE · ATUALIZA A CADA 90 SEGUNDOS</div>
   <div class="titulo">Apuração ao vivo</div>
   <div class="sub">Compara cada estado e município apurado com a projeção do modelo e estima para onde vai o resultado final.</div>
