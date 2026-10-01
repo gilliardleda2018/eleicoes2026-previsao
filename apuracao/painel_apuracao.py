@@ -100,14 +100,13 @@ def link_apuracao():
 def compartilhar(disputa):
     """Botões de compartilhar só a apuração: WhatsApp (mensagem pronta) e Instagram (arte para o Stories + link)."""
     url = link_apuracao()
-    if disputa == "presidente":
-        texto = ("📡 Apuração ao vivo — Lula × Flávio Bolsonaro, voto a voto, com Tuntum em destaque. "
-                 "Atualiza sozinho a cada 90 segundos. Acompanhe com a Aggilli Intelligence:")
-        arte = RAIZ / "assets" / "compartilhar" / "apuracao_brasil_stories.jpg"
-    else:
-        texto = ("📡 Apuração ao vivo — Bruna Pessoa e a disputa pelo Governo do Maranhão, com Tuntum em destaque. "
-                 "Atualiza sozinho a cada 90 segundos. Acompanhe com a Aggilli Intelligence:")
-        arte = RAIZ / "assets" / "compartilhar" / "apuracao_maranhao_stories.jpg"
+    # chamada única (contratantes: Bruna Pessoa e o time do Fernando); só convida a acompanhar, sem pedir voto
+    texto = ("💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! 🗳️\n\n"
+             "A apuração está AO VIVO e a Aggilli Intelligence acompanha voto a voto: Bruna Pessoa na Assembleia, "
+             "a disputa pelo Governo do Maranhão e a corrida presidencial, com Tuntum em destaque e atualização "
+             "a cada 90 segundos.\n\n👉 Acompanhe aqui:")
+    arte = RAIZ / "assets" / "compartilhar" / (
+        "apuracao_brasil_stories.jpg" if disputa == "presidente" else "apuracao_maranhao_stories.jpg")
     with st.container(key="compartilhar_apuracao"):
         c1, c2, c3 = st.columns([1.2, 1.2, 2])
         c1.link_button("📲 Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto + chr(10) + url)}",
