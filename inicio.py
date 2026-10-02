@@ -41,7 +41,7 @@ st.markdown("""<style>
     border-radius: 18px; border: 1px solid var(--linha); color: #FFFFFF; margin: 2px 0 18px;
     background: linear-gradient(100deg, var(--az1), var(--az2)); box-shadow: 0 10px 26px rgba(33,86,160,.25);}
 .hm-topo > img {height: 66px; display: block; margin: -6px 0;}
-.hm-topo .hm-slogan {font: 700 1.3rem 'Montserrat'; letter-spacing: -.005em; text-align: center;}
+.hm-topo .hm-slogan {font: 800 1.75rem/1.2 'Montserrat'; letter-spacing: -.01em; text-align: center;}
 .hm-topo .hm-slogan span, .hm-capa h1 span, .hm-creditos .cr-slogan span {color: #8FE3FF;}
 .hm-contato {display: flex; flex-direction: column; align-items: flex-end; gap: 5px; font: 600 .84rem 'Montserrat';}
 .hm-contato a {color: #FFFFFF !important; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;}
@@ -146,7 +146,7 @@ st.markdown("""<style>
 .hm-nota {text-align: center; color: #3E5675; font: 500 .8rem 'Montserrat'; margin-top: 8px;}
 @media (max-width: 900px) {
   .hm-topo {grid-template-columns: 1fr; text-align: center; gap: 8px; padding: 14px;}
-  .hm-topo > img {margin: 0 auto; height: 52px;} .hm-contato {align-items: center;}
+  .hm-topo > img {margin: 0 auto; height: 52px;} .hm-topo .hm-slogan {font-size: 1.35rem;} .hm-contato {align-items: center;}
   .hm-redes {grid-template-columns: 1fr; justify-items: center;} .hm-redes b {justify-self: center;}
   .hm-capa {padding: 28px 16px 18px;} .hm-selo {font-size: .64rem; letter-spacing: .14em; padding: 7px 12px;} .hm-capa h1 {font-size: 2.05rem !important;}
   .hm-recursos {grid-template-columns: 1fr; gap: 12px;}
@@ -224,7 +224,7 @@ _logo = _logo_base64()
 st.markdown(f"""
 <div class="hm-topo">
   {f'<img src="data:image/webp;base64,{_logo}" alt="Aggilli Intelligence">' if _logo else '<b>AGGILLI</b>'}
-  <div class="hm-slogan">Transformando dados em <span>inteligência</span></div>
+  <div class="hm-slogan">Transformando Dados em <span>Decisões Inteligentes</span></div>
   <div class="hm-redes">
     <a href="https://wa.me/5599991722200" target="_blank" title="WhatsApp"><img src="/app/static/icones/whatsapp.png" alt="">(99) 99172-2200</a>
     <a href="https://www.instagram.com/aggillisoftware/" target="_blank" title="Instagram"><img src="/app/static/icones/instagram.png" alt="">@aggillisoftware</a>
