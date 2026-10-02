@@ -1,50 +1,56 @@
 {
   "n_cenarios": 20000,
+  "data_corte": "2026-10-02",
+  "validacao_preditiva": "pendente: testes sintéticos não validam previsão real",
+  "escopo": "Lula x Flávio; demais candidatos não têm vitória modelada; sem exterior",
+  "transferencia_disponivel": true,
+  "efeitos_estaduais": "redistribuem votos; não alteram probabilidade nacional",
   "primeiro_turno": {
     "lula_validos_p10_p50_p90": [
-      37.1,
-      41.1,
-      44.5
+      38.0,
+      41.5,
+      44.7
     ],
     "flavio_validos_p10_p50_p90": [
-      37.2,
-      40.7,
-      44.9
+      38.9,
+      41.9,
+      45.5
     ],
-    "outros_validos_p50": 18.2,
+    "outros_validos_p50": 16.5,
     "prob_lula_vence_1t": 0.0,
     "prob_flavio_vence_1t": 0.003,
     "prob_segundo_turno": 0.997
   },
   "segundo_turno": {
     "lula_validos_p10_p50_p90": [
-      44.7,
-      48.7,
-      52.2
+      46.9,
+      49.4,
+      51.9
     ],
-    "prob_lula_vence_se_2t": 0.325,
-    "modelo_pesquisas_2t_p50": 50.0,
-    "modelo_transferencia_p50": 49.7,
+    "prob_lula_vence_se_2t": 0.38,
+    "modelo_pesquisas_2t_p50": 49.5,
+    "modelo_transferencia_p50": 49.2,
     "transferencia_medida": {
-      "lula": 0.386,
-      "dp": 0.048,
-      "pares": 55
+      "lula": 0.38,
+      "dp": 0.049,
+      "pares": 44,
+      "metodo": "distribuição empírica da transferência implícita"
     }
   },
   "sem_correcao_historica": {
-    "lula_2t_p50": 49.9,
-    "prob_lula": 0.473
+    "lula_2t_p50": 49.3,
+    "prob_lula": 0.31
   },
   "resultado_final": {
-    "prob_lula_presidente": 0.324,
-    "prob_flavio_presidente": 0.676
+    "prob_lula_presidente": 0.379,
+    "prob_flavio_presidente": 0.621
   },
   "cenario_alerta": {
-    "prob_lula_presidente": 0.083,
-    "prob_flavio_presidente": 0.917,
-    "lula_1t_p50": 40.0,
-    "flavio_1t_p50": 41.8,
-    "lula_2t_p50": 44.0
+    "prob_lula_presidente": 0.076,
+    "prob_flavio_presidente": 0.923,
+    "lula_1t_p50": 40.7,
+    "flavio_1t_p50": 42.8,
+    "lula_2t_p50": 43.4
   },
   "erro_historico": {
     "pesquisas": 64,
@@ -59,15 +65,18 @@
     "dp_1t": 5.8,
     "media_2t": 0.4,
     "dp_2t": 2.2,
-    "media_2018_2022": -2.7,
+    "media_2018_2022": -1.8,
     "media_2022_1t": -2.7,
     "erro_2t_antecipado_2022": -11.8,
     "persistencia": "uniforme de 0% a 100%",
     "erros_usados_2t": [
+      -0.3,
       -0.8,
-      -2.7,
-      -11.8
+      -1.0,
+      4.4,
+      -0.1
     ],
+    "metodo_principal_2t": "erros das pesquisas finais de segundo turno; hipótese não calibrada temporalmente",
     "detalhe": {
       "2006 1º t": -7.0,
       "2006 2º t": -0.3,
@@ -83,15 +92,15 @@
   },
   "estados": {
     "favorito_lula": 9,
-    "favorito_flavio": 17,
-    "indefinidos": 1
+    "favorito_flavio": 16,
+    "indefinidos": 2
   },
   "regioes_2t": {
-    "Centro-Oeste": 38.3,
-    "Nordeste": 63.9,
-    "Norte": 45.4,
-    "Sudeste": 44.3,
-    "Sul": 39.5
+    "Centro-Oeste": 37.7,
+    "Nordeste": 64.1,
+    "Norte": 44.7,
+    "Sudeste": 46.3,
+    "Sul": 39.8
   },
   "ajustes_regionais": {
     "PR": [

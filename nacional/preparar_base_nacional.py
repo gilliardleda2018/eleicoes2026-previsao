@@ -11,6 +11,7 @@ import urllib.request
 from pathlib import Path
 
 import pandas as pd
+from validacao_modelo import validar_percentuais
 
 D = Path(__file__).resolve().parent / "dados"
 UFS = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapá", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceará",
@@ -37,7 +38,16 @@ def tse_uf(uf, eleicao):
         arq.write_bytes(urllib.request.urlopen(req, timeout=30).read())
         time.sleep(0.2)
     t = json.loads(arq.read_text(encoding="utf-8"))
+    if float(str(t.get("pst", "0")).replace(",", ".")) != 100:
+        raise ValueError(f"Apuração incompleta ou sem marcador de conclusão: {uf}/{eleicao}")
     votos = {c["nm"]: int(c["vap"]) for c in t["cand"]}
+    if int(t["vv"]) <= 0 or sum(votos.values()) != int(t["vv"]):
+        raise ValueError(f"Contagem de votos inconsistente: {uf}/{eleicao}")
+    obrigatorios = {"LULA", "JAIR BOLSONARO"}
+    if eleicao == 544:
+        obrigatorios |= {"SIMONE TEBET", "CIRO GOMES"}
+    if not obrigatorios.issubset(votos):
+        raise ValueError(f"Candidato obrigatório ausente: {uf}/{eleicao}")
     return votos, int(t["vv"]), int(t["e"]), int(t["c"])  # válidos, eleitorado, comparecimento
 
 
@@ -57,7 +67,10 @@ b = pd.DataFrame(linhas)
 
 r18 = pd.read_csv(D / "tse" / "presidente_2018_uf.csv")
 r18["uf"] = r18.estado.map({v: k for k, v in UFS.items()})
-b = b.merge(r18.drop(columns="estado"), on="uf", how="left")
+if r18.uf.isna().any() or r18.uf.duplicated().any() or set(r18.uf) != set(UFS):
+    raise ValueError("Base de 2018 incompleta, duplicada ou com nomes de estados desconhecidos")
+b = b.merge(r18.drop(columns="estado"), on="uf", how="left", validate="one_to_one")
+validar_percentuais(b, ["haddad18_2t", "haddad18_1t", "ciro18_1t", "bolsonaro18_2t"], "Base de 2018")
 b["peso"] = b.validos22_2t / b.validos22_2t.sum()
 b.to_csv(D / "base_ufs.csv", index=False, encoding="utf-8")
 
