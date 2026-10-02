@@ -443,7 +443,17 @@ def painel_deputados():
     if ensaio:
         unidades = unidades if fracao >= 1 else motor.simular_parcial(unidades, fracao, semente=int(fracao * 1000))
     prev = previsao_deputados()
-    d, r = motor.projetar_votos(unidades, prev, numeros, {k: v[2] for k, v in DEPUTADOS.items()})
+    try:
+        d, r = motor.projetar_votos(unidades, prev, numeros, {k: v[2] for k, v in DEPUTADOS.items()})
+    except ValueError as e:
+        st.error(f"Projeção suspensa: dados inconsistentes ({e}). A página tentará atualizar novamente.")
+        return
+    st.info("**Como ler a projeção:** a base inicial da Bruna combina histórico eleitoral e hipóteses de "
+            "transferência e de campo; não é uma pesquisa de intenção de voto nem uma previsão eleitoral "
+            "validada para ela. Durante a apuração, o cálculo ajusta os votos que faltam pelo ritmo observado "
+            "nos municípios. A faixa contém os 80% centrais das simulações e sua cobertura real ainda não "
+            "foi calibrada. As chances de superar 24,8 mil ou 38,3 mil são condicionadas a essas hipóteses; "
+            "não são chances de eleição. As vagas dependem também dos votos e das regras aplicáveis aos partidos.")
     apurado = r["apurado_pct"] if ensaio else geral["pst"]
     st.caption(f"Fonte: TSE · deputado estadual MA · eleição {info['eleicao']} ({info['ciclo']}) · "
                f"{r['unidades_com_votos']} de {r['unidades']} municípios com votos · atualizado agora")
