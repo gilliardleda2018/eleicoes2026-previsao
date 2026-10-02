@@ -67,6 +67,19 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+st.info(
+    f"**Como ler estes números:**\n\n"
+    f"• **Chance de vitória:** em 100 eleições simuladas pelo modelo, Lula vence cerca de {pct(pl).replace('%', '')} "
+    f"e Flávio cerca de {pct(pf).replace('%', '')}. Isso não é a porcentagem de votos nem uma garantia.\n\n"
+    f"• **Projeção de votos:** no segundo turno, o centro da estimativa é Lula com "
+    f"{n(P2['lula_validos_p10_p50_p90'][1], 1)}% e Flávio com "
+    f"{n(100 - P2['lula_validos_p10_p50_p90'][1], 1)}% dos votos válidos "
+    f"(excluem brancos e nulos). Um placar apertado pode dar chances de vitória diferentes.\n\n"
+    "**Faixa de 80%:** reúne os 80% centrais dos resultados simulados; o resultado real pode ficar fora dela. "
+    "As pesquisas alimentam o cálculo, que também considera erros históricos e hipóteses. "
+    "Novos dados podem mudar as estimativas."
+)
+
 SECOES = ["🏁 Veredito", "📊 Pesquisas", "🧠 Modelos", "🗺️ Mapa", "🏙️ Estados", "🧭 Regiões", "📰 Mídia",
           "🎛️ Cenários", "📚 Nossa base", "ℹ️ Metodologia"]
 _e = st.pills("Seção", SECOES, default=SECOES[0], selection_mode="single", label_visibility="collapsed", key="secao_br")
