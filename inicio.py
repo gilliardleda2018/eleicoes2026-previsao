@@ -91,11 +91,19 @@ st.markdown("""<style>
     box-shadow: 0 14px 30px rgba(33,86,160,.25); transition: transform .18s, box-shadow .18s;}
 [class*="st-key-hc_"]:hover {transform: translateY(-4px); box-shadow: 0 20px 38px rgba(33,86,160,.33);}
 .st-key-hc_br {border-top: 4px solid #2BD27A !important;} .st-key-hc_ma {border-top: 4px solid #FF5A6E !important;}
-.st-key-hc_ap {border-top: 4px solid #2BD27A !important;}
+
 .hc-num {position: absolute; top: 10px; right: 18px; font: 800 2.7rem 'Montserrat'; color: rgba(255,255,255,.13);}
 .hc-emblema {height: 128px; display: flex; align-items: center; justify-content: center;}
 .hc-emblema .hc-bandeira {width: 150px; height: 104px; transform: rotate(-3deg); filter: drop-shadow(0 12px 16px rgba(10,30,70,.38));}
 .hc-emblema .hc-icone {font-size: 5.4rem; line-height: 1; filter: drop-shadow(0 12px 14px rgba(10,30,70,.35));}
+.hc-emblema .hc-a3d {width: 150px; height: 125px; transform: perspective(420px) rotateY(-16deg) rotateX(6deg);
+    filter: drop-shadow(0 14px 16px rgba(5,20,45,.55)) drop-shadow(0 0 18px rgba(20,230,245,.25));}
+/* card da apuração: azul-noite para o "A" ciano saltar */
+.st-key-hc_ap {background: radial-gradient(circle at 50% 0%, rgba(20,230,245,.18), transparent 55%),
+    linear-gradient(180deg, #1C3566, #12234A) !important; border-color: rgba(143,227,255,.25) !important;
+    border-top: 4px solid #14E6F5 !important;}
+.st-key-hc_ap .hc-chips span {background: rgba(20,230,245,.10); border-color: rgba(20,230,245,.35);}
+.st-key-hc_ap .hc-num {color: rgba(20,230,245,.16);}
 .hc-selo {font: 700 .72rem 'Montserrat'; letter-spacing: .24em; color: #8FE3FF; margin-top: 10px; display: flex;
     justify-content: center; align-items: center; gap: 8px;}
 .hc-selo em {font-style: normal; font-size: .62rem; letter-spacing: .1em; color: #0B3B24; background: #3BE07F;
@@ -187,7 +195,29 @@ BANDEIRA_MA = f"""<svg viewBox="0 0 150 104" class="hc-bandeira" role="img" aria
 <polygon fill="#fff" points="25,13 28.5,22.5 38.5,22.8 30.6,29 33.4,38.6 25,33 16.6,38.6 19.4,29 11.5,22.8 21.5,22.5"/>
 <rect width="150" height="104" fill="url(#gma)"/></g></svg>"""
 
-ICONE_AP = '<div class="hc-icone" role="img" aria-label="Apuração ao vivo">📡</div>'
+# "A" da logomarca da Aggilli em 3D (vetor redesenhado): faces de cima com degradê e facetas,
+# "espessura" com camadas mais escuras deslocadas e leve giro em perspectiva (CSS)
+_A_CAMADAS = """<g transform="translate(40.5 49.5)" fill="#034258"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(36.0 44.0)" fill="#044B61"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(31.5 38.5)" fill="#05546A"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(27.0 33.0)" fill="#065D73"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(22.5 27.5)" fill="#07667C"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(18.0 22.0)" fill="#086F85"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(13.5 16.5)" fill="#09788E"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(9.0 11.0)" fill="#0A8197"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(4.5 5.5)" fill="#0B8AA0"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g>"""
+ICONE_AP = f"""<svg class="hc-a3d" viewBox="58 52 912 760" role="img" aria-label="Aggilli Intelligence">
+<defs>
+<path id="aL" d="M397 244 L462 352 Q466 360 461 368 L268 676 Q170 700 72 750 Z"/>
+<path id="aB" d="M352 540 L548 530 Q556 531 560 538 L642 676 Q560 660 470 662 Q370 664 268 676 Z"/>
+<path id="aR" d="M502 66 L918 744 Q825 712 732 688 L426 183 Z"/>
+<linearGradient id="aGp" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#14E6F5"/>
+<stop offset="0.55" stop-color="#0FCFE6"/><stop offset="1" stop-color="#0E9FBA"/></linearGradient>
+<linearGradient id="aGe" x1="0.6" y1="0" x2="0.2" y2="1"><stop offset="0" stop-color="#16E2F2"/>
+<stop offset="0.6" stop-color="#10CDE3"/><stop offset="1" stop-color="#0FB4CC"/></linearGradient>
+<linearGradient id="aGb" x1="0" y1="0" x2="1" y2="0.4"><stop offset="0" stop-color="#13B9CF"/>
+<stop offset="1" stop-color="#18C3D6"/></linearGradient>
+<clipPath id="aCr"><use href="#aR"/></clipPath></defs>
+{_A_CAMADAS}
+<g stroke="#0B5466" stroke-opacity=".45" stroke-width="3" stroke-linejoin="round">
+<use href="#aL" fill="url(#aGe)"/><use href="#aB" fill="url(#aGb)"/><use href="#aR" fill="url(#aGp)"/></g>
+<g clip-path="url(#aCr)"><path d="M560 398 L634 296 L1000 900 L560 900 Z" fill="#06566B" fill-opacity=".24"/>
+<path d="M628 502 L700 396 L1000 900 L628 900 Z" fill="#06566B" fill-opacity=".24"/>
+<path d="M502 66 L540 128 L452 225 L426 183 Z" fill="#FFFFFF" fill-opacity=".14"/></g>
+<path d="M397 244 L120 680" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="4" fill="none"/>
+<path d="M502 66 L432 180" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="4" fill="none"/></svg>"""
 
 # ---------------------------------------------------------------- marca + capa
 _logo = _logo_base64()
