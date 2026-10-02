@@ -1,0 +1,32 @@
+{
+  "base_commit": "facc9a474deeda4504a928cbba0f082f43015a1b",
+  "data_corte": "2026-10-02",
+  "versoes": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2",
+    "streamlit": "1.62.0",
+    "plotly": "6.9.0"
+  },
+  "python": "3.12.14",
+  "entradas_sha256": {
+    "nacional/dados/base_ufs.csv": "2a5fe7cdceba316080b82e20daf98867facfb2e839e1f04e7a207cbfe0730c29",
+    "nacional/dados/br_ufs.json": "db8971b3157e178f7eb8dbb9176e6b1f7aecd32844420c465bfb22f1f54ffa61",
+    "nacional/dados/centroides_ufs.json": "36001c31354057083f32ed4a1640c2baa02496f51d2c5832e55067944ebdded5",
+    "nacional/dados/erro_2t_antecipado_2022.csv": "d2fb8c415ad15a7828a0c58d619834c3054359710473ae09efdb8f6191f39b8f",
+    "nacional/dados/erro_historico_presidente.csv": "bf6867ad3f1243b2af0e97f11b9ca3e942e0d40dc9b687e84e8348154448832d",
+    "nacional/dados/governadores_apoio_2026.csv": "22eada9296f37674a59cf56247778e68c252270a0b0610da948fa426fb490c98",
+    "nacional/dados/indicadores_nacionais.csv": "9f59ab5142958f8067313fbbb49ce53c8e77f2de0f69ae8ac2ae1953bbcd9460",
+    "nacional/dados/midia_nacional.csv": "a20b8feb3dec49b4e43ad5a14da530903d69902ea0658b7bf9f4b54954ec6512",
+    "nacional/dados/midia_nacional_argumentos.md": "ef50f629ef00ef51c13d12632a9b829a27231773db2c7059c37e7e6c23c7f8bc",
+    "nacional/dados/pesquisas_presidente.csv": "3995dd5bb6e955e8659bc19ede1e61c032c601df2e315c66e9f8dbd15490fdf3",
+    "nacional/dados/pesquisas_presidente_regioes.csv": "09a4b6433d5dc82d27044d9ee91b46cec5185b0922301c7d3b30980c223c763c"
+  },
+  "saidas_sha256": {
+    "ensemble_nacional.json": "c084cf11496c939432575d2c492b40ef00d739e60b61290ff07d20efa493fc6e",
+    "geo_ml_nacional.json": "57181b9df8b8796bbb076d9394ac3844109303b5100d072ca262dd5440d96d28",
+    "simulacao_nacional.json": "ef6b1759a4194907356d0fb3fcbaeacb253318f563fd022e6ac2e0273a936f07",
+    "ufs_previsao.csv": "d1ca184f701d28a167be069f0041ce76c26553145b7a38806cb2bed965b24f18"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "escopo": "backtest parcial da correção histórica com média das pesquisas finais; não valida pipeline pré-1º turno completo",
+  "limites": [
+    "somente três eleições de teste",
+    "data de publicação não disponível; corte de campo",
+    "amostras ausentes: piso de DP de 1 ponto",
+    "nenhum parâmetro ajustado pelo resultado da eleição-alvo"
+  ],
+  "metricas": {
+    "erro_historico": {
+      "eleicoes": 3,
+      "brier": 0.016642683333333342,
+      "log_loss": 0.09142457580944069,
+      "mae_voto_pts": 0.9518698168444123,
+      "cobertura_faixa_80": 0.6666666666666666,
+      "baseline_brier_50_50": 0.25,
+      "limite": "Métricas não verificam sozinhas a proveniência ou independência dos dados; poucas eleições geram grande incerteza."
+    },
+    "sem_correcao": {
+      "eleicoes": 3,
+      "brier": 0.009379010833333336,
+      "log_loss": 0.06586668767246258,
+      "mae_voto_pts": 0.9117572327694697,
+      "cobertura_faixa_80": 0.6666666666666666,
+      "baseline_brier_50_50": 0.25,
+      "limite": "Métricas não verificam sozinhas a proveniência ou independência dos dados; poucas eleições geram grande incerteza."
+    }
+  }
+}

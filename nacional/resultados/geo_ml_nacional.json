@@ -1,32 +1,41 @@
 {
   "Regressão linear": {
-    "r2_cv": 0.94,
-    "erro_medio_pts": 2.44
+    "r2_cv": 0.844,
+    "erro_medio_pts": 3.57
   },
   "Ridge": {
-    "r2_cv": 0.953,
-    "erro_medio_pts": 2.24
+    "r2_cv": 0.898,
+    "erro_medio_pts": 3.01
   },
   "Random Forest": {
-    "r2_cv": 0.911,
-    "erro_medio_pts": 3.29
+    "r2_cv": 0.308,
+    "erro_medio_pts": 10.38
   },
   "Gradient Boosting": {
-    "r2_cv": 0.943,
-    "erro_medio_pts": 2.71
+    "r2_cv": 0.541,
+    "erro_medio_pts": 8.02
   },
   "KNN geográfico": {
-    "r2_cv": 0.858,
-    "erro_medio_pts": 4.41
+    "r2_cv": 0.352,
+    "erro_medio_pts": 9.51
+  },
+  "_baseline": {
+    "erro_medio_pts": 4.59,
+    "descricao": "Persistência da geografia 2018; referência espacial"
+  },
+  "_validacao": {
+    "tipo": "região deixada de fora",
+    "temporal": false,
+    "observacao": "Não comprova acurácia eleitoral em 2026"
   },
   "_ensemble": {
     "pesos": {
-      "Regressão linear": 0.204,
-      "Ridge": 0.207,
-      "Random Forest": 0.198,
-      "Gradient Boosting": 0.205,
-      "KNN geográfico": 0.186
+      "Regressão linear": 0.485,
+      "Ridge": 0.515,
+      "Random Forest": 0.0,
+      "Gradient Boosting": 0.0,
+      "KNN geográfico": 0.0
     },
-    "erro_medio_pts": 2.99
+    "erro_medio_pts": 3.28
   }
 }

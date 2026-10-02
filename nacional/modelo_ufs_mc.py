@@ -19,20 +19,40 @@ from scipy.special import expit, logit
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, RidgeCV
 from sklearn.metrics import mean_absolute_error, r2_score
-from sklearn.model_selection import KFold, cross_val_predict
+from sklearn.model_selection import LeaveOneGroupOut, cross_val_predict
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 RAIZ = Path(__file__).resolve().parent
 D, RES = RAIZ / "dados", RAIZ / "resultados"
+from validacao_modelo import (data_corte, filtrar_datas, validar_percentuais, transferencia_implicita,
+                              sortear_transferencia, decidir, escrever_json)
+RES.mkdir(parents=True, exist_ok=True)
 SEMENTE, N_SIM = 42, 20_000
 rng = np.random.default_rng(SEMENTE)
 
 b = pd.read_csv(D / "base_ufs.csv")
+if len(b) != 27 or b.uf.nunique() != 27 or b.regiao.nunique() < 2:
+    raise ValueError("Base deve conter 27 UFs únicas e regiões válidas")
+cols_base = ["haddad18_2t", "haddad18_1t", "ciro18_1t", "lula22_2t", "lula22_1t", "ciro22_1t"]
+validar_percentuais(b, cols_base, "Base geográfica")
+if not np.isfinite(b.validos22_2t).all() or (b.validos22_2t <= 0).any():
+    raise ValueError("Pesos eleitorais inválidos")
 cent = json.load(open(D / "centroides_ufs.json"))
 b["lat"], b["lon"] = b.uf.map(lambda u: cent[u][0]), b.uf.map(lambda u: cent[u][1])
 ens = json.load(open(RES / "ensemble_nacional.json", encoding="utf-8"))
+if "data_corte" not in ens:
+    raise ValueError("Agregação sem data de corte; regenere com a versão corrigida")
+CORTE = pd.Timestamp(ens["data_corte"])
+if CORTE > min(data_corte(), pd.Timestamp("2026-10-04")):
+    raise ValueError("Agregação posterior ao corte permitido")
+for chave in ("lula_1t", "flavio_1t", "lula_2t"):
+    if chave not in ens["ensemble"]:
+        continue
+    e = ens["ensemble"][chave]
+    if not np.isfinite([e["est"], e["dp"]]).all() or not 0 <= e["est"] <= 100 or e["dp"] <= 0:
+        raise ValueError(f"Agregação inválida: {chave}")
 w = b.validos22_2t.values / b.validos22_2t.sum()
 b["log_validos"] = np.log(b.validos22_2t)
 
@@ -53,7 +73,8 @@ modelos = {
                                                    random_state=SEMENTE),
     "KNN geográfico": make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=4, weights="distance")),
 }
-cv = KFold(5, shuffle=True, random_state=SEMENTE)
+cv = list(LeaveOneGroupOut().split(X_treino, alvo, groups=b.regiao))
+# Avaliação espacial, não backtest de uma eleição futura.
 geo_ml, previsoes = {}, []
 for nome, m in modelos.items():
     oof = cross_val_predict(m, X_treino, alvo, cv=cv)
@@ -61,11 +82,19 @@ for nome, m in modelos.items():
                     "erro_medio_pts": round(float(mean_absolute_error(alvo, oof)), 2)}
     m.fit(X_treino, alvo)
     previsoes.append(m.predict(X_2026))
-r2s = np.array([max(v["r2_cv"], 0.01) for v in geo_ml.values()])
+erro_baseline = float(mean_absolute_error(alvo, desvio("haddad18_2t")))
+# Modelos piores que a persistência não devem piorar a geografia por serem complexos.
+r2s = np.array([max(v["r2_cv"], 0.01) if v["erro_medio_pts"] <= erro_baseline else 0.0 for v in geo_ml.values()])
+if not r2s.sum():
+    raise ValueError("Nenhum modelo geográfico supera persistência; revise antes de publicar")
 pesos_ml = r2s / r2s.sum()
 b["inclinacao_pt"] = np.average(np.vstack(previsoes), axis=0, weights=pesos_ml)
 b["inclinacao_pt"] -= np.average(b.inclinacao_pt, weights=w)
 erro_geo = float(np.average([v["erro_medio_pts"] for v in geo_ml.values()], weights=pesos_ml))
+geo_ml["_baseline"] = {"erro_medio_pts": round(float(mean_absolute_error(alvo, desvio("haddad18_2t"))), 2),
+                       "descricao": "Persistência da geografia 2018; referência espacial"}
+geo_ml["_validacao"] = {"tipo": "região deixada de fora", "temporal": False,
+                        "observacao": "Não comprova acurácia eleitoral em 2026"}
 geo_ml["_ensemble"] = {"pesos": dict(zip(modelos, pesos_ml.round(3))), "erro_medio_pts": round(erro_geo, 2)}
 
 # ------------------------------------------------------------------ B) calibração regional pelas pesquisas de 2026
@@ -74,18 +103,32 @@ AJUSTE = {}  # uf -> (ajuste em logit, erro)
 arq_reg = D / "pesquisas_presidente_regioes.csv"
 if arq_reg.exists():
     rr = pd.read_csv(arq_reg)
+    rr = filtrar_datas(rr, CORTE, inicio="inicio")
+    if "status" in rr:
+        rr = rr[rr.status == "confirmada"]
     for c in ("lula", "flavio"):
         rr[c] = pd.to_numeric(rr[c], errors="coerce")
     rr = rr.dropna(subset=["lula", "flavio"])
-    rr = rr[rr.turno.astype(str) == "2"] if (rr.turno.astype(str) == "2").sum() >= 5 else rr
+    rr = rr[rr.turno.astype(str) == "2"].copy()  # não mistura geografia de turnos diferentes
+    validar_percentuais(rr, ["lula", "flavio"], "Recortes regionais")
+    if ((rr.lula <= 0) | (rr.flavio <= 0)).any():
+        raise ValueError("Recortes com zero não são compatíveis com logit")
     pn = pd.read_csv(D / "pesquisas_presidente.csv")
+    pn = filtrar_datas(pn, CORTE)
+    pn["fim"] = pn.fim.dt.strftime("%Y-%m-%d")
+    rr["fim"] = rr.fim.dt.strftime("%Y-%m-%d")
+    if "status" in pn:
+        pn = pn[pn.status == "confirmada"]
     reg22 = b.groupby("regiao").apply(lambda d: np.average(d.lula22_2t, weights=d.validos22_2t), include_groups=False)
     nac22 = np.average(b.lula22_2t, weights=w)
     shifts = {}
     for (inst, fim), g in rr.groupby(["instituto", "fim"]):
         tot = pn[(pn.instituto == inst) & (pn.fim == fim) & (pn.turno.astype(str) == str(g.turno.iloc[0]))]
-        if tot.empty:
+        if len(tot) != 1:
             continue
+        validar_percentuais(tot, ["lula", "flavio"], "Pesquisa nacional pareada")
+        if (tot.lula <= 0).any() or (tot.flavio <= 0).any():
+            raise ValueError("Pesquisa nacional incompatível com logit")
         nac = float(pd.to_numeric(tot.lula).iloc[0]) / (float(pd.to_numeric(tot.lula).iloc[0]) +
                                                          float(pd.to_numeric(tot.flavio).iloc[0]))
         for _, lin in g.iterrows():
@@ -119,10 +162,14 @@ sys.path.insert(0, str(RAIZ))
 from historico import carregar as carregar_historico  # noqa: E402
 h = carregar_historico(D / "erro_historico_presidente.csv")
 corr = h.groupby(["ano", "turno"]).erro_margem.mean().reset_index()
+if corr.groupby("turno").ano.nunique().min() < 3:
+    raise ValueError("Histórico insuficiente: ao menos três eleições por turno")
 e1, e2 = corr[corr.turno == 1].erro_margem.values, corr[corr.turno == 2].erro_margem.values
 e_2022 = h[(h.ano == 2022) & (h.turno == 1)].erro_margem.values          # alerta, 1º turno (por instituto)
 pre2t = pd.read_csv(D / "erro_2t_antecipado_2022.csv")                     # alerta, 2º turno antecipado (2022)
-e_pre2t_2022 = pre2t.erro_margem.values
+e_pre2t_2022 = pd.to_numeric(pre2t.erro_margem, errors="raise").values
+if not len(e_pre2t_2022) or not np.isfinite(e_pre2t_2022).all():
+    raise ValueError("Histórico antecipado de 2022 inválido")
 
 # Modelo principal: erro = persistência (0 a 100%, incerta) × erro de uma eleição real sorteada + ruído normal.
 # O mesmo sorteio vale para o 1º turno e para o 2º (as pesquisas de 2º turno de hoje são feitas antes do 1º turno).
@@ -132,23 +179,27 @@ ruido_setor = rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
 erro1 = persist * rng.choice(e1, N_SIM) + ruido_setor
 # 2º turno (confronto direto): só evidências da era polarizada — 1º turno de 2018 e 2022 (sem voto útil relevante)
 # e o erro das simulações de 2º turno feitas antes do 1º turno de 2022
-e2_polar = np.array(list(corr[(corr.turno == 1) & (corr.ano >= 2018)].erro_margem.values) + [e_pre2t_2022.mean()])
-erro2t = persist * rng.choice(e2_polar, N_SIM) + rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
+# Principal: erros observados do próprio segundo turno. A hipótese polarizada
+# permanece apenas no cenário de alerta, até validação temporal independente.
+erro2t = persist * rng.choice(e2, N_SIM) + rng.normal(0, 0.6 * e2.std(ddof=1), N_SIM)
 # Cenário de alerta: o padrão de 2022 se repete integralmente
 erro_alerta_1t = rng.choice(e_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
 erro_alerta_2t = rng.choice(e_pre2t_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
 HIST = {"pesquisas": int(len(h)), "eleicoes": sorted(int(a) for a in h.ano.unique()),
         "media_1t": round(float(e1.mean()), 1), "dp_1t": round(float(e1.std(ddof=1)), 1),
         "media_2t": round(float(e2.mean()), 1), "dp_2t": round(float(e2.std(ddof=1)), 1),
-        "media_2018_2022": round(float(e_2022.mean()), 1), "media_2022_1t": round(float(e_2022.mean()), 1),
+        "media_2018_2022": round(float(corr[(corr.turno == 1) & (corr.ano >= 2018)].erro_margem.mean()), 1), "media_2022_1t": round(float(e_2022.mean()), 1),
         "erro_2t_antecipado_2022": round(float(e_pre2t_2022.mean()), 1),
         "persistencia": "uniforme de 0% a 100%",
-        "erros_usados_2t": [round(float(v), 1) for v in (list(corr[(corr.turno == 1) & (corr.ano >= 2018)].erro_margem.values)
-                                                         + [e_pre2t_2022.mean()])],
+        "erros_usados_2t": [round(float(v), 1) for v in e2],
+        "metodo_principal_2t": "erros das pesquisas finais de segundo turno; hipótese não calibrada temporalmente",
         "detalhe": {f"{int(a)} {int(t)}º t": round(float(v), 1) for a, t, v in corr.itertuples(index=False)}}
 
-L1 = np.clip(lf[:, 0] + erro1 / 2, 20, 75)
-F1 = np.clip(lf[:, 1] - erro1 / 2, 15, 70)
+# O histórico está na base dos dois candidatos, não em todos os válidos.
+# Converte a diferença de margem para a massa Lula+Flávio antes de aplicar.
+delta1 = erro1 * lf.sum(axis=1) / 200
+L1 = np.clip(lf[:, 0] + delta1, 20, 75)
+F1 = np.clip(lf[:, 1] - delta1, 15, 70)
 R1 = np.clip(100 - L1 - F1, 1, None)
 tot = L1 + F1 + R1
 L1, F1, R1 = 100 * L1 / tot, 100 * F1 / tot, 100 * R1 / tot
@@ -156,38 +207,41 @@ L1, F1, R1 = 100 * L1 / tot, 100 * F1 / tot, 100 * R1 / tot
 # 2º turno: 50% pesquisas de 2º turno (6 agregadores) + 50% transferência dos demais candidatos
 # transferência MEDIDA: 52 pesquisas (ago/set) com 1º e 2º turno na mesma entrevista
 pp = pd.read_csv(RES / "pesquisas_nacionais_tratadas.csv")
-par = pp[pp.turno == 1].drop(columns=["lula_2p"], errors="ignore").merge(
-    pp[pp.turno == 2][["instituto", "fim", "lula_2p"]], on=["instituto", "fim"])
-par["resto"] = 100 - par.lula_val - par.flavio_val
-par = par[(par.resto > 3) & (pd.to_datetime(par.fim) >= "2026-08-01")]
-par["t"] = (par.lula_2p - par.lula_val) / par.resto
-T_MED, T_DP, T_N = float(par.t.mean()), float(max(par.t.std(), 0.03)), int(len(par))
-k_ = T_MED * (1 - T_MED) / T_DP ** 2 - 1
-t_out = rng.beta(T_MED * k_, (1 - T_MED) * k_, N_SIM)  # parcela dos eleitores dos demais que vai para Lula
+if (pd.to_datetime(pp.fim) > CORTE).any():
+    raise ValueError("Pesquisas tratadas posteriores à agregação")
+par = transferencia_implicita(pp)
+T_N = int(len(par))
+T_MED = float(par.t.mean()) if T_N >= 4 else None
+T_DP = float(par.t.std(ddof=1)) if T_N >= 4 else None
+transferencia_disponivel = T_N >= 4
+if not transferencia_disponivel and "lula_2t" not in ens["ensemble"]:
+    raise ValueError("Sem transferência suficiente e sem agregação de segundo turno")
+t_out = sortear_transferencia(par.t.values, rng, N_SIM) if transferencia_disponivel else None
 L0, F0 = lf[:, 0], lf[:, 1]                               # pesquisas cruas (sem erro histórico)
-L2_transf = (L0 + t_out * np.clip(100 - L0 - F0, 1, None)) / 100
+L2_transf = np.clip((L0 + t_out * np.clip(100 - L0 - F0, 0, None)) / 100, 0, 1) if transferencia_disponivel else None
 if "lula_2t" in ens["ensemble"]:
     e2t = ens["ensemble"]["lula_2t"]
     L2_pesq = rng.normal(e2t["est"], e2t["dp"], N_SIM) / 100
 else:
     L2_pesq = L2_transf
-usa_pesq = rng.random(N_SIM) < 0.5
+usa_pesq = rng.random(N_SIM) < 0.5 if transferencia_disponivel and "lula_2t" in ens["ensemble"] else np.full(N_SIM, "lula_2t" in ens["ensemble"])
+if L2_transf is None:
+    L2_transf = L2_pesq.copy()  # fallback declarado; não estima transferência
 # 2º turno: erro da era polarizada (ver erro2t), com a mesma persistência sorteada do 1º turno
 L2 = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro2t / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
 
-vence_1t_l, vence_1t_f = L1 >= 50, F1 >= 50
-havera_2t = ~vence_1t_l & ~vence_1t_f
-lula_leva = vence_1t_l | (havera_2t & (L2 > 0.5))
-flavio_leva = vence_1t_f | (havera_2t & (L2 < 0.5))
-
+vence_1t_l, vence_1t_f, havera_2t, lula_leva, flavio_leva = decidir(L1, F1, L2)
+if not havera_2t.any():
+    raise ValueError("Nenhum cenário de segundo turno: relatório condicional indisponível")
 # cenário de alerta: as pesquisas erram exatamente como em 2022 (1º turno e simulações antecipadas de 2º turno)
-L1x = np.clip(lf[:, 0] + erro_alerta_1t / 2, 20, 75)
-F1x = np.clip(lf[:, 1] - erro_alerta_1t / 2, 15, 70)
+delta1x = erro_alerta_1t * lf.sum(axis=1) / 200
+L1x = np.clip(lf[:, 0] + delta1x, 20, 75)
+F1x = np.clip(lf[:, 1] - delta1x, 15, 70)
 R1x = np.clip(100 - L1x - F1x, 1, None)
 tx = L1x + F1x + R1x
 L1x, F1x, R1x = 100 * L1x / tx, 100 * F1x / tx, 100 * R1x / tx
 L2x = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro_alerta_2t / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
-lula_x = (L1x >= 50) | ((L1x < 50) & (F1x < 50) & (L2x > 0.5))
+_, _, _, lula_x, flavio_x = decidir(L1x, F1x, L2x)
 
 # ------------------------------------------------------------------ estados
 gov = pd.read_csv(D / "governadores_apoio_2026.csv") if (D / "governadores_apoio_2026.csv").exists() else None
@@ -213,7 +267,10 @@ def calibrar(logit_base, alvo_pais):
     for _ in range(30):
         s_ = expit(logit_base + c[:, None])
         c += logit(alvo_pais) - logit(np.clip((s_ * w).sum(axis=1), 1e-4, 1 - 1e-4))
-    return expit(logit_base + c[:, None])
+    out = expit(logit_base + c[:, None])
+    if not np.allclose((out * w).sum(axis=1), alvo_pais, atol=1e-8):
+        raise ValueError("Calibração estadual não convergiu")
+    return out
 
 
 uf_l2p_1t = calibrar(base_logit, L1[sel] / (L1[sel] + F1[sel]))
@@ -236,6 +293,11 @@ pct = lambda x: round(float(np.mean(x)), 3)
 reg = b.groupby("regiao")[["votos_lula_2t", "votos_flavio_2t"]].sum()
 sim = {
     "n_cenarios": N_SIM,
+    "data_corte": str(CORTE.date()),
+    "validacao_preditiva": "pendente: testes sintéticos não validam previsão real",
+    "escopo": "Lula x Flávio; demais candidatos não têm vitória modelada; sem exterior",
+    "transferencia_disponivel": transferencia_disponivel,
+    "efeitos_estaduais": "redistribuem votos; não alteram probabilidade nacional",
     "primeiro_turno": {"lula_validos_p10_p50_p90": [round(float(np.percentile(L1, k)), 1) for k in (10, 50, 90)],
                        "flavio_validos_p10_p50_p90": [round(float(np.percentile(F1, k)), 1) for k in (10, 50, 90)],
                        "outros_validos_p50": round(float(np.median(R1)), 1),
@@ -246,11 +308,11 @@ sim = {
                       "prob_lula_vence_se_2t": pct(L2[havera_2t] > 0.5),
                       "modelo_pesquisas_2t_p50": round(float(100 * np.median(L2_pesq)), 1),
                       "modelo_transferencia_p50": round(float(100 * np.median(L2_transf)), 1),
-                      "transferencia_medida": {"lula": round(T_MED, 3), "dp": round(T_DP, 3), "pares": T_N}},
+                      "transferencia_medida": {"lula": round(T_MED, 3) if T_MED is not None else None, "dp": round(T_DP, 3) if T_DP is not None else None, "pares": T_N, "metodo": "distribuição empírica da transferência implícita"}},
     "sem_correcao_historica": {"lula_2t_p50": round(float(100 * np.median(np.where(usa_pesq, L2_pesq, L2_transf))), 1),
                                "prob_lula": pct(np.where(usa_pesq, L2_pesq, L2_transf) > 0.5)},
     "resultado_final": {"prob_lula_presidente": pct(lula_leva), "prob_flavio_presidente": pct(flavio_leva)},
-    "cenario_alerta": {"prob_lula_presidente": pct(lula_x), "prob_flavio_presidente": pct(~lula_x),
+    "cenario_alerta": {"prob_lula_presidente": pct(lula_x), "prob_flavio_presidente": pct(flavio_x),
                        "lula_1t_p50": round(float(np.median(L1x)), 1), "flavio_1t_p50": round(float(np.median(F1x)), 1),
                        "lula_2t_p50": round(float(100 * np.median(L2x)), 1)},
     "erro_historico": HIST,
@@ -259,9 +321,11 @@ sim = {
     "regioes_2t": {r: round(float(100 * v.votos_lula_2t / (v.votos_lula_2t + v.votos_flavio_2t)), 1) for r, v in reg.iterrows()},
     "ajustes_regionais": {u: [round(a, 3), round(s, 3)] for u, (a, s) in AJUSTE.items()},
 }
+json.dumps(sim, allow_nan=False)
+json.dumps(geo_ml, allow_nan=False)
 b.to_csv(RES / "ufs_previsao.csv", index=False, encoding="utf-8")
-json.dump(sim, open(RES / "simulacao_nacional.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-json.dump(geo_ml, open(RES / "geo_ml_nacional.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+escrever_json(RES / "simulacao_nacional.json", sim)
+escrever_json(RES / "geo_ml_nacional.json", geo_ml)
 print(json.dumps(geo_ml, ensure_ascii=False, indent=1))
 print(json.dumps({k: v for k, v in sim.items() if k != "ajustes_regionais"}, ensure_ascii=False, indent=1))
 print(b[["uf", "governador_apoia", "lula22_2t", "lula_1t", "flavio_1t", "lula_2t", "prob_lula_vence_uf_2t"]].to_string(index=False))

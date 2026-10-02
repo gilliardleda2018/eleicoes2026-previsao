@@ -1,205 +1,190 @@
 {
-  "n_pesquisas_1t": 142,
-  "n_pesquisas_2t": 135,
+  "n_pesquisas_1t": 50,
+  "n_pesquisas_2t": 51,
   "modelos": {
     "lula_1t": {
       "Média ponderada": {
-        "est": 42.75,
-        "dp": 1.08
+        "est": 43.13,
+        "dp": 1.11
       },
       "Mediana robusta (últimos 30 dias)": {
-        "est": 43.59,
-        "dp": 1.48
+        "est": 42.86,
+        "dp": 1.65
       },
       "Regressão com efeito-instituto": {
-        "est": 42.1,
-        "dp": 1.42
+        "est": 41.94,
+        "dp": 1.9
       },
       "Filtro de Kalman": {
-        "est": 42.17,
-        "dp": 1.03
+        "est": 43.24,
+        "dp": 1.1
       },
       "Processo Gaussiano": {
-        "est": 43.26,
-        "dp": 1.63
+        "est": 44.19,
+        "dp": 1.22
       },
       "Bayesiano hierárquico (Gibbs)": {
-        "est": 42.3,
-        "dp": 0.82
-      },
-      "_ancora": {
-        "est": 42.68,
-        "dp": 2.18
+        "est": 41.89,
+        "dp": 0.77
       }
     },
     "flavio_1t": {
       "Média ponderada": {
-        "est": 40.27,
-        "dp": 1.16
+        "est": 40.77,
+        "dp": 1.2
       },
       "Mediana robusta (últimos 30 dias)": {
         "est": 40.0,
-        "dp": 1.05
+        "dp": 1.68
       },
       "Regressão com efeito-instituto": {
-        "est": 37.67,
-        "dp": 1.42
+        "est": 40.77,
+        "dp": 1.89
       },
       "Filtro de Kalman": {
-        "est": 39.32,
-        "dp": 1.03
+        "est": 40.44,
+        "dp": 1.1
       },
       "Processo Gaussiano": {
-        "est": 39.68,
-        "dp": 2.1
+        "est": 40.41,
+        "dp": 1.8
       },
       "Bayesiano hierárquico (Gibbs)": {
-        "est": 37.87,
-        "dp": 0.84
-      },
-      "_ancora": {
-        "est": 38.92,
-        "dp": 2.18
+        "est": 41.1,
+        "dp": 0.99
       }
     },
     "lula_2t": {
       "Média ponderada": {
-        "est": 49.65,
-        "dp": 1.03
+        "est": 49.8,
+        "dp": 1.04
       },
       "Mediana robusta (últimos 30 dias)": {
         "est": 49.97,
-        "dp": 0.82
+        "dp": 0.84
       },
       "Regressão com efeito-instituto": {
-        "est": 50.49,
-        "dp": 1.41
+        "est": 48.66,
+        "dp": 1.81
       },
       "Filtro de Kalman": {
-        "est": 49.7,
-        "dp": 1.03
+        "est": 49.6,
+        "dp": 1.06
       },
       "Processo Gaussiano": {
-        "est": 49.97,
-        "dp": 1.45
+        "est": 49.99,
+        "dp": 0.69
       },
       "Bayesiano hierárquico (Gibbs)": {
-        "est": 50.52,
-        "dp": 0.57
-      },
-      "_ancora": {
-        "est": 50.01,
-        "dp": 2.2
+        "est": 48.64,
+        "dp": 0.64
       }
     }
   },
   "efeito_instituto": {
     "lula_1t": {
-      "Alfa Inteligência": 0.88,
-      "American Analytics": 2.73,
-      "AtlasIntel": 2.66,
-      "Data Povo": -15.56,
-      "DataTrends": 1.74,
-      "Datafolha": 0.69,
-      "Futura": -1.13,
-      "Gerp": -1.51,
-      "Ideia": 1.33,
-      "Indexa": 3.95,
-      "MDA": 4.38,
-      "Nexus": 1.14,
-      "Palver": -0.94,
-      "Paraná Pesquisas": 1.09,
-      "PoderData": -0.68,
-      "Quaest": 2.88,
-      "Real Time Big Data": -0.42,
-      "Veritá": -2.09,
-      "Vetor/Arrow": -2.0,
-      "Vox Brasil": 0.88
+      "American Analytics": 1.47,
+      "AtlasIntel": 2.14,
+      "DataTrends": 1.42,
+      "Datafolha": -0.48,
+      "Futura": -1.31,
+      "Gerp": -2.36,
+      "Ideia": -0.5,
+      "Indexa": 2.55,
+      "MDA": 4.06,
+      "Nexus": 0.05,
+      "Palver": -0.45,
+      "PoderData": -1.94,
+      "Quaest": 1.92,
+      "Real Time Big Data": -2.57,
+      "Veritá": -2.15,
+      "Vox Brasil": -1.84
     },
     "flavio_1t": {
-      "Alfa Inteligência": -4.04,
-      "American Analytics": 0.6,
-      "AtlasIntel": 0.79,
-      "Data Povo": -13.69,
-      "DataTrends": 1.82,
-      "Datafolha": -0.32,
-      "Futura": 1.83,
-      "Gerp": 4.11,
-      "Ideia": 0.06,
-      "Indexa": -0.25,
-      "MDA": -3.58,
-      "Nexus": 0.48,
-      "Palver": 2.91,
-      "Paraná Pesquisas": 2.31,
-      "PoderData": 0.24,
-      "Quaest": -0.28,
-      "Real Time Big Data": -2.29,
-      "Veritá": 5.22,
-      "Vetor/Arrow": 3.93,
-      "Vox Brasil": 0.16
+      "American Analytics": -0.22,
+      "AtlasIntel": 0.74,
+      "DataTrends": 0.26,
+      "Datafolha": -1.26,
+      "Futura": -0.15,
+      "Gerp": 4.21,
+      "Ideia": 0.32,
+      "Indexa": 2.11,
+      "MDA": -3.8,
+      "Nexus": -0.03,
+      "Palver": 2.88,
+      "PoderData": -0.76,
+      "Quaest": -1.28,
+      "Real Time Big Data": -6.91,
+      "Veritá": 3.49,
+      "Vox Brasil": 0.39
     },
     "lula_2t": {
-      "Alfa Inteligência": 1.14,
-      "American Analytics": 0.76,
-      "AtlasIntel": 0.44,
-      "DataTrends": -0.99,
-      "Datafolha": 0.63,
-      "Futura": -1.97,
-      "Gerp": -2.99,
-      "Ideia": 1.18,
-      "Indexa": 2.15,
-      "MDA": 3.97,
-      "Nexus": 0.45,
-      "Palver": -1.76,
-      "Paraná Pesquisas": -0.87,
-      "PoderData": -0.23,
-      "Quaest": 0.57,
-      "Real Time Big Data": -0.08,
-      "Veritá": -3.63,
-      "Vetor/Arrow": 0.11,
-      "Vox Brasil": 1.1
+      "Alfa Inteligência": 0.67,
+      "American Analytics": 0.54,
+      "AtlasIntel": 0.81,
+      "DataTrends": -0.17,
+      "Datafolha": 1.43,
+      "Futura": -0.7,
+      "Gerp": -3.43,
+      "Ideia": 0.71,
+      "Indexa": 1.49,
+      "MDA": 3.89,
+      "Nexus": 0.32,
+      "Palver": -1.47,
+      "PoderData": -0.47,
+      "Quaest": 0.38,
+      "Real Time Big Data": -0.06,
+      "Veritá": -3.25,
+      "Vox Brasil": -0.7
     }
   },
   "ensemble": {
     "lula_1t": {
-      "est": 42.69,
-      "dp": 1.42,
-      "min_modelos": 42.1,
-      "max_modelos": 43.59
+      "est": 42.88,
+      "dp": 1.6,
+      "min_modelos": 41.89,
+      "max_modelos": 44.19
     },
     "flavio_1t": {
-      "est": 39.13,
-      "dp": 1.73,
-      "min_modelos": 37.67,
-      "max_modelos": 40.27
+      "est": 40.58,
+      "dp": 1.53,
+      "min_modelos": 40.0,
+      "max_modelos": 41.1
     },
     "lula_2t": {
-      "est": 50.05,
-      "dp": 1.16,
-      "min_modelos": 49.65,
-      "max_modelos": 50.52
+      "est": 49.44,
+      "dp": 1.26,
+      "min_modelos": 48.64,
+      "max_modelos": 49.99
     }
   },
-  "ancora": [
-    "Paraná Pesquisas"
-  ],
+  "ancora": null,
   "outros_validos_recentes": {
-    "cury": 6.81,
-    "renan": 4.25,
-    "caiado": 3.42,
-    "zema": 1.14,
-    "samara": 0.62,
-    "clariana": 0.3,
-    "hertz_dias": 0.36,
-    "edmilson_costa": 0.28,
-    "rui_pimenta": 0.4,
-    "outros": 0.95
+    "cury": 7.39,
+    "renan": 4.24,
+    "caiado": 3.53,
+    "zema": 1.24,
+    "samara": 0.59,
+    "marcal": 2.55,
+    "clariana": 0.24,
+    "hertz_dias": 0.37,
+    "edmilson_costa": 0.21,
+    "rui_pimenta": 0.37,
+    "outros": 1.39
   },
+  "data_corte": "2026-10-02",
+  "qualidade_dados": {
+    "linhas_entrada": 281,
+    "somente_status_confirmada": true,
+    "excluidas_1t_por_inconsistencia": 5,
+    "censurados": "ponto médio de [0,limite); denominador independente",
+    "denominador_1t": "100 menos indecisos e brancos/nulos; conservação com tolerância de 2 pontos"
+  },
+  "validacao_preditiva": "pendente: requer backtest temporal com dados reais",
   "institutos": [
     "Alfa Inteligência",
     "American Analytics",
     "AtlasIntel",
-    "Data Povo",
     "DataTrends",
     "Datafolha",
     "Futura",
@@ -209,13 +194,11 @@
     "MDA",
     "Nexus",
     "Palver",
-    "Paraná Pesquisas",
     "PoderData",
     "Quaest",
     "Real Time Big Data",
     "Veritá",
-    "Vetor/Arrow",
     "Vox Brasil"
   ],
-  "n_conferidas": 116
+  "n_conferidas": 101
 }
