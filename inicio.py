@@ -41,9 +41,9 @@ st.markdown("""<style>
     border-radius: 18px; border: 1px solid var(--linha); color: #FFFFFF; margin: 2px 0 18px;
     background: linear-gradient(100deg, var(--az1), var(--az2)); box-shadow: 0 10px 26px rgba(33,86,160,.25);}
 .hm-topo img {height: 66px; display: block; margin: -6px 0;}
-.hm-topo .hm-slogan {font: 800 1.35rem 'Montserrat'; text-align: center;}
+.hm-topo .hm-slogan {font: 700 1.3rem 'Montserrat'; letter-spacing: -.005em; text-align: center;}
 .hm-topo .hm-slogan span, .hm-capa h1 span, .hm-creditos .cr-slogan span {color: #8FE3FF;}
-.hm-contato {display: flex; flex-direction: column; align-items: flex-end; gap: 5px; font: 700 .86rem 'Manrope';}
+.hm-contato {display: flex; flex-direction: column; align-items: flex-end; gap: 5px; font: 600 .84rem 'Montserrat';}
 .hm-contato a {color: #FFFFFF !important; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;}
 .hm-contato b {color: #8FE3FF; letter-spacing: .08em; margin-left: 6px;}
 .hm-ic {width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round;
@@ -56,19 +56,19 @@ st.markdown("""<style>
                 radial-gradient(circle at 12% 0%, rgba(143,227,255,.30), transparent 45%),
                 radial-gradient(circle at 95% 100%, rgba(150,120,235,.35), transparent 50%),
                 linear-gradient(125deg, var(--az1), var(--az2) 55%, var(--az3));}
-.hm-selo {display: inline-block; font: 800 .74rem 'Manrope'; letter-spacing: .24em; color: #BDEFFF; padding: 8px 18px;
+.hm-selo {display: inline-block; font: 700 .72rem 'Montserrat'; letter-spacing: .26em; color: #BDEFFF; padding: 8px 18px;
     border-radius: 999px; border: 1px solid rgba(189,239,255,.45); background: rgba(255,255,255,.08);}
-.hm-capa h1 {font: 900 3.3rem/1.08 'Montserrat' !important; color: #FFFFFF !important; margin: 22px 0 14px !important;
-    padding: 0 !important; letter-spacing: -.01em;}
-.hm-capa p {font: 600 1.06rem/1.6 'Manrope'; color: var(--suave); max-width: 700px; margin: 0 auto;}
+.hm-capa h1 {font: 800 3.4rem/1.08 'Montserrat' !important; color: #FFFFFF !important; margin: 22px 0 14px !important;
+    padding: 0 !important; letter-spacing: -.02em;}
+.hm-capa p {font: 500 1.04rem/1.65 'Montserrat'; color: var(--suave); max-width: 700px; margin: 0 auto;}
 .hm-contagem {display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; padding: 11px 22px;
-    border-radius: 999px; font: 800 .95rem 'Manrope'; background: rgba(255,255,255,.12); border: 1px solid var(--linha);}
+    border-radius: 999px; font: 600 .93rem 'Montserrat'; background: rgba(255,255,255,.12); border: 1px solid var(--linha);}
 .hm-contagem i {width: 10px; height: 10px; border-radius: 50%; background: #3BE07F; animation: hmpulso 1.8s infinite;}
 @keyframes hmpulso {0% {box-shadow: 0 0 0 0 rgba(59,224,127,.7);} 70% {box-shadow: 0 0 0 10px rgba(59,224,127,0);}
     100% {box-shadow: 0 0 0 0 rgba(59,224,127,0);}}
 .hm-recursos {display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; padding-top: 20px;
     border-top: 1px solid var(--linha);}
-.hm-recursos div {display: flex; align-items: center; justify-content: center; gap: 9px; font: 700 .9rem 'Manrope';
+.hm-recursos div {display: flex; align-items: center; justify-content: center; gap: 9px; font: 600 .88rem 'Montserrat';
     color: #EAF4FF;}
 .hm-recursos .hm-ic {width: 18px; height: 18px; color: #8FE3FF;}
 /* cards */
@@ -82,50 +82,50 @@ st.markdown("""<style>
 [class*="st-key-hc_"]:hover {transform: translateY(-4px); box-shadow: 0 20px 38px rgba(33,86,160,.33);}
 .st-key-hc_br {border-top: 4px solid #2BD27A !important;} .st-key-hc_ma {border-top: 4px solid #FF5A6E !important;}
 .st-key-hc_ap {border-top: 4px solid #2BD27A !important;}
-.hc-num {position: absolute; top: 10px; right: 18px; font: 900 2.7rem 'Montserrat'; color: rgba(255,255,255,.13);}
+.hc-num {position: absolute; top: 10px; right: 18px; font: 800 2.7rem 'Montserrat'; color: rgba(255,255,255,.13);}
 .hc-emblema {height: 128px; display: flex; align-items: center; justify-content: center;}
-.hc-emblema svg {width: 128px; height: 98px; filter: drop-shadow(0 12px 14px rgba(10,30,70,.35));}
+.hc-emblema .hc-bandeira {width: 150px; height: 104px; transform: rotate(-3deg); filter: drop-shadow(0 12px 16px rgba(10,30,70,.38));}
 .hc-emblema .hc-icone {font-size: 5.4rem; line-height: 1; filter: drop-shadow(0 12px 14px rgba(10,30,70,.35));}
-.hc-selo {font: 800 .74rem 'Manrope'; letter-spacing: .2em; color: #8FE3FF; margin-top: 10px; display: flex;
+.hc-selo {font: 700 .72rem 'Montserrat'; letter-spacing: .24em; color: #8FE3FF; margin-top: 10px; display: flex;
     justify-content: center; align-items: center; gap: 8px;}
 .hc-selo em {font-style: normal; font-size: .62rem; letter-spacing: .1em; color: #0B3B24; background: #3BE07F;
     border-radius: 999px; padding: 2px 9px;}
-.hc-titulo {font: 900 1.75rem/1.1 'Montserrat'; margin: 6px 0 6px;}
-.hc-texto {font: 600 .95rem 'Manrope'; color: var(--suave); min-height: 2.6em;}
+.hc-titulo {font: 800 1.7rem/1.1 'Montserrat'; letter-spacing: -.01em; margin: 6px 0 6px;}
+.hc-texto {font: 500 .92rem 'Montserrat'; color: var(--suave); min-height: 2.6em;}
 .hc-linhas {text-align: left; margin-top: 14px;}
-.hc-linha {display: flex; justify-content: space-between; align-items: baseline; font: 800 1rem 'Manrope';}
+.hc-linha {display: flex; justify-content: space-between; align-items: baseline; font: 600 .98rem 'Montserrat';}
 .hc-linha span {display: inline-flex; align-items: center; gap: 8px;}
 .hc-linha span i {width: 8px; height: 8px; border-radius: 50%;}
-.hc-linha b {font: 900 1.25rem 'Montserrat';}
+.hc-linha b {font: 800 1.2rem 'Montserrat';}
 .hc-barra {height: 7px; border-radius: 7px; background: rgba(255,255,255,.18); margin: 6px 0 12px; overflow: hidden;}
 .hc-barra i {display: block; height: 100%; border-radius: 7px;}
 .hc-chips {display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; min-height: 5.4rem;
     align-content: center;}
-.hc-chips span {display: inline-flex; align-items: center; gap: 6px; font: 800 .86rem 'Manrope'; color: #FFFFFF;
+.hc-chips span {display: inline-flex; align-items: center; gap: 6px; font: 600 .84rem 'Montserrat'; color: #FFFFFF;
     background: rgba(255,255,255,.12); border: 1px solid var(--linha); border-radius: 999px; padding: 7px 14px;}
 .hc-chips .hm-ic {width: 14px; height: 14px; color: #8FE3FF;}
-.hc-legenda {font: 700 .8rem 'Manrope'; color: var(--suave); margin: 4px 0 6px; letter-spacing: .04em;}
+.hc-legenda {font: 500 .78rem 'Montserrat'; color: var(--suave); margin: 4px 0 6px; letter-spacing: .04em;}
 [class*="st-key-hc_"] [data-testid="stPageLink"] a {background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35);
     border-radius: 14px; justify-content: center; padding: .6rem 1rem; transition: background .15s;}
 [class*="st-key-hc_"] [data-testid="stPageLink"] a:hover {background: rgba(255,255,255,.24);}
-[class*="st-key-hc_"] [data-testid="stPageLink"] a p {color: #FFFFFF !important; font-weight: 800;}
+[class*="st-key-hc_"] [data-testid="stPageLink"] a p {color: #FFFFFF !important; font: 700 .92rem 'Montserrat' !important;}
 .st-key-hc_ap [data-testid="stPageLink"] a {background: linear-gradient(100deg, #1FA463, #2BD27A); border-color: transparent;}
 /* compartilhar e créditos */
 .st-key-hs_compartilhar {max-width: 560px; margin: 28px auto 8px; padding: 18px 18px 6px; border-radius: 24px;
     border: 1px solid var(--linha); background: linear-gradient(160deg, var(--az2), var(--az1));
     box-shadow: 0 14px 30px rgba(33,86,160,.22);}
-.st-key-hs_compartilhar .cp-titulo {font: 800 1.2rem 'Montserrat'; color: #FFFFFF; text-align: center; margin-bottom: 10px;}
+.st-key-hs_compartilhar .cp-titulo {font: 700 1.15rem 'Montserrat'; color: #FFFFFF; text-align: center; margin-bottom: 10px;}
 .hm-creditos {display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; margin: 26px 0 6px;
     padding: 22px 26px; border-radius: 24px; color: #FFFFFF; border: 1px solid var(--linha);
     background: radial-gradient(circle at 0% 0%, rgba(143,227,255,.25), transparent 40%), linear-gradient(110deg, var(--az1), var(--az2));
     box-shadow: 0 14px 30px rgba(33,86,160,.22);}
 .hm-creditos img {height: 80px; display: block;}
-.hm-creditos .cr-selo {font: 800 .7rem 'Manrope'; letter-spacing: .2em; color: #8FE3FF;}
-.hm-creditos .cr-nome {font: 900 1.5rem 'Montserrat';}
-.hm-creditos .cr-slogan {font: 700 1rem 'Montserrat';}
-.hm-creditos .cr-texto {font: 600 .86rem/1.5 'Manrope'; color: var(--suave); margin-top: 6px;}
+.hm-creditos .cr-selo {font: 700 .68rem 'Montserrat'; letter-spacing: .2em; color: #8FE3FF;}
+.hm-creditos .cr-nome {font: 800 1.45rem 'Montserrat';}
+.hm-creditos .cr-slogan {font: 600 .98rem 'Montserrat';}
+.hm-creditos .cr-texto {font: 500 .84rem/1.55 'Montserrat'; color: var(--suave); margin-top: 6px;}
 .hm-creditos .cr-texto b {color: #8FE3FF;}
-.hm-nota {text-align: center; color: #3E5675; font: 600 .82rem 'Manrope'; margin-top: 8px;}
+.hm-nota {text-align: center; color: #3E5675; font: 500 .8rem 'Montserrat'; margin-top: 8px;}
 @media (max-width: 900px) {
   .hm-topo {grid-template-columns: 1fr; text-align: center; gap: 8px; padding: 14px;}
   .hm-topo img {margin: 0 auto; height: 52px;} .hm-contato {align-items: center;}
@@ -149,34 +149,33 @@ def ic(nome):
     return f'<svg class="hm-ic" viewBox="0 0 24 24">{_IC[nome]}</svg>'
 
 
-# bandeiras tremulando: o desenho passa por uma onda (feTurbulence só no eixo x + feDisplacementMap) e ganha
-# faixas de luz e sombra, como um tecido
-def _bandeira(id_, desenho, rotulo):
-    return f"""<svg viewBox="-8 -10 166 124" role="img" aria-label="{rotulo}">
-<defs><filter id="{id_}o" x="-10%" y="-15%" width="120%" height="130%">
-<feTurbulence type="fractalNoise" baseFrequency="0.018 0.0001" numOctaves="1" seed="4" result="t"/>
-<feDisplacementMap in="SourceGraphic" in2="t" scale="16" xChannelSelector="R" yChannelSelector="G"/></filter>
-<linearGradient id="{id_}l" x1="0" x2="1">
-<stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".22" stop-color="#000" stop-opacity=".16"/>
-<stop offset=".45" stop-color="#fff" stop-opacity=".30"/><stop offset=".7" stop-color="#000" stop-opacity=".18"/>
-<stop offset="1" stop-color="#fff" stop-opacity=".22"/></linearGradient>
-<clipPath id="{id_}c"><rect width="150" height="104" rx="6"/></clipPath></defs>
-<g filter="url(#{id_}o)"><g clip-path="url(#{id_}c)">{desenho}<rect width="150" height="104" fill="url(#{id_}l)"/></g></g></svg>"""
+# bandeiras estilizadas (SVG desenhado aqui: cantos arredondados, brilho suave e sombra)
+_BRILHO = """<defs><linearGradient id="{id}" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+<stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
+<clipPath id="{id}c"><rect width="150" height="104" rx="16"/></clipPath></defs>"""
 
-
-BANDEIRA_BR = _bandeira("hbr", """<rect width="150" height="104" fill="#009B3A"/>
-<polygon points="75,11 139,52 75,93 11,52" fill="#FEDF00"/><circle cx="75" cy="52" r="25" fill="#002776"/>
+BANDEIRA_BR = f"""<svg viewBox="0 0 150 104" class="hc-bandeira" role="img" aria-label="Bandeira do Brasil">
+{_BRILHO.format(id="gbr")}<g clip-path="url(#gbrc)">
+<rect width="150" height="104" fill="#009B3A"/>
+<polygon points="75,11 139,52 75,93 11,52" fill="#FEDF00"/>
+<circle cx="75" cy="52" r="25" fill="#002776"/>
 <path d="M51 46 Q75 38 99 55 L98 61 Q75 45 52 52 Z" fill="#FFFFFF"/>
 <g fill="#fff"><circle cx="66" cy="62" r="1.6"/><circle cx="74" cy="66" r="1.8"/><circle cx="83" cy="63" r="1.5"/>
 <circle cx="79" cy="70" r="1.3"/><circle cx="69" cy="70" r="1.2"/><circle cx="62" cy="57" r="1.1"/>
-<circle cx="88" cy="68" r="1.1"/><circle cx="72" cy="40" r="1.4"/></g>""", "Bandeira do Brasil")
+<circle cx="88" cy="68" r="1.1"/><circle cx="72" cy="40" r="1.4"/></g>
+<rect width="150" height="104" fill="url(#gbr)"/></g></svg>"""
+
 _listras = "".join(
     f'<rect y="{i * 104 / 9:.2f}" width="150" height="{104 / 9 + .3:.2f}" fill="{c}"/>'
     for i, c in enumerate(["#D21034", "#FFFFFF", "#111111", "#FFFFFF", "#D21034",
                            "#FFFFFF", "#111111", "#FFFFFF", "#D21034"]))
-BANDEIRA_MA = _bandeira("hma", _listras + """<rect width="50" height="52" fill="#0B3F8C"/>
-<polygon fill="#fff" points="25,13 28.5,22.5 38.5,22.8 30.6,29 33.4,38.6 25,33 16.6,38.6 19.4,29 11.5,22.8 21.5,22.5"/>""",
-                        "Bandeira do Maranhão")
+BANDEIRA_MA = f"""<svg viewBox="0 0 150 104" class="hc-bandeira" role="img" aria-label="Bandeira do Maranhão">
+{_BRILHO.format(id="gma")}<g clip-path="url(#gmac)">{_listras}
+<rect width="50" height="52" fill="#0B3F8C"/>
+<polygon fill="#fff" points="25,13 28.5,22.5 38.5,22.8 30.6,29 33.4,38.6 25,33 16.6,38.6 19.4,29 11.5,22.8 21.5,22.5"/>
+<rect width="150" height="104" fill="url(#gma)"/></g></svg>"""
+
 ICONE_AP = '<div class="hc-icone" role="img" aria-label="Apuração ao vivo">📡</div>'
 
 # ---------------------------------------------------------------- marca + capa
@@ -272,14 +271,15 @@ with st.container(key="hs_compartilhar"):
     # no computador, baixa a miniatura e abre o Instagram
     components.html(f"""
 <style>
-  body {{margin: 0; font-family: Manrope, Arial, sans-serif;}}
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap');
+  body {{margin: 0; font-family: Montserrat, Arial, sans-serif;}}
   .mini {{display: block; width: 100%; max-width: 440px; margin: 0 auto 12px; border-radius: 16px;
          box-shadow: 0 12px 26px rgba(10,30,70,.35); border: 1px solid rgba(255,255,255,.25);}}
   .ic {{display: flex; justify-content: center; gap: 30px; padding: 4px 0;}}
   .ic a, .ic button {{background: none; border: 0; padding: 0; cursor: pointer; text-align: center; text-decoration: none;}}
   .ic img {{width: 64px; height: 64px; transition: transform .15s; filter: drop-shadow(0 6px 12px rgba(27,42,65,.18));}}
   .ic a:hover img, .ic button:hover img {{transform: translateY(-3px) scale(1.06);}}
-  .ic span {{display: block; font: 800 12px Manrope, Arial; color: #FFFFFF; margin-top: 4px;}}
+  .ic span {{display: block; font: 700 12px Montserrat, Arial; color: #FFFFFF; margin-top: 4px;}}
   #msg {{text-align: center; font-size: 12px; color: #EAF4FF; min-height: 16px; margin-top: 4px;}}
 </style>
 <a href="{wa}" target="_blank" rel="noopener"><img class="mini" src="/app/static/compartilhar/{ARTE}"
