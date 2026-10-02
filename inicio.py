@@ -40,6 +40,7 @@ st.markdown("""<style>
 .hm-topo {display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; padding: 14px 26px;
     border-radius: 18px; border: 1px solid var(--linha); color: #FFFFFF; margin: 2px 0 18px;
     background: linear-gradient(100deg, var(--az1), var(--az2)); box-shadow: 0 10px 26px rgba(33,86,160,.25);}
+.hm-topo > img, .hm-creditos > img {filter: drop-shadow(0 0 6px rgba(255,255,255,.45)) drop-shadow(0 1px 1px rgba(255,255,255,.35));}
 .hm-topo > img {height: 66px; display: block; margin: -6px 0;}
 .hm-topo .hm-slogan {font: 800 1.75rem/1.2 'Montserrat'; letter-spacing: -.01em; text-align: center;}
 .hm-topo .hm-slogan span, .hm-capa h1 span, .hm-creditos .cr-slogan span {color: #8FE3FF;}
