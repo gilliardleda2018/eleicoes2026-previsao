@@ -233,7 +233,13 @@ elif SECAO == 3:
                                  "Lula em 2022 (2º turno)"], horizontal=True)
     comum = dict(geojson=GEOJ, locations="uf", featureidkey="properties.uf", hover_name="uf", map_style="carto-positron",
                  zoom=2.8, center={"lat": -14.5, "lon": -52}, opacity=.8, height=640,
-                 hover_data={"uf": False, "lula_2t": ":.1f", "prob_lula_vence_uf_2t": ":.0%", "governador_apoia": True})
+                 hover_data={"uf": False, "lula_2t": ":.1f", "prob_lula_vence_uf_2t": ":.0%", "governador_apoia": True},
+                 labels={"lula_2t": "Lula · votos válidos no 2º turno (%)",
+                         "prob_lula_vence_uf_2t": "Chance de Lula vencer no estado",
+                         "governador_apoia": "Apoio do governador",
+                         "favorito_2t": "Favorito no estado", "gov": "Apoio do governador",
+                         "lula_1t": "Lula · votos válidos no 1º turno (%)",
+                         "lula22_2t": "Lula · votos em 2022 (%)"})
     esc = [[0, AZUL], [0.5, "#F2F2F2"], [1, VERM]]
     if visao.startswith("Lula no 2º"):
         fig = px.choropleth_map(UFS, color="lula_2t", color_continuous_scale=esc, range_color=(25, 75), **comum)
@@ -248,6 +254,8 @@ elif SECAO == 3:
     else:
         fig = px.choropleth_map(UFS, color="lula22_2t", color_continuous_scale=esc, range_color=(25, 75), **comum)
     fig.update_layout(margin=dict(t=0, b=0, l=0, r=0), legend_title_text="")
+    st.caption("Os votos projetados e a chance de vitória são estimativas do modelo. "
+               "Uma chance arredondada para 100% não é garantia de vitória.")
     grafico(fig)
 
 # ====================================================================== estados
