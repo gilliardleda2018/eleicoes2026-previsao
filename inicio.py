@@ -109,7 +109,7 @@ st.markdown("""<style>
     -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%);}
 .hc-duelo-flag {position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%);}
 .hc-duelo-flag .hc-bandeira {width: 92px; height: 64px; transform: rotate(-3deg); filter: drop-shadow(0 10px 14px rgba(10,30,70,.5));}
-.st-key-hc_br .hc-num {display: none;}
+.st-key-hc_br .hc-num, .st-key-hc_ma .hc-num {display: none;}
 .hc-num {z-index: 2; text-shadow: 0 2px 10px rgba(10,30,70,.25);}
 .hc-selo {font: 700 .72rem 'Montserrat'; letter-spacing: .24em; color: #8FE3FF; margin-top: 10px; display: flex;
     justify-content: center; align-items: center; gap: 8px;}
@@ -206,9 +206,17 @@ BANDEIRA_MA = f"""<svg viewBox="0 0 150 104" class="hc-bandeira" role="img" aria
 # "espessura" com camadas mais escuras deslocadas e leve giro em perspectiva (CSS)
 _A_CAMADAS = """<g transform="translate(40.5 49.5)" fill="#034258"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(36.0 44.0)" fill="#044B61"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(31.5 38.5)" fill="#05546A"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(27.0 33.0)" fill="#065D73"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(22.5 27.5)" fill="#07667C"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(18.0 22.0)" fill="#086F85"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(13.5 16.5)" fill="#09788E"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(9.0 11.0)" fill="#0A8197"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g><g transform="translate(4.5 5.5)" fill="#0B8AA0"><use href="#aL"/><use href="#aB"/><use href="#aR"/></g>"""
 import base64 as _b64
-_DUELO = RAIZ / "assets" / "fotos" / "duelo_lula_flavio.webp"
-DUELO_BR = (f'<div class="hc-duelo"><img src="data:image/webp;base64,{_b64.b64encode(_DUELO.read_bytes()).decode()}" '
-            f'alt="Lula e Flávio Bolsonaro"><div class="hc-duelo-flag">{BANDEIRA_BR}</div></div>') if _DUELO.exists() else ""
+def _duelo(arquivo, bandeira, alt):
+    """Foto do duelo (inteira, com degradê embaixo) com a bandeira no centro, entre os dois."""
+    f = RAIZ / "assets" / "fotos" / arquivo
+    if not f.exists():
+        return ""
+    return (f'<div class="hc-duelo"><img src="data:image/webp;base64,{_b64.b64encode(f.read_bytes()).decode()}" '
+            f'alt="{alt}"><div class="hc-duelo-flag">{bandeira}</div></div>')
+
+
+DUELOS = {"hc_br": _duelo("duelo_lula_flavio.webp", BANDEIRA_BR, "Lula e Flávio Bolsonaro"),
+          "hc_ma": _duelo("duelo_braide_orleans.webp", BANDEIRA_MA, "Eduardo Braide e Orleans Brandão")}
 ICONE_AP = f"""<svg class="hc-a3d" viewBox="58 52 912 760" role="img" aria-label="Aggilli Intelligence">
 <defs>
 <path id="aL" d="M397 244 L462 352 Q466 360 461 368 L268 676 Q170 700 72 750 Z"/>
@@ -293,7 +301,7 @@ for c, (chave, num, emblema, selo, titulo, texto, itens, legenda, pagina, botao)
                 for nome, v, cor in itens) + "</div>"
         st.markdown(f"""
 <div class="hc-num">{num}</div>
-{DUELO_BR if (chave == "hc_br" and DUELO_BR) else f'<div class="hc-emblema">{emblema}</div>'}
+{DUELOS.get(chave) or f'<div class="hc-emblema">{emblema}</div>'}
 <div class="hc-selo">{selo}{f"<em>{chip_ap}</em>" if chave == "hc_ap" else ""}</div>
 <div class="hc-titulo">{titulo}</div>
 <div class="hc-texto">{texto}</div>
