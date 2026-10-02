@@ -627,6 +627,7 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
         quadros_t.append(f'<div class="pt-quadro" style="--cor:{cor}"><div class="pt-nome">{nome.upper()}</div>{corpo}</div>')
     sub_t = (f"{n(tun['pst'], 1)}% das seções apuradas em Tuntum · " + diferenca(
         tun["votos"].get(na, 0), tun["votos"].get(nb, 0))) if tun else ""
+    quadro_dif = diferenca_tuntum(tun, na, nb, curto_a, curto_b, cor_a, cor_b)
     st.markdown(f"""
 <div class="pl-legenda">{pc['legenda']}</div>
 <div class="placar-pres">
@@ -641,7 +642,44 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
   <div class="pl-x pequeno-x">✕</div>
   {quadros_t[1]}
 </div>
-<div class="pl-dif">{sub_t}</div>""", unsafe_allow_html=True)
+<div class="pl-dif">{sub_t}</div>
+{quadro_dif}""", unsafe_allow_html=True)
+
+
+# piadinhas para quando a diferença em Tuntum fica grande (sem pedir voto e sem desmerecer ninguém)
+PIADAS_TUNTUM = [
+    "Em Tuntum isso já não é disputa, é goleada: o outro lado vai pedir prorrogação! ⚽",
+    "Com essa vantagem, {lider} já dá pra ser visto de satélite em Tuntum 🛰️",
+    "Nem a calculadora mais otimista chama isso de disputa apertada 😅",
+    "Tuntum falou alto: diferença tão grande que já tem gente pedindo recontagem só por curiosidade 🧮",
+    "Se fosse corrida, {lider} já estaria tomando café na linha de chegada ☕",
+]
+
+
+def diferenca_tuntum(tun, na, nb, curto_a, curto_b, cor_a, cor_b):
+    """Quadro central abaixo dos dois de Tuntum: diferença em votos; se for grande, uma piadinha."""
+    if not tun:
+        return ('<div class="pt-dif"><div class="pd-rot">DIFERENÇA EM TUNTUM</div><div class="pd-num">—</div>'
+                '<div class="pd-frase">A contagem de Tuntum aparece aqui assim que o TSE divulgar.</div></div>')
+    va, vb, vv = tun["votos"].get(na, 0), tun["votos"].get(nb, 0), tun.get("vv", 0) or 0
+    dif = abs(va - vb)
+    if va == vb:
+        frase = ("Zero a zero por enquanto: Tuntum ainda está aquecendo. 🔥" if va == 0
+                 else "Empate cravado em Tuntum! Cada voto agora vale ouro. 🥇")
+        return (f'<div class="pt-dif"><div class="pd-rot">DIFERENÇA EM TUNTUM</div><div class="pd-num">0 votos</div>'
+                f'<div class="pd-frase">{frase}</div></div>')
+    lider, cor = (curto_a, cor_a) if va > vb else (curto_b, cor_b)
+    pts = 100 * dif / vv if vv else 0
+    if pts >= 20 and dif >= 300:
+        frase = PIADAS_TUNTUM[int(dif) % len(PIADAS_TUNTUM)].format(lider=lider)
+    elif pts < 2:
+        frase = "Disputa voto a voto em Tuntum: ninguém pisca! 👀"
+    else:
+        frase = f"{lider} abre vantagem em Tuntum, mas a apuração continua."
+    return (f'<div class="pt-dif" style="--cor:{cor}"><div class="pd-rot">DIFERENÇA EM TUNTUM</div>'
+            f'<div class="pd-num">{n(dif)} {"voto" if dif == 1 else "votos"}</div>'
+            f'<div class="pd-lider">{lider} na frente · {n(pts, 1)} pontos dos válidos</div>'
+            f'<div class="pd-frase">{frase}</div></div>')
 
 
 CARGO_TXT = {"presidente": ("presidente do Brasil", "O Brasil"), "governador": ("governador do Maranhão", "O Maranhão")}

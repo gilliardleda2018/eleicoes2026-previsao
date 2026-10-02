@@ -336,6 +336,14 @@ hr, [data-testid="stDivider"] {border: none !important; height: 1px !important; 
 .pl-dif {text-align: center; font: 800 .95rem 'Manrope'; color: #3A4458; margin: 10px 0 14px;}
 .pl-legenda {text-align: center; font: 900 1.7rem/1.1 'Montserrat'; letter-spacing: .08em; color: #1B2A41;
     margin: 18px 0 6px;}
+.pt-dif {max-width: 520px; margin: 10px auto 6px; text-align: center; padding: 14px 20px 12px; border-radius: 20px;
+    background: linear-gradient(180deg, #FFFFFF, #F4F7FB); border: 1.5px solid #C9D3E0; border-top: 5px solid var(--cor, #5B6477);
+    box-shadow: 0 8px 22px rgba(27,42,65,.08);}
+.pt-dif .pd-rot {font: 800 .72rem 'Montserrat'; letter-spacing: .18em; color: #5B6477;}
+.pt-dif .pd-num {font: 900 2.2rem/1.15 'Montserrat'; color: var(--cor, #1B2A41); margin: 4px 0 2px;}
+.pt-dif .pd-lider {font: 700 .86rem 'Montserrat'; color: #3A4458;}
+.pt-dif .pd-frase {font: 600 .92rem/1.45 'Montserrat'; color: #1B2A41; margin-top: 8px; padding-top: 8px;
+    border-top: 1px dashed #D6DEE9;}
 .placar-tuntum {display: flex; align-items: stretch; justify-content: center; gap: 18px;}
 .pt-quadro {flex: 1; max-width: 460px; border-radius: 18px; padding: 14px 18px; text-align: center;
     background: linear-gradient(160deg, color-mix(in srgb, var(--cor) 14%, #FFFFFF), #FFFFFF);
