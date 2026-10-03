@@ -19,6 +19,7 @@ sys.path.insert(0, str(RAIZ / "apuracao"))
 import momento  # noqa: E402
 import motor  # noqa: E402
 import dinamica  # noqa: E402
+import comparador_margens  # noqa: E402
 from comum import CSS, _logo_base64, barra_navegacao, cabecalho_marca, grafico, n, pct, tabela  # noqa: E402
 
 if __name__ == "__main__":
@@ -560,6 +561,7 @@ def painel_deputados():
                      {DEPUTADOS[k][0]: c["contado"] for k, c in r["cand"].items()},
                      apurado, info["consultado_em"] if not ensaio else time.time(),
                      {DEPUTADOS[k][0]: c["final"] for k, c in r["cand"].items()}, ensaio, oficial=geral)
+    comparador_margens.mostrar(r, DEPUTADOS, ensaio)
     cartao_tuntum(d)
     narrador(r, geral, numeros, ensaio, apurado)
 
