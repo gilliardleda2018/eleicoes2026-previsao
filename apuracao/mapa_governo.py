@@ -18,5 +18,18 @@ def figura(d, geo, ensaio=False):
         labels={'lideranca':'Liderança no recorte','contado_a':'Votos de Braide',
                 'contado_b':'Votos de Orleans','pst':'Seções apuradas (%)'},
         title='Votação por município' + (' · ENSAIO' if ensaio else ' · votos apurados'))
+    for trace in fig.data:
+        cor = {'Braide':'#1F6FB2','Orleans':'#E07B1F','Empate':'#8B929C','Sem votos':'#8B929C'}[trace.name]
+        trace.hovertemplate = (
+            "<b>%{hovertext}</b><br><br>"
+            "<b>Liderança no recorte:</b> " + trace.name + "<br>"
+            "Braide · <b>%{customdata[1]:,.0f}</b> votos<br>"
+            "Orleans · <b>%{customdata[2]:,.0f}</b> votos<br><br>"
+            "Seções apuradas · <b>%{customdata[3]:.1f}%</b>"
+            "<extra></extra>")
+        trace.hoverlabel = dict(bgcolor='#FFFCF3', bordercolor=cor,
+                                font=dict(family='Arial, sans-serif',size=14,color='#293647'),
+                                align='left',namelength=-1)
+    fig.update_layout(separators=',.')
     fig.update_layout(margin=dict(t=50,b=0,l=0,r=0),legend=dict(orientation='h'))
     return fig
