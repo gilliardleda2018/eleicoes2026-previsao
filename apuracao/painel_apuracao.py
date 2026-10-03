@@ -101,6 +101,10 @@ box-shadow:3px 4px 10px rgba(74,69,49,.1)}
 .placar-pres .pl-quadro{padding:38px 12px 20px}.placar-pres .pl-nome{font-size:.68rem;letter-spacing:0}
 .placar-pres .pl-pct{font-size:.75rem}.pl-x{width:28px;height:28px;font-size:1rem}
 .pl-legenda{font-size:1.05rem}.placar-tuntum .pt-quadro{padding:16px 10px}}
+.placar-pres .pl-quadro.pl-partido{background:linear-gradient(145deg,var(--cor),var(--escuro))!important;color:#fff}
+.placar-pres .pl-partido .pl-nome{color:#fff}
+.placar-pres .pl-partido .pl-pct{color:rgba(255,255,255,.85)}
+.placar-pres .pl-estrela{color:#ffdf35;font-size:1.25em}
 </style>
 """, unsafe_allow_html=True)
 
@@ -678,8 +682,8 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
         lados.append(f"""
 <div class="pl-lado">
   <div class="pl-foto" style="--cor:{cor}">{img}</div>
-  <div class="pl-quadro" style="--cor:{cor};">
-    <div class="pl-nome">{nome.upper()} · {num if str(num).isdigit() else '—'}</div>
+  <div class="pl-quadro{' pl-partido' if disputa == 'presidente' else ''}" style="--cor:{cor};--escuro:{escuro};">
+    <div class="pl-nome">{'<span class="pl-estrela" aria-label="estrela amarela">★</span> ' if disputa == 'presidente' and chave == 'lula' else ''}{nome.upper()} · {num if str(num).isdigit() else '—'}</div>
     <div class="pl-votos">{n(votos)}</div>
     <div class="pl-pct">{n(p, 2)}% dos votos válidos</div>
   </div>
