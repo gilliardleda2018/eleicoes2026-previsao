@@ -23,6 +23,38 @@ if __name__ == "__main__":
     st.set_page_config(page_title="Apuração ao vivo", page_icon="🗳️", layout="wide")
     st.markdown(CSS, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+.dep-card{--accent:#3B6FB6;background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:24px;
+box-shadow:0 8px 28px rgba(27,42,65,.055);position:relative;overflow:hidden;min-height:390px}
+.dep-card:before{content:"";position:absolute;top:0;left:24px;right:24px;height:3px;background:var(--accent);border-radius:0 0 6px 6px}
+.dep-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
+.dep-name{font-size:1.15rem;font-weight:750;color:#1B2A41;line-height:1.3}
+.dep-badge{font-size:.74rem;font-weight:650;color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,white);
+padding:5px 9px;border-radius:8px;white-space:nowrap}
+.dep-label{font-size:.68rem;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:#64748b}
+.dep-votes{font-size:2.7rem;font-weight:800;letter-spacing:-.06em;line-height:1.15;color:#17263d;margin:6px 0}
+.dep-votes small{font-size:.85rem;font-weight:500;letter-spacing:0;color:#64748b;margin-left:8px}
+.dep-status{font-size:.77rem;line-height:1.6;color:#64748b;margin:8px 0 20px}
+.dep-projection{border-top:1px solid #edf1f6;padding-top:18px}
+.dep-projection strong{display:block;font-size:1.65rem;letter-spacing:-.04em;color:#17263d;margin:4px 0}
+.dep-range{font-size:.8rem;color:#64748b;line-height:1.65}
+.dep-reference{font-size:.72rem;color:#64748b;margin-top:10px;line-height:1.6}
+.dep-chances{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.dep-chance{background:#f7f9fc;border:1px solid #edf1f6;border-radius:12px;padding:12px}
+.dep-chance span{display:block;font-size:.7rem;color:#64748b;line-height:1.5}
+.dep-chance b{display:block;font-size:1.2rem;color:#17263d;margin-top:3px}
+.tuntum{background:linear-gradient(120deg,#fff7fb,#fff 65%)!important;border:1px solid #e2e8f0!important;
+border-radius:22px!important;box-shadow:0 8px 28px rgba(27,42,65,.045)!important;padding:24px!important}
+.tuntum .tt-bruna{border-left-width:3px!important;padding-left:20px!important}
+.tuntum .tt-num{font-size:clamp(3rem,7vw,5rem)!important;letter-spacing:-.06em}
+.tuntum .tt-outro{background:#fff!important;border:1px solid #e7edf4!important;
+border-top:3px solid var(--cor)!important;border-radius:16px!important;padding:16px!important}
+@media(max-width:640px){.dep-card{padding:20px;min-height:0}.dep-head{margin-bottom:20px}
+.dep-name{font-size:1.05rem}.tuntum{padding:18px!important}.tuntum .tt-outros{gap:10px!important}}
+</style>
+""", unsafe_allow_html=True)
+
 # a Assembleia MA (Bruna Pessoa) vem primeiro e em destaque
 DISPUTAS = {
     "Assembleia MA · Bruna, Abigail e Eric": dict(disputa="deputado", unidade="Município"),
@@ -459,15 +491,20 @@ def painel_deputados():
             f"{'+' if ritmo >= 1 else '−'}{n(abs(ritmo - 1) * 100, 0)}% vs. {'projeção' if chave == 'bruna' else '2022'}")
         num = numeros.get(chave, "?")
         col.markdown(f"""
-<div class="cartao" style="border-left-color:{cor}"><h4 style="color:{cor}">{nome}
-<span style="font-size:.8rem;opacity:.7">nº {num if str(num).isdigit() else '—'}</span></h4>
-<div style="font:800 2rem Montserrat">{n(c['contado'])} <span style="font-size:1rem">votos</span></div>
-<div class="pequeno">{texto_ritmo} · esperado até agora {n(c['esperado_ate_agora'])}</div>
-<div style="margin-top:8px"><b>Projeção do final: {mil(c['final'][1])}</b><br>
-<span class="pequeno">faixa provável {mil(c['final'][0])} a {mil(c['final'][2])} · antes da apuração: {mil(c['previsto'])}
-({origem})</span></div>
-<div style="margin-top:6px">Chance de passar de 38,3 mil: <b>{pct(c['prob_acima']['último eleito da chapa do governo em 2022'])}</b>
-· de 24,8 mil: <b>{pct(c['prob_acima']['menor eleito em 2022'])}</b></div></div>""", unsafe_allow_html=True)
+<div class="dep-card" style="--accent:{cor}">
+<div class="dep-head"><div class="dep-name">{nome}</div>
+<span class="dep-badge">nº {num if str(num).isdigit() else '—'}</span></div>
+<div class="dep-label">Votos apurados</div>
+<div class="dep-votes">{n(c['contado'])}<small>votos</small></div>
+<div class="dep-status">{texto_ritmo}<br>Esperado até agora: {n(c['esperado_ate_agora'])} votos</div>
+<div class="dep-projection"><div class="dep-label">Projeção do resultado final</div>
+<strong>{mil(c['final'][1])} votos</strong>
+<div class="dep-range">Faixa provável: {mil(c['final'][0])} a {mil(c['final'][2])}</div>
+<div class="dep-reference">Antes da apuração: {mil(c['previsto'])} votos<br>{origem}</div></div>
+<div class="dep-chances">
+<div class="dep-chance"><span>Acima de 38,3 mil votos</span><b>{pct(c['prob_acima']['último eleito da chapa do governo em 2022'])}</b></div>
+<div class="dep-chance"><span>Acima de 24,8 mil votos</span><b>{pct(c['prob_acima']['menor eleito em 2022'])}</b></div>
+</div></div>""", unsafe_allow_html=True)
 
     estatisticas(d, r, apurado)
 
