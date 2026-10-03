@@ -682,7 +682,7 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
         lados.append(f"""
 <div class="pl-lado">
   <div class="pl-foto" style="--cor:{cor}">{img}</div>
-  <div class="pl-quadro{' pl-partido' if disputa == 'presidente' else ''}" style="--cor:{cor};--escuro:{escuro};">
+  <div class="pl-quadro pl-partido" style="--cor:{cor};--escuro:{escuro};">
     <div class="pl-nome">{'<span class="pl-estrela" aria-label="estrela amarela">★</span> ' if disputa == 'presidente' and chave == 'lula' else ''}{nome.upper()} · {num if str(num).isdigit() else '—'}</div>
     <div class="pl-votos">{n(votos)}</div>
     <div class="pl-pct">{n(p, 2)}% dos votos válidos</div>
