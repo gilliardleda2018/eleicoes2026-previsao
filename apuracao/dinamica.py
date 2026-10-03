@@ -6,17 +6,21 @@ import streamlit as st
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
 try:
+    from . import editor_apuracao
+except ImportError:
+    import editor_apuracao
+try:
     from .historico_servidor import gravar_ler, selos
 except ImportError:
     from historico_servidor import gravar_ler, selos
 
 
-def registrar(estado, votos, percentual, consultado, projecoes=None):
+def registrar(estado, votos, percentual, consultado, projecoes=None, unidades=None):
     """Não duplica consultas em cache; correções negativas são preservadas."""
     votos = {str(k): float(v) for k, v in votos.items() if math.isfinite(float(v))}
     p = max(0.0, min(100.0, float(percentual)))
     anterior = estado.get('ultimo')
-    atual = dict(votos=votos, percentual=p, consultado=consultado, projecoes=projecoes or {})
+    atual = dict(votos=votos, percentual=p, consultado=consultado, projecoes=projecoes or {}, unidades=unidades or {})
     if anterior and consultado <= anterior['consultado']:
         return estado
     if anterior:
@@ -51,22 +55,22 @@ def horario(t):
     return datetime.fromtimestamp(t, timezone(timedelta(hours=-3))).strftime('%H:%M:%S')
 
 
-def mostrar(chave, votos, percentual, consultado, projecoes=None, ensaio=False, oficial=None):
+def mostrar(chave, votos, percentual, consultado, projecoes=None, ensaio=False, oficial=None, unidades=None):
     chave = 'dinamica_' + chave
     estado = st.session_state.get(chave, {})
     armazenado = False
     if not ensaio:
         try:
             registros = gravar_ler(chave, dict(votos=votos, percentual=percentual,
-                                   consultado=consultado, projecoes=projecoes or {}))
+                                   consultado=consultado, projecoes=projecoes or {}, unidades=unidades or {}))
             estado = {}
             for x in registros:
-                registrar(estado, x['votos'], x['percentual'], x['consultado'], x['projecoes'])
+                registrar(estado, x['votos'], x['percentual'], x['consultado'], x['projecoes'], x.get('unidades', {}))
             armazenado = True
         except Exception:
             # Falha de armazenamento não pode interromper os placares.
             st.caption('Histórico compartilhado indisponível; mantendo o histórico desta sessão.')
-    estado = registrar(estado, votos, percentual, consultado, projecoes)
+    estado = registrar(estado, votos, percentual, consultado, projecoes, unidades)
     st.session_state[chave] = estado
     st.markdown('''<style>
 .ao-status{padding:16px 20px;border:1px solid #c8d7e7;border-radius:20px;
@@ -81,6 +85,7 @@ background:linear-gradient(145deg,#fffdf5,#edf3f8);box-shadow:5px 8px 18px #2034
     st.markdown(f'<div class="ao-status"><b>{"🧪 Ensaio" if ensaio else "📡 Dados oficiais · TSE"}</b> · consulta bem-sucedida às {horario(consultado)} (Brasília)<br>'
                 f'<strong>{p:.1f}%</strong> apurado · {"histórico compartilhado no servidor" if armazenado else "histórico desta sessão"}'
                 f'<div class="ao-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{p}" aria-label="Percentual apurado"><i style="width:{p}%"></i></div></div>', unsafe_allow_html=True)
+    editor_apuracao.mostrar(estado['historico'], ensaio)
     for nome, delta in estado.get('deltas', {}).items():
         if delta:
             texto = f'{nome}: {delta:+,.0f} votos desde a consulta anterior'.replace(',', '.')
@@ -151,3 +156,4 @@ def telao():
 @media(max-width:640px){.pl-votos,.dep-votes,.tt-num{font-size:2.7rem!important}
 .pl-nome,.dep-name{font-size:1rem!important}}
 </style>''',unsafe_allow_html=True)
+

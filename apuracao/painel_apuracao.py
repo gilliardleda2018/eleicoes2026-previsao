@@ -560,7 +560,10 @@ def painel_deputados():
     dinamica.mostrar(f"deputado_1_{ensaio}",
                      {DEPUTADOS[k][0]: c["contado"] for k, c in r["cand"].items()},
                      apurado, info["consultado_em"] if not ensaio else time.time(),
-                     {DEPUTADOS[k][0]: c["final"] for k, c in r["cand"].items()}, ensaio, oficial=geral)
+                     {DEPUTADOS[k][0]: c["final"] for k, c in r["cand"].items()}, ensaio, oficial=geral,
+                     unidades={str(x.municipio): dict(percentual=float(x.pst),
+                               votos={DEPUTADOS[k][0]:float(getattr(x,"real_"+k)) for k in DEPUTADOS})
+                               for x in d.itertuples()})
     comparador_margens.mostrar(r, DEPUTADOS, ensaio)
     cartao_tuntum(d)
     narrador(r, geral, numeros, ensaio, apurado)
@@ -903,7 +906,9 @@ def painel():
     dinamica.mostrar(f"{cfg['disputa']}_{turno}_{ensaio}",
                      {na: float(d.contado_a.sum()), nb: float(d.contado_b.sum())},
                      apurado, info["consultado_em"] if not ensaio else time.time(),
-                     {na: r["final_a"], nb: r["final_b"]} if not r.get("sem_dados") else {}, ensaio, oficial=geral)
+                     {na: r["final_a"], nb: r["final_b"]} if not r.get("sem_dados") else {}, ensaio, oficial=geral,
+                     unidades={str(getattr(x,"municipio",getattr(x,cfg["chave"]))):dict(percentual=float(x.pst),
+                               votos={na:float(x.contado_a),nb:float(x.contado_b)}) for x in d.itertuples()})
     placar_duelo(cfg["disputa"], unidades, geral, numeros, info)
     resultado_turno(cfg["disputa"], turno, unidades, geral, numeros, info, ensaio)
     if r.get("sem_dados"):
@@ -1120,3 +1125,4 @@ with st.expander("🔧 Verificar conexão com o TSE (diagnóstico)"):
         else:
             st.error("Há etapas com falha. Se o erro for de acesso (403/timeout), o TSE pode estar bloqueando este "
                      "servidor: no domingo, rode o painel num computador no Brasil (streamlit run app.py).")
+
