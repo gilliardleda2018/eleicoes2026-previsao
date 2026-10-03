@@ -419,8 +419,29 @@ def projetar_votos(unidades, previsao, numeros, colunas_prev, chave_prev="CD_MUN
     Em cada município, "esperado até agora" = projeção do modelo × fração apurada. O ritmo do candidato
     (votos reais ÷ esperado, reamostrado entre os municípios já apurados e puxado para 1 no começo) corrige a projeção
     dos votos que faltam; em município já bem apurado vale o ritmo do próprio município."""
+    if not isinstance(n_boot, (int, np.integer)) or n_boot < 1:
+        raise ValueError("Quantidade de simulações deve ser inteira e positiva")
+    if not np.isfinite(forca_prior) or forca_prior <= 0:
+        raise ValueError("Força da projeção inicial deve ser positiva e finita")
+    for tabela, chave, nome in ((previsao, chave_prev, "previsão"), (unidades, "unidade", "apuração")):
+        if chave not in tabela or tabela[chave].isna().any() or tabela[chave].duplicated().any():
+            raise ValueError(f"Municípios ausentes ou duplicados na {nome}")
+    if previsao.empty:
+        raise ValueError("Previsão municipal vazia")
+    if not set(unidades.unidade).issubset(set(previsao[chave_prev])):
+        raise ValueError("Apuração contém município fora da previsão")
+    for col in [col_total, *colunas_prev.values()]:
+        valores = pd.to_numeric(previsao[col], errors="raise").to_numpy(dtype=float)
+        if not np.isfinite(valores).all() or (valores < 0).any():
+            raise ValueError(f"Previsão inválida: {col}")
+    if previsao[col_total].sum() <= 0:
+        raise ValueError("Total esperado deve ser positivo")
+    for col in ["pst", "vv", *[c for c in unidades if c.startswith("v_")]]:
+        valores = pd.to_numeric(unidades[col], errors="raise").to_numpy(dtype=float)
+        if not np.isfinite(valores).all() or (valores < 0).any() or (col == "pst" and (valores > 100).any()):
+            raise ValueError(f"Apuração inválida: {col}")
     rng = np.random.default_rng(semente)
-    d = previsao.merge(unidades, left_on=chave_prev, right_on="unidade", how="left").fillna({"pst": 0, "vv": 0})
+    d = previsao.merge(unidades, left_on=chave_prev, right_on="unidade", how="left", validate="one_to_one").fillna({"pst": 0, "vv": 0})
     p = (d.pst.astype(float) / 100).clip(0, 1).values
     tot = d[col_total].astype(float).values
     frac = float((p * tot).sum() / max(tot.sum(), 1))
