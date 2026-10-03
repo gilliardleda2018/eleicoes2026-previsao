@@ -936,6 +936,14 @@ def painel():
                                votos={na:float(x.contado_a),nb:float(x.contado_b)}) for x in d.itertuples()})
     placar_duelo(cfg["disputa"], unidades, geral, numeros, info)
     resultado_turno(cfg["disputa"], turno, unidades, geral, numeros, info, ensaio)
+    if cfg["disputa"] == "governador":
+        import mapa_governo
+        st.subheader("Votação para governador por município")
+        st.caption("Azul: Braide à frente de Orleans · laranja: Orleans à frente de Braide · cinza: empate ou sem votos. Liderança parcial entre os dois acompanhados, não declaração de vitória.")
+        if ensaio:
+            st.caption("ENSAIO: resultados históricos usados como substitutos dos candidatos de 2026; não são votos oficiais de Braide e Orleans.")
+        with open(cfg["geo"], encoding="utf-8") as arquivo_geo:
+            grafico(mapa_governo.figura(d, json.load(arquivo_geo), ensaio))
     if r.get("sem_dados"):
         st.metric("Seções apuradas", f"{n(apurado, 1)}%")
         st.info("Ainda há poucos votos apurados para comparar com a projeção. Aguarde os primeiros resultados.")
