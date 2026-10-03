@@ -65,6 +65,43 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+st.info(
+    f"**Como ler estes números:**\n\n"
+    f"**Chance de vitória:** em 100 eleições simuladas, Braide vence cerca de {pct(pb).replace('%', '')} "
+    f"e Orleans cerca de {pct(po).replace('%', '')}. É uma frequência do modelo, não porcentagem de votos nem garantia.\n\n"
+    f"**Projeção de votos:** no segundo turno, o centro da estimativa é Braide com "
+    f"{n(P2['braide_validos_p10_p50_p90'][1], 1)}% e Orleans com "
+    f"{n(100 - P2['braide_validos_p10_p50_p90'][1], 1)}% dos votos válidos, excluindo brancos e nulos. "
+    "**Faixa de 80%:** contém os 80% centrais das simulações; o resultado real pode ficar fora dela.\n\n"
+    "**Como o modelo é feito e testado:**\n\n"
+    "**1. Dados:** combina pesquisas conferidas na base com uma compilação pública ainda não conferida. "
+    "Quando faltam resultados de candidatos menores, estima esses valores pelas demais pesquisas. "
+    "Usa histórico eleitoral de 2018 e 2022 e informações municipais. Nem todas as entradas têm o mesmo grau de verificação.\n\n"
+    "**2. Seis métodos de pesquisas:** média ponderada privilegia pesquisas recentes e maiores; mediana robusta "
+    "reduz valores extremos; regressão estima diferenças entre institutos; Kalman acompanha a evolução; "
+    "processo gaussiano estima uma curva com incerteza; modelo bayesiano hierárquico combina tendência e "
+    "diferenças entre institutos. As estimativas são combinadas, incluindo a dispersão entre métodos.\n\n"
+    "**3. Cinco algoritmos municipais:** regressão linear aprende relações médias; Ridge limita ajustes excessivos; "
+    "Random Forest combina árvores; Gradient Boosting corrige erros por etapas; KNN compara municípios parecidos. "
+    "Aprendem relações entre votos de 2018 e 2022, porte e localização nos 217 municípios. "
+    "A validação divide os municípios aleatoriamente em cinco grupos: treina em quatro e testa no restante. "
+    "Os cinco modelos recebem pesos pelo desempenho; esse teste não mede o acerto em uma eleição futura.\n\n"
+    "**4. Turnos e geografia:** o primeiro turno inclui outros candidatos. Para o segundo, metade dos cenários "
+    "usa pesquisas diretas e metade estima transferência ao comparar pesquisas dos dois turnos; isso não "
+    "acompanha eleitores individualmente. O mesmo erro histórico sorteado do primeiro turno é aplicado aos dois turnos, "
+    "com intensidade variável. Bahia e Piauí em 2022 formam um cenário de alerta. "
+    "Pesquisas regionais, histórico municipal e apoio de prefeitos ajudam a distribuir a projeção pelo estado.\n\n"
+    f"**5. Simulações:** Monte Carlo gera {n(SIM['n_cenarios'])} cenários estaduais e usa uma subamostra de "
+    "4 mil para as projeções municipais. Varia pesquisas, erros, transferências e efeitos locais. "
+    "Mais simulações não garantem mais precisão eleitoral.\n\n"
+    "**6. Testes e limites:** o treinamento registra erros da validação municipal. Nesta atualização, "
+    "conferimos o carregamento das dez seções do painel e a explicação com os números atuais. "
+    "Os 14 testes e o teste histórico de 2014, 2018 e 2022 descritos no cenário nacional não validam "
+    "automaticamente este modelo estadual. Não foi demonstrado aqui um teste temporal completo do cenário Maranhão. "
+    "A mistura de 50/50, persistência dos erros e efeito de prefeitos são hipóteses; "
+    "as chances de vitória consideram Braide ou Orleans como vencedor. Novas pesquisas e premissas podem mudar o resultado."
+)
+
 SECOES = ["🏁 Veredito", "📊 Pesquisas", "🧠 Modelos", "🗺️ Mapa", "🏙️ Cidades", "🧭 Regiões", "📰 Mídia",
           "🎛️ Cenários", "📚 Nossa base", "ℹ️ Metodologia"]
 _e = st.pills("Seção", SECOES, default=SECOES[0], selection_mode="single", label_visibility="collapsed", key="secao_ma")
