@@ -532,7 +532,23 @@ def painel_deputados():
     apurado = r["apurado_pct"] if ensaio else geral["pst"]
     st.caption(f"Fonte: TSE · deputado estadual MA · eleição {info['eleicao']} ({info['ciclo']}) · "
                f"{r['unidades_com_votos']} de {r['unidades']} municípios com votos · atualizado agora")
-    st.metric("Seções apuradas no Maranhão", f"{n(apurado, 1)}%")
+    # A intensidade visual acompanha o percentual oficial, sem alterar o cálculo.
+    intensidade = max(0.0, min(100.0, float(apurado))) / 100.0
+    claro = tuple(round(a + (z - a) * intensidade) for a, z in zip((247, 250, 255), (112, 169, 231)))
+    fundo = "#{:02x}{:02x}{:02x}".format(*claro)
+    st.markdown(f"""<style>
+.st-key-progresso_secoes_ma [data-testid="stMetric"]{{
+    background:linear-gradient(145deg,#fafdff 0%,{fundo} 100%)!important;
+    border:1px solid rgba(43,103,173,{0.18 + 0.32 * intensidade:.3f})!important;
+    border-radius:20px;padding:18px 22px;
+    box-shadow:6px 9px 20px rgba(34,68,110,{0.08 + 0.10 * intensidade:.3f}),
+    inset 1px 1px 0 rgba(255,255,255,.85),inset -1px -1px 0 rgba(43,103,173,.12);
+    transition:background .6s ease,border-color .6s ease,box-shadow .6s ease;}}
+.st-key-progresso_secoes_ma [data-testid="stMetricLabel"],
+.st-key-progresso_secoes_ma [data-testid="stMetricValue"]{{color:#153456!important;}}
+</style>""", unsafe_allow_html=True)
+    with st.container(key="progresso_secoes_ma"):
+        st.metric("Seções apuradas no Maranhão", f"{n(apurado, 1)}%")
     cartao_tuntum(d)
     narrador(r, geral, numeros, ensaio, apurado)
 
