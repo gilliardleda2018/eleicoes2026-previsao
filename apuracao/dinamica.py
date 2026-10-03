@@ -5,6 +5,10 @@ import math
 import streamlit as st
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
+try:
+    from .historico_servidor import gravar_ler, selos
+except ImportError:
+    from historico_servidor import gravar_ler, selos
 
 
 def registrar(estado, votos, percentual, consultado, projecoes=None):
@@ -47,9 +51,22 @@ def horario(t):
     return datetime.fromtimestamp(t, timezone(timedelta(hours=-3))).strftime('%H:%M:%S')
 
 
-def mostrar(chave, votos, percentual, consultado, projecoes=None, ensaio=False):
+def mostrar(chave, votos, percentual, consultado, projecoes=None, ensaio=False, oficial=None):
     chave = 'dinamica_' + chave
-    estado = registrar(st.session_state.get(chave, {}), votos, percentual, consultado, projecoes)
+    estado = st.session_state.get(chave, {})
+    armazenado = False
+    if not ensaio:
+        try:
+            registros = gravar_ler(chave, dict(votos=votos, percentual=percentual,
+                                   consultado=consultado, projecoes=projecoes or {}))
+            estado = {}
+            for x in registros:
+                registrar(estado, x['votos'], x['percentual'], x['consultado'], x['projecoes'])
+            armazenado = True
+        except Exception:
+            # Falha de armazenamento não pode interromper os placares.
+            st.caption('Histórico compartilhado indisponível; mantendo o histórico desta sessão.')
+    estado = registrar(estado, votos, percentual, consultado, projecoes)
     st.session_state[chave] = estado
     st.markdown('''<style>
 .ao-status{padding:16px 20px;border:1px solid #c8d7e7;border-radius:20px;
@@ -62,7 +79,7 @@ background:linear-gradient(145deg,#fffdf5,#edf3f8);box-shadow:5px 8px 18px #2034
 </style>''', unsafe_allow_html=True)
     p = estado['ultimo']['percentual']
     st.markdown(f'<div class="ao-status"><b>{"🧪 Ensaio" if ensaio else "📡 Dados oficiais · TSE"}</b> · consulta bem-sucedida às {horario(consultado)} (Brasília)<br>'
-                f'<strong>{p:.1f}%</strong> apurado · histórico iniciado ao abrir esta sessão'
+                f'<strong>{p:.1f}%</strong> apurado · {"histórico compartilhado no servidor" if armazenado else "histórico desta sessão"}'
                 f'<div class="ao-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{p}" aria-label="Percentual apurado"><i style="width:{p}%"></i></div></div>', unsafe_allow_html=True)
     for nome, delta in estado.get('deltas', {}).items():
         if delta:
@@ -76,9 +93,11 @@ background:linear-gradient(145deg,#fffdf5,#edf3f8);box-shadow:5px 8px 18px #2034
 let s={restante};const el=document.getElementById('tempo');function atualizar(){{el.textContent=s>0?'Próxima verificação em cerca de '+s+' s':'Aguardando a próxima verificação automática';s=Math.max(0,s-1)}}atualizar();setInterval(atualizar,1000);
 </script>''', height=28)
     with st.expander('Evolução e últimas atualizações', expanded=False):
+        if armazenado:
+            st.caption('Histórico compartilhado entre visitantes. No Render atual, reinício ou deploy pode apagar o armazenamento local; um volume persistente pode ser configurado pelo administrador.')
         h = estado['historico']
         if len(h) < 2:
-            st.caption('Os gráficos aparecem após duas consultas bem-sucedidas. Recarregar a página reinicia este histórico.')
+            st.caption('Os gráficos aparecem após duas consultas bem-sucedidas. O ensaio mantém histórico separado por sessão.')
         else:
             nomes = list(votos)
             if len(nomes) >= 2:
@@ -103,10 +122,19 @@ let s={restante};const el=document.getElementById('tempo');function atualizar(){
                 st.caption('Linhas: estimativa central do modelo. Áreas: faixas de incerteza fornecidas pelo modelo; não são votos oficiais nem garantia de resultado.')
         for t, evento in reversed(estado.get('eventos', [])):
             st.write(f'{horario(t)} · {evento}')
+    for titulo, detalhe in selos(oficial or {}, ensaio):
+        st.success(f'{titulo} · {detalhe}' if detalhe else titulo)
 
 
 def falha(chave):
     estado = st.session_state.get('dinamica_' + chave)
+    if not estado and chave.endswith('False'):
+        try:
+            registros = gravar_ler('dinamica_' + chave)
+            if registros:
+                estado = {'ultimo':registros[-1]}
+        except Exception:
+            pass
     if estado:
         st.warning('A consulta falhou. Última consulta bem-sucedida às ' + horario(estado['ultimo']['consultado']) + ' (Brasília).')
         st.dataframe([{'Candidato':k,'Últimos votos apurados':v} for k,v in estado['ultimo']['votos'].items()],hide_index=True)
@@ -120,4 +148,6 @@ def telao():
 .pl-nome,.dep-name{font-size:1.35rem!important}
 [data-testid="stCaptionContainer"],.dep-reference,.dep-status{display:none}
 .st-key-compartilhar_apuracao{display:none}
+@media(max-width:640px){.pl-votos,.dep-votes,.tt-num{font-size:2.7rem!important}
+.pl-nome,.dep-name{font-size:1rem!important}}
 </style>''',unsafe_allow_html=True)
