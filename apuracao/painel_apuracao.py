@@ -541,7 +541,11 @@ def painel_deputados():
     if ensaio:
         unidades = unidades if fracao >= 1 else motor.simular_parcial(unidades, fracao, semente=int(fracao * 1000))
     prev = previsao_deputados()
+    inicio_calculo = time.perf_counter()
     d, r = motor.projetar_votos(unidades, prev, numeros, {k: v[2] for k, v in DEPUTADOS.items()})
+    tempo_calculo = time.perf_counter() - inicio_calculo
+    referencia_final = ({DEPUTADOS[k][0]:c["contado"] for k,c in r["cand"].items()}
+                        if (ensaio and fracao >= 1) or (not ensaio and geral.get("totalizado") is True) else None)
     apurado = r["apurado_pct"] if ensaio else geral["pst"]
     st.caption(f"Fonte: TSE · deputado estadual MA · eleição {info['eleicao']} ({info['ciclo']}) · "
                f"{r['unidades_com_votos']} de {r['unidades']} municípios com votos · atualizado agora")
@@ -565,7 +569,7 @@ def painel_deputados():
     dinamica.mostrar(f"deputado_1_{ensaio}",
                      {DEPUTADOS[k][0]: c["contado"] for k, c in r["cand"].items()},
                      apurado, info["consultado_em"] if not ensaio else time.time(),
-                     {DEPUTADOS[k][0]: c["final"] for k, c in r["cand"].items()}, ensaio, oficial=geral,
+                     {DEPUTADOS[k][0]: c["final"] for k, c in r["cand"].items()}, ensaio, oficial=geral, referencia_final=referencia_final, tempo_calculo=tempo_calculo,
                      unidades={str(x.municipio): dict(percentual=float(x.pst),
                                votos={DEPUTADOS[k][0]:float(getattr(x,"real_"+k)) for k in DEPUTADOS})
                                for x in d.itertuples()})
@@ -910,16 +914,22 @@ def painel():
     if ensaio:
         unidades = unidades if fracao >= 1 else motor.simular_parcial(unidades, fracao, semente=int(fracao * 1000))
     prev = carregar_previsao()
+    inicio_calculo = time.perf_counter()
     d, r = motor.projetar(unidades, prev, numeros, cfg["a"], cfg["b"], f"prev_a_{turno}t", f"prev_b_{turno}t",
                           "validos_26_est", cfg["chave"], turno=turno)
+    tempo_calculo = time.perf_counter() - inicio_calculo
     na, nb = cfg["nome_a"], cfg["nome_b"]
+    referencia_final = ({na:100*float(d.contado_a.sum())/float(d.contado_vv.sum()),
+                         nb:100*float(d.contado_b.sum())/float(d.contado_vv.sum())}
+                        if float(d.contado_vv.sum()) > 0 and
+                        ((ensaio and fracao >= 1) or (not ensaio and geral.get("totalizado") is True)) else None)
     apurado = geral["pst"] if not ensaio else r["apurado_pct_votos"]
     st.caption(f"Fonte: TSE · eleição {info['eleicao']} ({info['ciclo']}) · {r['unidades_com_votos']} de "
                f"{r['unidades']} {cfg['unidade'].lower()}s com votos · atualizado agora")
     dinamica.mostrar(f"{cfg['disputa']}_{turno}_{ensaio}",
                      {na: float(d.contado_a.sum()), nb: float(d.contado_b.sum())},
                      apurado, info["consultado_em"] if not ensaio else time.time(),
-                     {na: r["final_a"], nb: r["final_b"]} if not r.get("sem_dados") else {}, ensaio, oficial=geral,
+                     {na: r["final_a"], nb: r["final_b"]} if not r.get("sem_dados") else {}, ensaio, oficial=geral, referencia_final=referencia_final, tempo_calculo=tempo_calculo,
                      unidades={str(getattr(x,"municipio",getattr(x,cfg["chave"]))):dict(percentual=float(x.pst),
                                votos={na:float(x.contado_a),nb:float(x.contado_b)}) for x in d.itertuples()})
     placar_duelo(cfg["disputa"], unidades, geral, numeros, info)

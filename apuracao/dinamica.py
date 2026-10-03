@@ -55,7 +55,8 @@ def horario(t):
     return datetime.fromtimestamp(t, timezone(timedelta(hours=-3))).strftime('%H:%M:%S')
 
 
-def mostrar(chave, votos, percentual, consultado, projecoes=None, ensaio=False, oficial=None, unidades=None):
+def mostrar(chave, votos, percentual, consultado, projecoes=None, ensaio=False, oficial=None, unidades=None,
+            referencia_final=None, tempo_calculo=None):
     chave = 'dinamica_' + chave
     estado = st.session_state.get(chave, {})
     armazenado = False
@@ -127,6 +128,13 @@ let s={restante};const el=document.getElementById('tempo');function atualizar(){
                 st.caption('Linhas: estimativa central do modelo. Áreas: faixas de incerteza fornecidas pelo modelo; não são votos oficiais nem garantia de resultado.')
         for t, evento in reversed(estado.get('eventos', [])):
             st.write(f'{horario(t)} · {evento}')
+    try:
+        from . import eficiencia
+    except ImportError:
+        import eficiencia
+    referencia = referencia_final if ensaio or (oficial or {}).get('totalizado') is True else None
+    eficiencia.mostrar(estado['historico'], referencia, ensaio,
+                      'votos' if 'deputado' in chave else 'pontos percentuais', tempo_calculo)
     for titulo, detalhe in selos(oficial or {}, ensaio):
         st.success(f'{titulo} · {detalhe}' if detalhe else titulo)
 
