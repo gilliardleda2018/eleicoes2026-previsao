@@ -100,4 +100,46 @@ extra. Não comprovam qualidade de um modelo nem desligamento real na AWS.
 A nova conexão superou o bloqueio de acesso. Preparar permissões mínimas dos
 recursos dedicados, infraestrutura de limite/desligamento e dataset rotulado;
 estimar custo total e testar em paralelo antes de ativar. Não há endpoint ou job para
-desligar nesta preparação. O período não foi agendado na AWS.
+desligar nesta preparação. O desligamento já foi agendado, conforme abaixo.
+
+## Avanço de 03/10 após autorização para concluir
+
+Criados grupo Scheduler eleicoes2026-piloto e role
+arn:aws:iam::614471945241:role/eleicoes2026/AggilliEleicoes2026PilotShutdown.
+Criado e relido o agendamento ENABLED:
+arn:aws:scheduler:us-east-1:614471945241:schedule/eleicoes2026-piloto/eleicoes2026-desligar-20261010
+
+Deadline fixo: 10/10/2026 às 11:31:34 America/Fortaleza. O período operacional
+será menor que sete dias se a ativação ocorrer mais tarde. Target universal
+sagemaker:deleteEndpoint, exclusivamente eleicoes2026-editor-piloto. Janela
+flexível OFF; até três retries, idade máxima uma hora. A simulação IAM
+confirmou allowed para este endpoint e implicitDeny para outro-projeto.
+Isso verifica configuração e política, não uma execução real bem-sucedida.
+Ainda faltam testar a entrega, monitorar falha de desligamento e limpar
+artefatos/logs. Se o endpoint não for criado, a chamada encontrará recurso
+inexistente; cancelar o agendamento se o piloto for abandonado.
+
+Implementados dataset.py (SQLite somente leitura, mudanças por unidade,
+revisões e viradas, rótulos inicialmente vazios) e treinar.py (Gradient
+Boosting, corte temporal global sem dividir grupos, NDCG@5 contra regras).
+Exige pelo menos 30 grupos, cinco datas e cinco grupos de teste comparáveis;
+exporta artefato só com melhoria superior a 0,02. Estes números são gates
+iniciais de engenharia, não garantia estatística. Revisão humana e teste em
+paralelo continuam necessários. Dependências separadas espelham o ambiente
+local; as dependências do Render não mudaram.
+
+Sete testes de contrato/dataset passaram. Também confirmado: validar([])
+recusa treino. Os únicos três snapshots locais têm tempos 1, 2 e 3, votos
+A/B e nenhuma unidade: são fixtures de testes, não dados oficiais. Não foram
+usados para treinar ou demonstrar qualidade. Chave *_False é filtro operacional,
+não prova independente de origem; certificar fontes antes do treino.
+
+Comandos:
+python -m sagemaker_piloto.dataset BANCO_OFICIAL.sqlite3 rotulagem.jsonl
+python -m sagemaker_piloto.treinar rotulagem_preenchida.jsonl artefato_novo
+python -m unittest sagemaker_piloto.test_contrato sagemaker_piloto.test_dataset -v
+
+Bloqueios restantes: dados reais de mudanças rotulados, teste de qualidade,
+cliente/gateway com contador global persistente, orçamento total fechado,
+alertas e ligação com Render. Não foi ativada inferência paga. Não houve
+retreino de Bruna, alteração de motor ou modelos nacionais.
