@@ -27,8 +27,9 @@ def figura(d, geo, ensaio=False):
             "Orleans · <b>%{customdata[2]:,.0f}</b> votos<br><br>"
             "Seções apuradas · <b>%{customdata[3]:.1f}%</b>"
             "<extra></extra>")
-        trace.hoverlabel = dict(bgcolor='#FFFCF3', bordercolor=cor,
-                                font=dict(family='Arial, sans-serif',size=14,color='#293647'),
+        fundo = {'Braide':'#E8F2FF','Orleans':'#FFF0DF','Empate':'#F0F1F4','Sem votos':'#F0F1F4'}[trace.name]
+        trace.hoverlabel = dict(bgcolor=fundo, bordercolor=cor,
+                                font=dict(family='Arial, sans-serif',size=15,color='#243449'),
                                 align='left',namelength=-1)
     fig.update_layout(separators=',.')
     fig.update_layout(margin=dict(t=50,b=0,l=0,r=0),legend=dict(orientation='h'))
