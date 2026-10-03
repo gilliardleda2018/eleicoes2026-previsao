@@ -7,6 +7,28 @@ sem alinhar com o usuário. Região proposta: us-east-1.
 
 ## Estado verificado
 
+Atualização após reconexão em 03/10: as conexões personal (nova) e AWS Core
+retornaram identidade root da conta 614471945241. ListEndpoints funcionou em
+us-east-1 e retornou zero endpoints. A conexão Primary continua no auditor.
+O bloqueio anterior foi superado na nova conexão; não indica que o piloto
+esteja ativo.
+
+Foi criada e relida a role dedicada:
+arn:aws:iam::614471945241:role/eleicoes2026/AggilliEleicoes2026SageMakerExecution
+
+Trust restrito ao serviço SageMaker, conta, região e recursos com nome
+contendo eleicoes2026. Verificadas zero políticas inline e zero políticas
+anexadas: ainda não há acesso a artefatos, imagens ou logs. Esta role não é
+uma identidade de operador e não substitui a conexão root. Não foi criada
+chave de acesso. Tags de data e orçamento são documentação, não desligamento
+nem limite financeiro. Nenhum recurso dos outros projetos foi alterado.
+
+GetProducts (AmazonSageMaker) confirmou tarifa de 2 GB em us-east-1:
+US$ 0,0000400000 por segundo; SKU WRGJQXV26JHS9764, publicação 03/10/2026.
+O custo dos demais componentes continua pendente.
+
+### Registro da conexão anterior
+
 A conexão Primary usa personal-assistant-dai-auditor. ListEndpoints e
 SimulatePrincipalPolicy foram negados pela permissions boundary em 03/10.
 Não houve criação de recursos, treino ou integração com o painel. Não alterar
@@ -73,9 +95,9 @@ Quatro testes: início/fim exato dos sete dias, preservação do conteúdo,
 fallback por prazo/limite e rejeição de IDs inválidos, duplicados, NaN ou texto
 extra. Não comprovam qualidade de um modelo nem desligamento real na AWS.
 
-## Próxima etapa bloqueada
+## Próximas etapas ainda pendentes
 
-Obter conexão dedicada com permissões adequadas; então revisar políticas
-mínimas, construir infraestrutura de limite/desligamento e dataset, estimar
-custo total e testar em paralelo antes de ativar. Não há endpoint ou job para
+A nova conexão superou o bloqueio de acesso. Preparar permissões mínimas dos
+recursos dedicados, infraestrutura de limite/desligamento e dataset rotulado;
+estimar custo total e testar em paralelo antes de ativar. Não há endpoint ou job para
 desligar nesta preparação. O período não foi agendado na AWS.
