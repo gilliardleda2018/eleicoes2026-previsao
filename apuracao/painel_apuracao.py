@@ -52,6 +52,17 @@ border-radius:22px!important;box-shadow:8px 12px 24px rgba(74,69,49,.16),-4px -4
 border-top:3px solid var(--cor)!important;border-radius:16px!important;padding:16px!important}
 @media(max-width:640px){.dep-card{padding:20px;min-height:0}.dep-head{margin-bottom:20px}
 .dep-name{font-size:1.05rem}.tuntum{padding:18px!important}.tuntum .tt-outros{gap:10px!important}}
+
+.st-key-placar_stats [data-testid="stMetric"]{
+background:linear-gradient(145deg,#fffdf5 0%,#f1efe4 48%,#e6e4da 100%)!important;
+border:1px solid #d8d5c6;border-radius:20px;padding:20px;
+box-shadow:8px 12px 24px rgba(74,69,49,.16),-4px -4px 14px rgba(255,255,255,.85),
+inset 1px 1px 0 rgba(255,255,255,.95),inset -1px -1px 0 rgba(154,147,120,.2)}
+.st-key-placar_stats [data-testid="stMetric"]:hover{
+box-shadow:8px 14px 28px rgba(74,69,49,.19),-4px -4px 14px rgba(255,255,255,.85),inset 1px 1px 0 #fffef9}
+.st-key-placar_stats [class*="st-key-caixa_"]{
+background:linear-gradient(145deg,#fffdf5,#f1efe4 48%,#e6e4da)!important;border-color:#d8d5c6!important;
+box-shadow:8px 12px 24px rgba(74,69,49,.16),inset 1px 1px 0 #fffef9!important}
 </style>
 """, unsafe_allow_html=True)
 
@@ -506,7 +517,8 @@ def painel_deputados():
 <div class="dep-chance"><span>Acima de 24,8 mil votos</span><b>{pct(c['prob_acima']['menor eleito em 2022'])}</b></div>
 </div></div>""", unsafe_allow_html=True)
 
-    estatisticas(d, r, apurado)
+    with st.container(key="placar_stats"):
+        estatisticas(d, r, apurado)
 
     if r["apurado_pct"] < 5:
         st.info("Ainda há poucas seções apuradas: as projeções do final ficam largas até uns 10–15% da apuração.")
