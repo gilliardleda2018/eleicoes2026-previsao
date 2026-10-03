@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+import time
 from urllib.parse import quote
 from pathlib import Path
 
@@ -17,6 +18,7 @@ sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "apuracao"))
 import momento  # noqa: E402
 import motor  # noqa: E402
+import dinamica  # noqa: E402
 from comum import CSS, _logo_base64, barra_navegacao, cabecalho_marca, grafico, n, pct, tabela  # noqa: E402
 
 if __name__ == "__main__":
@@ -131,6 +133,7 @@ DEPUTADOS = {"bruna": ("Bruna Pessoa", "#E02597", "votos_projetados", "projeçã
 
 cabecalho_marca()
 barra_navegacao("ap")
+dinamica.telao()
 st.markdown("""
 <div class="capa" style="background: linear-gradient(100deg, #0E5A73 0%, #12233F 55%, #3B2A6B 100%);">
   <div class="selo">DOMINGO, 4 DE OUTUBRO · APURAÇÃO OFICIAL DO TSE · ATUALIZA A CADA 90 SEGUNDOS</div>
@@ -273,7 +276,8 @@ elif ensaio:
 
 @st.cache_data(ttl=90, show_spinner="Baixando a apuração do TSE…")
 def baixar(disputa, turno_, ensaio_):
-    return motor.baixar(disputa, turno_, ensaio=ensaio_)
+    unidades, geral, numeros, info = motor.baixar(disputa, turno_, ensaio=ensaio_)
+    return unidades, geral, numeros, dict(info, consultado_em=time.time())
 
 
 def carregar_previsao():
@@ -512,12 +516,15 @@ def narrador(r, geral, numeros, ensaio, apurado):
 
 @st.fragment(run_every=None if ensaio else "90s")
 def painel_deputados():
+    chave_dinamica = f"deputado_1_{ensaio}"
     try:
         unidades, geral, numeros, info = baixar("deputado", 1, ensaio)
     except Exception as e:  # noqa: BLE001
+        dinamica.falha(chave_dinamica)
         st.error(f"Não foi possível acessar o TSE agora ({e}). A página tenta de novo sozinha.")
         return
     if unidades is None:
+        dinamica.falha(chave_dinamica)
         st.warning(f"⏳ {info['erro']} A página verifica sozinha a cada 90 segundos; no domingo, a apuração começa às 17h "
                    "(horário de Brasília). Enquanto isso, use o **modo ensaio**.")
         return
@@ -549,6 +556,10 @@ def painel_deputados():
 </style>""", unsafe_allow_html=True)
     with st.container(key="progresso_secoes_ma"):
         st.metric("Seções apuradas no Maranhão", f"{n(apurado, 1)}%")
+    dinamica.mostrar(f"deputado_1_{ensaio}",
+                     {DEPUTADOS[k][0]: c["contado"] for k, c in r["cand"].items()},
+                     apurado, info["consultado_em"] if not ensaio else time.time(),
+                     {DEPUTADOS[k][0]: c["final"] for k, c in r["cand"].items()}, ensaio)
     cartao_tuntum(d)
     narrador(r, geral, numeros, ensaio, apurado)
 
@@ -858,15 +869,18 @@ def resultado_turno(disputa, turno, unidades, geral, numeros, info, ensaio_):
 
 @st.fragment(run_every=None if ensaio else "90s")
 def painel():
+    chave_dinamica = f"{cfg['disputa']}_{turno}_{ensaio}"
     if ensaio and cfg["disputa"] == "governador" and turno == 2:
         st.warning("O Maranhão não teve 2º turno para governador em 2022: não há ensaio possível.")
         return
     try:
         unidades, geral, numeros, info = baixar(cfg["disputa"], turno, ensaio)
     except Exception as e:  # noqa: BLE001
+        dinamica.falha(chave_dinamica)
         st.error(f"Não foi possível acessar o TSE agora ({e}). A página tenta de novo sozinha.")
         return
     if unidades is None:
+        dinamica.falha(chave_dinamica)
         st.warning(f"⏳ {info['erro']} A página verifica sozinha a cada 90 segundos; no domingo, a apuração começa às 17h "
                    "(horário de Brasília). Enquanto isso, use o **modo ensaio**.")
         return
@@ -882,6 +896,10 @@ def painel():
     apurado = geral["pst"] if not ensaio else r["apurado_pct_votos"]
     st.caption(f"Fonte: TSE · eleição {info['eleicao']} ({info['ciclo']}) · {r['unidades_com_votos']} de "
                f"{r['unidades']} {cfg['unidade'].lower()}s com votos · atualizado agora")
+    dinamica.mostrar(f"{cfg['disputa']}_{turno}_{ensaio}",
+                     {na: float(d.contado_a.sum()), nb: float(d.contado_b.sum())},
+                     apurado, info["consultado_em"] if not ensaio else time.time(),
+                     {na: r["final_a"], nb: r["final_b"]} if not r.get("sem_dados") else {}, ensaio)
     placar_duelo(cfg["disputa"], unidades, geral, numeros, info)
     resultado_turno(cfg["disputa"], turno, unidades, geral, numeros, info, ensaio)
     if r.get("sem_dados"):
@@ -951,7 +969,8 @@ Hoje, <b>{lider}</b> termina à frente em <b>{pct(prob)}</b> das projeções.{te
 # ------------------------------------------------------------------ Senado e Câmara Federal (MA)
 @st.cache_data(ttl=90, show_spinner="Baixando a apuração do TSE…")
 def baixar_ranking(disputa, ensaio_, fracao_):
-    return motor.ranking(disputa, ensaio_, fracao_)
+    df, info = motor.ranking(disputa, ensaio_, fracao_)
+    return df, dict(info, consultado_em=time.time())
 
 
 @st.cache_data(ttl=None, show_spinner=False)
@@ -997,12 +1016,14 @@ def _iniciais(nm):
 
 
 def painel_ranking(disputa):
+    chave_dinamica = f"{disputa}_1_{ensaio}"
     vagas = motor.VAGAS[disputa]
     titulo = "Senado · Maranhão" if disputa == "senador" else "Câmara dos Deputados · Maranhão"
     destaque_assembleia()
     try:
         df, info = baixar_ranking(disputa, ensaio, fracao if ensaio else 1.0)
     except Exception as e:  # noqa: BLE001
+        dinamica.falha(chave_dinamica)
         st.error(f"Não foi possível acessar o TSE agora ({e}). A página tenta de novo sozinha.")
         return
     if df is None:
@@ -1020,6 +1041,8 @@ def painel_ranking(disputa):
     k[1].metric("Votos válidos apurados", n(info["vv"]))
     k[2].metric("Seções apuradas em Tuntum", f"{n(info['pst_tuntum'], 1)}%")
 
+    dinamica.mostrar(f"{disputa}_1_{ensaio}", {str(x.nome): float(x.votos) for x in df.head(6).itertuples()},
+                     info["pst"], info["consultado_em"] if not ensaio else time.time(), ensaio=ensaio)
     mostrar = 6 if disputa == "senador" else 30
     vv = max(info["vv"], 1)
     topo = df.head(mostrar)
