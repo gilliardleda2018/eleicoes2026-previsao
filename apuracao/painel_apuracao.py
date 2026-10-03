@@ -74,6 +74,33 @@ inset 1px 1px 0 rgba(255,255,255,.95),inset -1px -1px 0 rgba(154,147,120,.2)!imp
 border-color:#d8d5c6!important;border-radius:14px}
 @media(max-width:640px){.st-key-apuracao_deputados .cartao,
 .st-key-apuracao_deputados [class*="st-key-caixa_"]{padding:16px}}
+
+.placar-pres{gap:24px;margin-top:18px}
+.placar-pres .pl-foto{width:112px;height:112px;margin-bottom:-32px;border:3px solid #fffdf5;
+outline:2px solid var(--cor);box-shadow:0 8px 18px rgba(27,42,65,.13)}
+.placar-pres .pl-quadro,.placar-tuntum .pt-quadro,.pt-dif{
+background:linear-gradient(145deg,#fffdf5 0%,#f1efe4 48%,#e6e4da 100%)!important;
+border:1px solid #d8d5c6;border-radius:24px;
+box-shadow:8px 12px 24px rgba(74,69,49,.16),-4px -4px 14px rgba(255,255,255,.85),
+inset 1px 1px 0 rgba(255,255,255,.95),inset -1px -1px 0 rgba(154,147,120,.2)}
+.placar-pres .pl-quadro{padding:52px 24px 26px;color:#17263d;border-bottom:3px solid var(--cor)}
+.placar-pres .pl-nome{color:var(--cor);font-size:.82rem;letter-spacing:.06em}
+.placar-pres .pl-votos{font-size:clamp(2.3rem,5vw,3.6rem);letter-spacing:-.05em;margin:12px 0 6px}
+.placar-pres .pl-pct{font-size:.9rem;font-weight:550;color:#64748b}
+.pl-legenda{font-size:1.3rem;letter-spacing:.025em;margin:26px 0 16px}
+.pl-x{width:40px;height:40px;font-size:1.25rem;background:#f7f5eb;border:1px solid #d8d5c6;
+box-shadow:3px 4px 10px rgba(74,69,49,.1)}
+.placar-tuntum .pt-quadro{padding:22px;border-top:3px solid var(--cor)}
+.placar-tuntum .pt-nome{letter-spacing:.06em;font-size:.77rem}
+.placar-tuntum .pt-votos{font-size:2.2rem;letter-spacing:-.04em;margin:10px 0 6px}
+.placar-tuntum .pt-pct,.pl-dif{font-size:.85rem;font-weight:550;color:#64748b}
+.pt-dif{padding:20px 24px;border-top:3px solid var(--cor,#8b8878)}
+.pt-dif .pd-num{letter-spacing:-.04em}
+.pt-dif .pd-frase{font-size:.83rem;font-weight:500;border-color:#d8d5c6}
+@media(max-width:640px){.placar-pres{gap:10px}.placar-pres .pl-foto{width:80px;height:80px;margin-bottom:-24px}
+.placar-pres .pl-quadro{padding:38px 12px 20px}.placar-pres .pl-nome{font-size:.68rem;letter-spacing:0}
+.placar-pres .pl-pct{font-size:.75rem}.pl-x{width:28px;height:28px;font-size:1rem}
+.pl-legenda{font-size:1.05rem}.placar-tuntum .pt-quadro{padding:16px 10px}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -651,7 +678,7 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
         lados.append(f"""
 <div class="pl-lado">
   <div class="pl-foto" style="--cor:{cor}">{img}</div>
-  <div class="pl-quadro" style="background: linear-gradient(160deg, {cor}, {escuro});">
+  <div class="pl-quadro" style="--cor:{cor};">
     <div class="pl-nome">{nome.upper()} · {num if str(num).isdigit() else '—'}</div>
     <div class="pl-votos">{n(votos)}</div>
     <div class="pl-pct">{n(p, 2)}% dos votos válidos</div>
