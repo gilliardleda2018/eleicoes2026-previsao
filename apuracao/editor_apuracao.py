@@ -52,6 +52,12 @@ def mostrar(historico,ensaio=False):
     if not historico:
         return
     resumo,destaques=analisar(historico[-2] if len(historico)>1 else None,historico[-1])
+    if ensaio:
+        try:
+            from .inferencia_ensaio import mostrar_teste
+        except ImportError:
+            from inferencia_ensaio import mostrar_teste
+        destaques = mostrar_teste(destaques, historico)
     st.markdown('''<style>
 .ed-card{padding:20px 24px;border-radius:22px;border:1px solid #d8d5c6;
 background:linear-gradient(145deg,#fffdf5,#eeeade);color:#17263d;
