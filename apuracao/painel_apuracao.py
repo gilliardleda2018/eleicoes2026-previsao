@@ -20,6 +20,7 @@ import momento  # noqa: E402
 import motor  # noqa: E402
 import dinamica  # noqa: E402
 import comparador_margens  # noqa: E402
+import mudancas_tuntum  # noqa: E402
 from comum import CSS, _logo_base64, barra_navegacao, cabecalho_marca, grafico, n, pct, tabela  # noqa: E402
 
 if __name__ == "__main__":
@@ -404,7 +405,7 @@ def estatisticas(d, r, apurado):
                    f"sobre o Eric na cidade). Municípios com votos apurados: {len(ap)} de {len(d)}.")
 
 
-def cartao_tuntum(d):
+def cartao_tuntum(d, info):
     """Cartão de Tuntum: Bruna em destaque (grande); Abigail e Eric menores, do mesmo tamanho."""
     t = d[d.municipio.astype(str).str.lower() == "tuntum"]
     if t.empty:
@@ -427,6 +428,10 @@ def cartao_tuntum(d):
     </div>
   </div>
 </div>""", unsafe_allow_html=True)
+
+    mudancas_tuntum.mostrar("deputado", 1, ensaio,
+        {"Bruna Pessoa": vb, "Abigail Cunha": va, "Eric Costa": ve}, pst,
+        time.time() if ensaio else info["consultado_em"])
 
 
 def narrador(r, geral, numeros, ensaio, apurado):
@@ -565,7 +570,7 @@ def painel_deputados():
                                votos={DEPUTADOS[k][0]:float(getattr(x,"real_"+k)) for k in DEPUTADOS})
                                for x in d.itertuples()})
     comparador_margens.mostrar(r, DEPUTADOS, ensaio)
-    cartao_tuntum(d)
+    cartao_tuntum(d, info)
     narrador(r, geral, numeros, ensaio, apurado)
 
     k = st.columns(3)
@@ -767,6 +772,14 @@ def placar_duelo(disputa, unidades, geral, numeros, info):
 </div>
 <div class="pl-dif">{sub_t}</div>
 {quadro_dif}""", unsafe_allow_html=True)
+
+    local = tun
+    if disputa == "governador" and local is None and len(linha):
+        l0 = linha.iloc[0]
+        local = dict(pst=float(l0.pst), votos={x:float(l0.get(f"v_{x}",0) or 0) for x in (na,nb)})
+    mudancas_tuntum.mostrar(disputa, turno, ensaio,
+        {nome_a:local["votos"].get(na,0),nome_b:local["votos"].get(nb,0)} if local else None,
+        local["pst"] if local else None, time.time() if ensaio else info["consultado_em"])
 
 
 # piadinhas para quando a diferença em Tuntum fica grande (sem pedir voto e sem desmerecer ninguém)
