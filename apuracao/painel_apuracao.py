@@ -63,6 +63,17 @@ box-shadow:8px 14px 28px rgba(74,69,49,.19),-4px -4px 14px rgba(255,255,255,.85)
 .st-key-placar_stats [class*="st-key-caixa_"]{
 background:linear-gradient(145deg,#fffdf5,#f1efe4 48%,#e6e4da)!important;border-color:#d8d5c6!important;
 box-shadow:8px 12px 24px rgba(74,69,49,.16),inset 1px 1px 0 #fffef9!important}
+
+.st-key-apuracao_deputados .cartao,
+.st-key-apuracao_deputados [class*="st-key-caixa_"]{
+background:linear-gradient(145deg,#fffdf5 0%,#f1efe4 48%,#e6e4da 100%)!important;
+border:1px solid #d8d5c6!important;border-radius:22px;padding:22px;
+box-shadow:8px 12px 24px rgba(74,69,49,.16),-4px -4px 14px rgba(255,255,255,.85),
+inset 1px 1px 0 rgba(255,255,255,.95),inset -1px -1px 0 rgba(154,147,120,.2)!important}
+.st-key-apuracao_deputados [data-testid="stDataFrame"]{
+border-color:#d8d5c6!important;border-radius:14px}
+@media(max-width:640px){.st-key-apuracao_deputados .cartao,
+.st-key-apuracao_deputados [class*="st-key-caixa_"]{padding:16px}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1011,7 +1022,8 @@ def painel_ranking_vivo():
 
 
 if deputados:
-    painel_deputados()
+    with st.container(key="apuracao_deputados"):
+        painel_deputados()
 elif cfg["disputa"] in ("senador", "federal"):
     painel_ranking_vivo()
 else:
