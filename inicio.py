@@ -159,6 +159,26 @@ st.markdown("""<style>
   .hm-recursos {grid-template-columns: 1fr; gap: 12px;}
   .hm-creditos {grid-template-columns: 1fr; text-align: center; gap: 12px;}
   .hm-creditos img {margin: 0 auto; height: 58px;} .hm-creditos .hm-contato {align-items: center;}}
+
+/* Acabamento azul com o mesmo relevo suave dos cartões da apuração. */
+.hm-topo,.hm-capa,[class*="st-key-hc_"],.st-key-hs_compartilhar,.hm-creditos{
+    border-radius:24px;border:1px solid rgba(210,230,255,.35);
+    box-shadow:8px 12px 24px rgba(25,56,105,.22),-4px -4px 14px rgba(255,255,255,.6),
+    inset 1px 1px 0 rgba(255,255,255,.3),inset -1px -1px 0 rgba(7,28,65,.24);}
+.hm-topo{background:linear-gradient(145deg,#397fc6 0%,#2d67af 48%,#214d88 100%);}
+.hm-capa{background:radial-gradient(circle at 12% 0%,rgba(143,227,255,.18),transparent 50%),
+    linear-gradient(145deg,#4389cb 0%,#306eb5 48%,#285998 100%);}
+.hm-capa h1{font-size:clamp(2rem,4.2vw,3.2rem)!important;letter-spacing:-.035em;line-height:1.14!important;}
+.hm-capa p{font-weight:450;max-width:760px;}
+.hm-selo{letter-spacing:.16em;}
+.hm-contagem,.hc-chips span,.hm-redes a{
+    box-shadow:inset 1px 1px 0 rgba(255,255,255,.2),2px 3px 8px rgba(12,38,75,.12);}
+[class*="st-key-hc_"]{background:linear-gradient(145deg,#3a80c4 0%,#2d68ae 48%,#234f8a 100%);}
+[class*="st-key-hc_"]:hover{box-shadow:10px 16px 28px rgba(25,56,105,.26),
+    -4px -4px 14px rgba(255,255,255,.6),inset 1px 1px 0 rgba(255,255,255,.3);}
+.hc-titulo{letter-spacing:-.025em;}
+.st-key-hs_compartilhar,.hm-creditos{background:linear-gradient(145deg,#397fc6,#24538f);}
+@media(max-width:900px){.hm-topo,.hm-capa,.hm-creditos{border-radius:22px;}}
 </style>""", unsafe_allow_html=True)
 
 # ícones de traço (estilo Lucide), desenhados aqui
