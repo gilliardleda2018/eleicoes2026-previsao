@@ -435,11 +435,11 @@ def narrador(r, geral, numeros, ensaio, apurado):
     if vb + va + ve < 1:
         return
     semente = int(apurado // 5)  # troca a frase a cada ~5% apurados (não fica piscando a cada atualização)
-    # ---- eleita? (situação oficial do TSE; no ensaio, simulada com a linha de 38,3 mil ao fim da apuração)
+    # ---- eleita somente quando a situação oficial do TSE confirma; ensaio não infere cadeira
     num_b = numeros.get("bruna")
     if ensaio:
-        eleita = apurado >= 99.9 and vb >= 38329
-        situacao = "eleita (simulação do ensaio)" if eleita else ""
+        eleita = False
+        situacao = ""
     else:
         eleita = bool(geral.get("eleito", {}).get(num_b))
         situacao = geral.get("situacao", {}).get(num_b, "")
@@ -864,6 +864,8 @@ def resultado_turno(disputa, turno, unidades, geral, numeros, info, ensaio_):
     c[1].image(imagem, width="stretch")
     texto = (f"{'🍿' if segundo else '🎉'} {titulo}\n\n{frase}\n\n{curto_a}: {n(va)} votos ({n(pa, 2)}%) · "
              f"{curto_b}: {n(vb)} votos ({n(pb, 2)}%)\n\nAcompanhe com a Aggilli Intelligence 👉 {momento.LINK}")
+    if ensaio_:
+        texto = "🧪 ENSAIO · RESULTADO SIMULADO, NÃO É APURAÇÃO DE 2026\n\n" + texto
     momento.botoes(texto, imagem, f"resultado_{disputa}_{turno}turno.jpg")
 
 
@@ -1116,4 +1118,3 @@ with st.expander("🔧 Verificar conexão com o TSE (diagnóstico)"):
         else:
             st.error("Há etapas com falha. Se o erro for de acesso (403/timeout), o TSE pode estar bloqueando este "
                      "servidor: no domingo, rode o painel num computador no Brasil (streamlit run app.py).")
-
