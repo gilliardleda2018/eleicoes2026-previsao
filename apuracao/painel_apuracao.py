@@ -575,6 +575,8 @@ def painel_deputados():
                                for x in d.itertuples()})
     comparador_margens.mostrar(r, DEPUTADOS, ensaio)
     cartao_tuntum(d, info)
+    import recortes_locais
+    recortes_locais.mostrar(d, info, ensaio)
     narrador(r, geral, numeros, ensaio, apurado)
 
     k = st.columns(3)
