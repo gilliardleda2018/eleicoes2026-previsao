@@ -1,0 +1,4 @@
+# Ambiente separado; não adicionar ao Render antes de integrar e validar.
+scikit-learn==1.8.0
+joblib==1.5.3
+numpy==2.3.5
