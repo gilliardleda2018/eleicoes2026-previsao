@@ -1,56 +1,56 @@
 {
   "n_cenarios": 20000,
-  "data_corte": "2026-10-02",
+  "data_corte": "2026-10-04",
   "validacao_preditiva": "pendente: testes sintéticos não validam previsão real",
   "escopo": "Lula x Flávio; demais candidatos não têm vitória modelada; sem exterior",
   "transferencia_disponivel": true,
   "efeitos_estaduais": "redistribuem votos; não alteram probabilidade nacional",
   "primeiro_turno": {
     "lula_validos_p10_p50_p90": [
-      38.0,
-      41.5,
+      38.1,
+      41.6,
       44.7
     ],
     "flavio_validos_p10_p50_p90": [
-      38.9,
-      41.9,
-      45.5
+      39.7,
+      42.8,
+      46.4
     ],
-    "outros_validos_p50": 16.5,
+    "outros_validos_p50": 15.6,
     "prob_lula_vence_1t": 0.0,
-    "prob_flavio_vence_1t": 0.003,
-    "prob_segundo_turno": 0.997
+    "prob_flavio_vence_1t": 0.007,
+    "prob_segundo_turno": 0.993
   },
   "segundo_turno": {
     "lula_validos_p10_p50_p90": [
-      46.9,
-      49.4,
-      51.9
+      46.7,
+      49.2,
+      51.6
     ],
-    "prob_lula_vence_se_2t": 0.38,
-    "modelo_pesquisas_2t_p50": 49.5,
-    "modelo_transferencia_p50": 49.2,
+    "prob_lula_vence_se_2t": 0.332,
+    "modelo_pesquisas_2t_p50": 49.3,
+    "modelo_transferencia_p50": 48.9,
     "transferencia_medida": {
-      "lula": 0.38,
-      "dp": 0.049,
-      "pares": 44,
+      "lula": 0.378,
+      "dp": 0.051,
+      "pares": 45,
       "metodo": "distribuição empírica da transferência implícita"
     }
   },
   "sem_correcao_historica": {
-    "lula_2t_p50": 49.3,
-    "prob_lula": 0.31
+    "lula_2t_p50": 49.1,
+    "prob_lula": 0.248
   },
   "resultado_final": {
-    "prob_lula_presidente": 0.379,
-    "prob_flavio_presidente": 0.621
+    "prob_lula_presidente": 0.329,
+    "prob_flavio_presidente": 0.671
   },
   "cenario_alerta": {
-    "prob_lula_presidente": 0.076,
+    "prob_lula_presidente": 0.077,
     "prob_flavio_presidente": 0.923,
-    "lula_1t_p50": 40.7,
-    "flavio_1t_p50": 42.8,
-    "lula_2t_p50": 43.4
+    "lula_1t_p50": 40.8,
+    "flavio_1t_p50": 43.7,
+    "lula_2t_p50": 43.2
   },
   "erro_historico": {
     "pesquisas": 64,
@@ -96,11 +96,11 @@
     "indefinidos": 2
   },
   "regioes_2t": {
-    "Centro-Oeste": 37.7,
-    "Nordeste": 64.1,
-    "Norte": 44.7,
-    "Sudeste": 46.3,
-    "Sul": 39.8
+    "Centro-Oeste": 37.4,
+    "Nordeste": 63.8,
+    "Norte": 44.4,
+    "Sudeste": 46.1,
+    "Sul": 39.5
   },
   "ajustes_regionais": {
     "PR": [
