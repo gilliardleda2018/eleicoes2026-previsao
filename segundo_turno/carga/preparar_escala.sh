@@ -38,8 +38,13 @@ COMUM=(--region "$REGIAO" --execution-environment gen2
   --cpu="$CPU" --memory="$MEM" --no-cpu-throttling --cpu-boost
   --update-env-vars "TZ=America/Sao_Paulo,APURACAO_COMPARTILHADO=/mnt/aovivo/apuracao,PRESENCA_DIR=/mnt/aovivo,STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION=true,STREAMLIT_SERVER_WEBSOCKET_PING_INTERVAL=25,STREAMLIT_SERVER_DISCONNECTED_SESSION_TTL=60")
 VOL="name=aovivo,type=cloud-storage,bucket=$BUCKET"
-if ! gcloud run deploy "$SERVICO" --source . "${COMUM[@]}" \
-      --add-volume "$VOL,mount-options=metadata-cache-ttl-secs=0" --add-volume-mount volume=aovivo,mount-path=/mnt/aovivo 2>&1 | tee /tmp/deploy_aovivo.log; [ "${PIPESTATUS[0]}" = 0 ]; then
+set +e
+gcloud run deploy "$SERVICO" --source . "${COMUM[@]}" \
+  --add-volume "$VOL,mount-options=metadata-cache-ttl-secs=0" --add-volume-mount volume=aovivo,mount-path=/mnt/aovivo \
+  2>&1 | tee /tmp/deploy_aovivo.log
+ST=${PIPESTATUS[0]}
+set -e
+if [ "$ST" != 0 ]; then
   if grep -q "Quota violated" /tmp/deploy_aovivo.log; then
     echo "PARE: cota de CPU/memória da região. Use um MAX menor (ex.: MAX=10) ou peça aumento da cota." >&2; exit 1
   fi
