@@ -36,6 +36,7 @@ class FakeSt(types.ModuleType):
     def __init__(self):
         super().__init__("streamlit")
         self.session_state = Estado()
+        self.query_params = Estado()  # usado pelo modo TV da versão de produção do comum.py
         self.botoes = set()
 
     # decoradores
