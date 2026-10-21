@@ -195,10 +195,29 @@ st.markdown("""<style>
 .t2-card .r {font: 700 .7rem 'Montserrat'; letter-spacing: .12em; color: #5B6477; text-transform: uppercase;}
 .t2-card .v {font: 800 1.7rem/1.15 'Montserrat'; color: var(--cor, #1B2A41); margin: 4px 0 2px; letter-spacing: -.02em;}
 .t2-card .s {font: 500 .8rem 'Montserrat'; color: #5B6477;}
-/* abas */
-[data-testid="stTabs"] button[role="tab"] p {font: 700 .95rem 'Montserrat' !important;}
-[data-testid="stTabs"] [data-baseweb="tab-highlight"] {background: linear-gradient(90deg, #C8102E, #1D4E89) !important;
-  height: 3px !important;}
+/* abas: barra de botões em vidro azul-noite, fixa no topo ao rolar; a aba ativa ganha o degradê do duelo */
+.st-key-t2_abas [data-baseweb="tab-list"] {position: sticky; top: 3.4rem; z-index: 60; gap: 8px; padding: 8px;
+  margin: 2px 0 18px; border-radius: 20px; overflow-x: auto; scrollbar-width: none;
+  background: linear-gradient(145deg, rgba(18,35,63,.96), rgba(22,48,79,.96) 55%, rgba(27,59,102,.96));
+  box-shadow: 0 14px 30px rgba(11,22,40,.22), inset 1px 1px 0 rgba(255,255,255,.10); backdrop-filter: blur(8px);}
+.st-key-t2_abas [data-baseweb="tab-list"]::-webkit-scrollbar {display: none;}
+.st-key-t2_abas [data-baseweb="tab-highlight"], .st-key-t2_abas [data-baseweb="tab-border"] {display: none !important;}
+.st-key-t2_abas button[role="tab"] {flex: 1 0 auto; justify-content: center; height: auto !important; margin: 0 !important;
+  padding: .62rem 1.15rem !important; border-radius: 14px !important; border: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(255,255,255,.06) !important; transition: transform .16s, background .16s, box-shadow .16s;}
+.st-key-t2_abas button[role="tab"] p {font: 700 .92rem 'Montserrat' !important; color: #D6E6FA !important;
+  letter-spacing: .01em; white-space: nowrap;}
+.st-key-t2_abas button[role="tab"]:hover {background: rgba(255,255,255,.14) !important; transform: translateY(-1px);}
+.st-key-t2_abas button[role="tab"]:hover p {color: #FFFFFF !important;}
+.st-key-t2_abas button[role="tab"][aria-selected="true"] {border-color: transparent !important;
+  background: linear-gradient(110deg, #C8102E 0%, #7A1F55 48%, #1D4E89 100%) !important;
+  box-shadow: 0 8px 20px rgba(200,16,46,.28), 0 8px 20px rgba(29,78,137,.28), inset 0 1px 0 rgba(255,255,255,.25);}
+.st-key-t2_abas button[role="tab"][aria-selected="true"] p {color: #FFFFFF !important; font-weight: 800 !important;}
+.st-key-t2_abas button[role="tab"]:focus-visible {outline: 2px solid #8FE3FF; outline-offset: 2px;}
+@media (max-width: 760px) {.st-key-t2_abas [data-baseweb="tab-list"] {top: 3rem; border-radius: 16px; padding: 6px;}
+  .st-key-t2_abas button[role="tab"] {flex: 0 0 auto; padding: .5rem .85rem !important;}
+  .st-key-t2_abas button[role="tab"] p {font-size: .82rem !important;}}
+@media (prefers-reduced-motion: reduce) {.st-key-t2_abas button[role="tab"] {transition: none;}}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -343,7 +362,10 @@ def destino_em_disputa(df):
     return lula, flavio
 
 
-aba = st.tabs(["🔮 Previsão", "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum", "📰 Pesquisas e contexto", "🧪 Metodologia"])
+ao_vivo_agora = agora >= INICIO - timedelta(hours=1)
+with st.container(key="t2_abas"):
+    aba = st.tabs(["🔮 Previsão", "🔴 Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
+                   "📰 Pesquisas e contexto", "🧪 Metodologia"])
 
 
 # ================================================================ 1) previsão
@@ -973,5 +995,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 16h30 (indicadores de Tuntum)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 18h30 (menu novo)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
