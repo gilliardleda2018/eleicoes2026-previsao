@@ -418,6 +418,63 @@ def _br(x, casas=1):
     return f"{x:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+HOVER_CARD = dict(bgcolor="#0F1E36", bordercolor="#C8102E", align="left",
+                  font=dict(family="Montserrat, Manrope, Arial, sans-serif", size=12, color="#EAF1FB"))
+_LINHA = '<span style="color:#3A5277">──────────────────────────</span>'
+
+
+def _barra(pct_lula):
+    k = int(round(max(0.0, min(100.0, pct_lula)) / 5))
+    return f'<span style="color:#E3243B">{"█" * k}</span><span style="color:#3C7DD9">{"█" * (20 - k)}</span>'
+
+
+def _rot(txt):
+    return f'<span style="color:#9FB7D9">{txt}</span>'
+
+
+def _lider(pct_lula):
+    return ("<span style='color:#FF6B7D'><b>Lula na frente</b></span>" if pct_lula >= 50
+            else "<span style='color:#7FB2FF'><b>Flávio na frente</b></span>")
+
+
+def cartao_municipio(r, ao_vivo=False):
+    """Cartão do município no mapa do Maranhão (mesmo estilo do cartão dos locais de Tuntum)."""
+    nome = escape(str(r.municipio))
+    polo = ""
+    if getattr(r, "polo_intermediaria", 0) == 1:
+        polo = ' <span style="color:#F5C04A;font-size:11px">★ POLO REGIONAL</span>'
+    elif getattr(r, "polo_imediata", 0) == 1:
+        polo = ' <span style="color:#F5C04A;font-size:11px">★ CIDADE-POLO</span>'
+    reg = escape(f"{getattr(r, 'regiao_imediata', '')} · {getattr(r, 'regiao_intermediaria', '')}".upper())
+    cab = (f'<span style="font-size:15px"><b>{nome}</b></span>{polo}<br>'
+           f'<span style="color:#9FB7D9;font-size:11px">📍 REGIÃO {reg}</span><br>{_LINHA}<br>')
+    l1, l2 = float(r.lula_1t_pct) if hasattr(r, "lula_1t_pct") else np.nan, float(r.lula_2t)
+    vl, vf = int(round(r.votos_lula_2t)), int(round(r.votos_flavio_2t))
+    if ao_vivo:
+        a_l, a_f, pst = float(r.v_13 or 0), float(r.v_22 or 0), float(r.pst or 0)
+        agora = 100 * a_l / (a_l + a_f) if a_l + a_f else np.nan
+        dif = agora - l2
+        sinal = "+" if dif >= 0 else "−"
+        cor_d = "#FF6B7D" if dif >= 0 else "#7FB2FF"
+        return (cab + f'{_rot("Apurado")}  <b>{_br(pst)}%</b> das seções<br>{_LINHA}<br>'
+                f'<span style="color:#FF6B7D"><b>● Lula</b></span>     <span style="font-size:14px"><b>{_br(a_l, 0)}</b></span>'
+                f'  votos · <b>{_br(agora)}%</b><br>'
+                f'<span style="color:#7FB2FF"><b>● Flávio</b></span>  <span style="font-size:14px"><b>{_br(a_f, 0)}</b></span>'
+                f'  votos · <b>{_br(100 - agora)}%</b><br>{_barra(agora)}<br>'
+                f'{_rot("Previsto Lula")}  <b>{_br(l2)}%</b>  · <span style="color:{cor_d}"><b>{sinal}{_br(abs(dif))} pts</b></span>'
+                f'  · {_lider(agora)}<br>'
+                f'<span style="color:#6F86A8;font-size:10px">% entre Lula e Flávio · apuração do TSE × modelo Aggilli</span>')
+    linhas = f'{_rot("Eleitores")}  <b>{_br(r.eleitorado, 0)}</b>   {_rot("Válidos no 1º t")}  <b>{_br(r.validos, 0)}</b><br>{_LINHA}<br>'
+    return (cab + linhas +
+            f'<span style="color:#FF6B7D"><b>● Lula</b></span>     1º t {_br(l1)}%  →  '
+            f'<span style="font-size:14px"><b>{_br(l2)}%</b></span> {_rot("proj.")}<br>'
+            f'<span style="color:#7FB2FF"><b>● Flávio</b></span>  1º t {_br(r.flavio_1t_pct)}%  →  '
+            f'<span style="font-size:14px"><b>{_br(100 - l2)}%</b></span> {_rot("proj.")}<br>'
+            f'{_barra(l2)}<br>'
+            f'{_rot("Votos projetados")}  <b>{_br(vl, 0)} × {_br(vf, 0)}</b>  · {_lider(l2)}<br>'
+            f'<span style="color:#6F86A8;font-size:10px">1º turno em % dos válidos · 2º turno: projeção do modelo Aggilli</span>')
+
+
 def cartao_local(r):
     """Cartão do local de votação no mapa de Tuntum (HTML do hover do Plotly)."""
     nome = re.sub(r"\b(Da|De|Do|Das|Dos|E)\b", lambda m: m.group(1).lower(), str(r.nome).title())
@@ -494,8 +551,10 @@ def sem_votos(fig, geojson, chave_geo, locais, nomes):
         return fig
     base = go.Choroplethmap(geojson=geo_recorte(geojson, chave_geo, locais), locations=list(locais), z=[0] * len(locais), featureidkey=chave_geo,
                             colorscale=[[0, "#C7CED9"], [1, "#C7CED9"]], showscale=False, marker_opacity=.75,
-                            marker_line_color="#FFFFFF", marker_line_width=.6, text=list(nomes),
-                            hovertemplate="<b>%{text}</b><br>ainda sem votos apurados<extra></extra>")
+                            marker_line_color="#FFFFFF", marker_line_width=.6,
+                            text=[x if "<" in str(x) else f'<span style="font-size:15px"><b>{escape(str(x))}</b></span><br>'
+                                  f'<span style="color:#9FB7D9">⏳ aguardando os primeiros votos</span>' for x in nomes],
+                            hovertemplate="%{text}<extra></extra>", hoverlabel=HOVER_CARD)
     fig.add_trace(base)
     fig.data = (fig.data[-1],) + fig.data[:-1]  # cinza por baixo das unidades já apuradas
     return fig
@@ -831,12 +890,20 @@ with aba[1]:
                                         map_style="carto-positron", zoom=5.3, center={"lat": -5.2, "lon": -45.2},
                                         opacity=.85, hover_name="municipio",
                                         hover_data={"pst": ":.1f", "lula_agora": ":.1f", "lula_2t": ":.1f", "cd_ibge": False})
+                fig.update_traces(text=[cartao_municipio(r, ao_vivo=True) for r in m_ok.itertuples()],
+                                  hovertemplate="%{text}<extra></extra>", hoverlabel=HOVER_CARD)
             else:
                 fig = go.Figure()
                 fig.update_layout(map=dict(style="carto-positron", zoom=5.3, center={"lat": -5.2, "lon": -45.2}))
-            fig.update_layout(height=560, margin=dict(l=0, r=0, t=36, b=0), title="Municípios · Lula apurado (%)")
+            fig.update_layout(height=560, margin=dict(l=0, r=0, t=36, b=0), title="Municípios · Lula apurado (%)",
+                              coloraxis_colorbar=dict(title="", ticksuffix="%"))
             falt = m[m.lula_agora.isna()]
-            grafico(sem_votos(fig, geo("ma"), "properties.CD_MUN", falt.cd_ibge, falt.municipio))
+            nomes_falt = [f'<span style="font-size:15px"><b>{escape(str(r.municipio))}</b></span><br>'
+                          f'<span style="color:#9FB7D9;font-size:11px">📍 REGIÃO {escape(str(r.regiao_imediata).upper())}</span><br>'
+                          f'{_LINHA}<br><span style="color:#9FB7D9">⏳ aguardando os primeiros votos</span><br>'
+                          f'{_rot("Previsto Lula")}  <b>{_br(r.lula_2t)}%</b>  ·  {_rot("Flávio")}  <b>{_br(100 - r.lula_2t)}%</b><br>'
+                          f'{_barra(r.lula_2t)}' for r in falt.itertuples()]
+            grafico(sem_votos(fig, geo("ma"), "properties.CD_MUN", falt.cd_ibge, nomes_falt))
             if len(falt):
                 st.caption(f"Em cinza: {len(falt)} município(s) ainda sem votos apurados.")
         with c2:
@@ -938,7 +1005,10 @@ with aba[2]:
                                 center={"lat": -5.2, "lon": -45.2}, opacity=.85, hover_name="municipio",
                                 hover_data={"lula_1t_pct": ":.1f", "lula_2t": ":.1f", "votos_lula_2t": ":,.0f",
                                             "votos_flavio_2t": ":,.0f", "cd_ibge": False})
-        fig.update_layout(height=640, margin=dict(l=0, r=0, t=36, b=0), title=vis)
+        fig.update_traces(text=[cartao_municipio(r) for r in m.itertuples()], hovertemplate="%{text}<extra></extra>",
+                          hoverlabel=HOVER_CARD, selector=dict(type="choroplethmap"))
+        fig.update_layout(height=640, margin=dict(l=0, r=0, t=36, b=0), title=vis,
+                          coloraxis_colorbar=dict(title="", ticksuffix="%" if col_ != "variacao" else " pts"))
         grafico(fig)
     with c2:
         busca = st.text_input("Buscar município", key="t2_busca_ma", placeholder="ex.: Imperatriz")
@@ -1019,9 +1089,7 @@ with aba[3]:
                                marker=dict(size=tam, color=pts.lula_2t, colorscale=ESCALA, cmin=20, cmax=85, opacity=.95,
                                            colorbar=dict(title="", ticksuffix="%", len=.6, thickness=12)),
                                text=pts.card, hovertemplate="%{text}<extra></extra>", name="Locais de votação",
-                               hoverlabel=dict(bgcolor="#0F1E36", bordercolor="#C8102E", align="left",
-                                               font=dict(family="Montserrat, Manrope, Arial, sans-serif", size=12,
-                                                         color="#EAF1FB")))
+                               hoverlabel=HOVER_CARD)
             centro = {"lat": float(pts.lat.median()), "lon": float(pts.lon.median())}
         fig.update_layout(height=620, margin=dict(l=0, r=0, t=36, b=0), map_style="carto-positron",
                           map=dict(center=centro, zoom=8.2), title="Locais de votação · projeção Lula (%)",
@@ -1256,5 +1324,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 22h30 (cartão do mapa)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 23h (cartões do MA)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
