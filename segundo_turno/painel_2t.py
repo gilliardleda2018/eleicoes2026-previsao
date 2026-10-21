@@ -32,7 +32,7 @@ if __name__ == "__main__":
     st.markdown(CSS, unsafe_allow_html=True)
 
 RES, DADOS = AQUI / "resultados", AQUI / "dados"
-BRT = timezone(timedelta(hours=-3))
+BRT = timezone(timedelta(hours=-3))  # horário de Brasília (sem horário de verão desde 2019), independe do fuso do servidor
 INICIO = datetime(2026, 10, 25, 17, 0, tzinfo=BRT)
 COR_L, COR_F = "#C8102E", "#1D4E89"
 COR_L_CLARO, COR_F_CLARO = "#FF8A9A", "#8FC3FF"
@@ -268,8 +268,8 @@ if not SOMENTE_2T:
 agora = datetime.now(BRT)
 if agora < INICIO:
     d = (INICIO.date() - agora.date()).days
-    quando = {0: "É hoje · apuração a partir das 17h (Brasília)", 1: "Amanhã · apuração a partir das 17h"}.get(
-        d, f"Faltam {d} dias · domingo, 25 de outubro, apuração a partir das 17h")
+    quando = {0: "É hoje · apuração a partir das 17h (Brasília)", 1: "Amanhã · apuração a partir das 17h (Brasília)"}.get(
+        d, f"Faltam {d} dias · domingo, 25 de outubro, apuração a partir das 17h (horário de Brasília)")
     vivo = ""
 else:
     quando, vivo = "Apuração em andamento · dados oficiais do TSE", "vivo"
