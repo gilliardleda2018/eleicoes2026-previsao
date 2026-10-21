@@ -195,29 +195,45 @@ st.markdown("""<style>
 .t2-card .r {font: 700 .7rem 'Montserrat'; letter-spacing: .12em; color: #5B6477; text-transform: uppercase;}
 .t2-card .v {font: 800 1.7rem/1.15 'Montserrat'; color: var(--cor, #1B2A41); margin: 4px 0 2px; letter-spacing: -.02em;}
 .t2-card .s {font: 500 .8rem 'Montserrat'; color: #5B6477;}
-/* abas: barra de botões em vidro azul-noite, fixa no topo ao rolar; a aba ativa ganha o degradê do duelo */
-.st-key-t2_abas [data-baseweb="tab-list"] {position: sticky; top: 3.4rem; z-index: 60; gap: 8px; padding: 8px;
-  margin: 2px 0 18px; border-radius: 20px; overflow-x: auto; scrollbar-width: none;
-  background: linear-gradient(145deg, rgba(18,35,63,.96), rgba(22,48,79,.96) 55%, rgba(27,59,102,.96));
-  box-shadow: 0 14px 30px rgba(11,22,40,.22), inset 1px 1px 0 rgba(255,255,255,.10); backdrop-filter: blur(8px);}
-.st-key-t2_abas [data-baseweb="tab-list"]::-webkit-scrollbar {display: none;}
-.st-key-t2_abas [data-baseweb="tab-highlight"], .st-key-t2_abas [data-baseweb="tab-border"] {display: none !important;}
-.st-key-t2_abas button[role="tab"] {flex: 1 0 auto; justify-content: center; height: auto !important; margin: 0 !important;
-  padding: .62rem 1.15rem !important; border-radius: 14px !important; border: 1px solid rgba(255,255,255,.14) !important;
-  background: rgba(255,255,255,.06) !important; transition: transform .16s, background .16s, box-shadow .16s;}
-.st-key-t2_abas button[role="tab"] p {font: 700 .92rem 'Montserrat' !important; color: #D6E6FA !important;
-  letter-spacing: .01em; white-space: nowrap;}
-.st-key-t2_abas button[role="tab"]:hover {background: rgba(255,255,255,.14) !important; transform: translateY(-1px);}
-.st-key-t2_abas button[role="tab"]:hover p {color: #FFFFFF !important;}
-.st-key-t2_abas button[role="tab"][aria-selected="true"] {border-color: transparent !important;
+/* abas: barra de botões em vidro azul-noite; a aba ativa ganha o degradê do duelo.
+   Streamlit 1.6x desenha as abas com react-aria (role="tab", aria-selected / data-selected,
+   .react-aria-SelectionIndicator e uma linha cinza em ::after); versões antigas usavam baseweb. Cobre os dois. */
+[data-testid="stTabs"] [role="tablist"] {position: sticky !important; top: 3.4rem; z-index: 60 !important; display: flex !important;
+  gap: 8px !important; padding: 8px !important; margin: 2px 0 18px !important; border-radius: 20px !important;
+  overflow-x: auto; scrollbar-width: none; border: 0 !important;
+  background: linear-gradient(145deg, rgba(18,35,63,.97), rgba(22,48,79,.97) 55%, rgba(27,59,102,.97)) !important;
+  box-shadow: 0 14px 30px rgba(11,22,40,.22), inset 1px 1px 0 rgba(255,255,255,.10);}
+[data-testid="stTabs"] [role="tablist"]::-webkit-scrollbar {display: none;}
+[data-testid="stTabs"] [role="tablist"]::after, [data-testid="stTabs"] [role="tablist"]::before {display: none !important;}
+[data-testid="stTabs"] .react-aria-SelectionIndicator, [data-testid="stTabs"] [data-baseweb="tab-highlight"],
+[data-testid="stTabs"] [data-baseweb="tab-border"], [data-testid="stTabs"] [data-testid="stTabsHighlight"] {display: none !important;}
+[data-testid="stTabs"] [role="tab"] {flex: 1 0 auto !important; justify-content: center !important; height: auto !important;
+  min-height: 0 !important; margin: 0 !important; padding: .62rem 1.15rem !important; border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,.16) !important; background: rgba(255,255,255,.07) !important;
+  color: #D6E6FA !important; transition: transform .16s, background .16s, box-shadow .16s;}
+[data-testid="stTabs"] [role="tab"] p, [data-testid="stTabs"] [role="tab"] span, [data-testid="stTabs"] [role="tab"] div {
+  font-family: 'Montserrat', sans-serif !important; font-weight: 700 !important; font-size: .92rem !important;
+  color: inherit !important; white-space: nowrap;}
+[data-testid="stTabs"] [role="tab"]:hover, [data-testid="stTabs"] [role="tab"][data-hovered] {background: rgba(255,255,255,.15) !important; color: #FFFFFF !important;
+  transform: translateY(-1px);}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] [role="tab"][data-selected] {color: #FFFFFF !important; border-color: transparent !important;
   background: linear-gradient(110deg, #C8102E 0%, #7A1F55 48%, #1D4E89 100%) !important;
-  box-shadow: 0 8px 20px rgba(200,16,46,.28), 0 8px 20px rgba(29,78,137,.28), inset 0 1px 0 rgba(255,255,255,.25);}
-.st-key-t2_abas button[role="tab"][aria-selected="true"] p {color: #FFFFFF !important; font-weight: 800 !important;}
-.st-key-t2_abas button[role="tab"]:focus-visible {outline: 2px solid #8FE3FF; outline-offset: 2px;}
-@media (max-width: 760px) {.st-key-t2_abas [data-baseweb="tab-list"] {top: 3rem; border-radius: 16px; padding: 6px;}
-  .st-key-t2_abas button[role="tab"] {flex: 0 0 auto; padding: .5rem .85rem !important;}
-  .st-key-t2_abas button[role="tab"] p {font-size: .82rem !important;}}
-@media (prefers-reduced-motion: reduce) {.st-key-t2_abas button[role="tab"] {transition: none;}}
+  box-shadow: 0 8px 20px rgba(200,16,46,.30), 0 8px 20px rgba(29,78,137,.30), inset 0 1px 0 rgba(255,255,255,.25) !important;}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] p, [data-testid="stTabs"] [role="tab"][data-selected] p {font-weight: 800 !important;}
+[data-testid="stTabs"] [role="tab"]:focus-visible, [data-testid="stTabs"] [role="tab"][data-focus-visible] {outline: 2px solid #8FE3FF !important; outline-offset: 2px;}
+@media (max-width: 760px) {[data-testid="stTabs"] [role="tablist"] {top: 3rem; border-radius: 16px !important; padding: 6px !important;}
+  [data-testid="stTabs"] [role="tab"] {flex: 0 0 auto !important; padding: .5rem .85rem !important;}
+  [data-testid="stTabs"] [role="tab"] p {font-size: .82rem !important;}}
+@media (prefers-reduced-motion: reduce) {[data-testid="stTabs"] [role="tab"] {transition: none;}}
+/* contador de pessoas conectadas */
+.t2-online {display: flex; width: fit-content; margin: 2px 0 10px auto; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px; background: #0F1E36; color: #E6F0FF; font: 600 .86rem 'Montserrat';
+  box-shadow: 0 6px 16px rgba(11,22,40,.18);}
+.t2-online b {font-weight: 800; color: #FFFFFF; font-size: .98rem;}
+.t2-online .pulso {width: 9px; height: 9px; border-radius: 50%; background: #2ECC71; box-shadow: 0 0 0 0 rgba(46,204,113,.6);
+  animation: t2pulso 1.8s infinite;}
+@keyframes t2pulso {70% {box-shadow: 0 0 0 9px rgba(46,204,113,0);} 100% {box-shadow: 0 0 0 0 rgba(46,204,113,0);}}
+@media (prefers-reduced-motion: reduce) {.t2-online .pulso {animation: none;}}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -280,8 +296,25 @@ SOMENTE_2T = _param("so2t") == "1" or os.environ.get("SOMENTE_2T", "") == "1"
 # endereço divulgado: a página de redirecionamento da Aggilli, quando configurada no serviço
 LINK_2T = os.environ.get("LINK_2T") or (os.environ.get("PUBLIC_URL", "").rstrip("/") + "/segundo_turno?so2t=1"
                                         if os.environ.get("PUBLIC_URL") else "")
-if not SOMENTE_2T:
-    barra_navegacao("2t")
+barra_navegacao("2t")  # na produção, também mostra o contador de pessoas conectadas e o modo TV
+if SOMENTE_2T:
+    st.markdown('<style>[class*="st-key-barra_nav"] {display: none !important;}</style>', unsafe_allow_html=True)
+
+
+# pessoas conectadas agora (também no link ?so2t=1): atualiza sozinho a cada 20 s
+@st.fragment(run_every="20s")
+def conectados():
+    try:
+        import presenca
+        total, origem = presenca.contar()
+    except Exception:  # noqa: BLE001
+        return
+    rotulo = "pessoa conectada agora" if total == 1 else "pessoas conectadas agora"
+    st.markdown(f'<div class="t2-online" title="Contagem por {origem}; atualiza a cada 20 s">'
+                f'<span class="pulso"></span><b>{n(total)}</b> {rotulo}</div>', unsafe_allow_html=True)
+
+
+conectados()
 
 # ================================================================ capa
 agora = datetime.now(BRT)
@@ -363,9 +396,8 @@ def destino_em_disputa(df):
 
 
 ao_vivo_agora = agora >= INICIO - timedelta(hours=1)
-with st.container(key="t2_abas"):
-    aba = st.tabs(["🔮 Previsão", "🔴 Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
-                   "📰 Pesquisas e contexto", "🧪 Metodologia"])
+aba = st.tabs(["🔮 Previsão", "🔴 Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
+               "📰 Pesquisas e contexto", "🧪 Metodologia"])
 
 
 # ================================================================ 1) previsão
@@ -995,5 +1027,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 18h30 (menu novo)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 19h (menu + conectados)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)

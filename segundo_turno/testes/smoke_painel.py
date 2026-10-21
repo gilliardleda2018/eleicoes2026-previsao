@@ -131,8 +131,10 @@ if __name__ == "__main__":
     import os
     os.environ["LINK_2T"] = "https://exemplo.aggillintelligence.com.br/2turno"
     rodar("só o 2º turno (?so2t=1) + compartilhar", {"t2_modo": "Ensaio"}, params={"so2t": "1"})
-    navegou = any(c[0] == "page_link" for c in CHAMADAS)
-    assert not navegou, "com ?so2t=1 a barra de navegação não deve aparecer"
+    assert any(c[0] == "markdown" and "st-key-barra_nav" in c[1] and "display: none" in c[1] for c in CHAMADAS), \
+        "com ?so2t=1 a barra de navegação deve ficar escondida"
+    assert any(c[0] == "markdown" and "t2-online" in c[1] and "conectad" in c[1] for c in CHAMADAS), \
+        "faltou o contador de pessoas conectadas"
     assert any(c[0] == "link_button" for c in CHAMADAS), "faltou o botão de compartilhar"
     del os.environ["LINK_2T"]
     rodar("ensaio 2% + busca", {"t2_modo": "Ensaio", "t2_frac": 2, "t2_busca_ma": "imperatriz"})
