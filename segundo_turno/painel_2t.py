@@ -314,6 +314,35 @@ def cards(itens):
         for r, v, s, c in itens) + "</div>", unsafe_allow_html=True)
 
 
+OUTROS_1T = ["cury", "renan", "caiado", "zema", "outros"]
+
+
+def base_tuntum():
+    """Seções de Tuntum (1º turno + projeção) com bairro, local do cadastro do TSE e zona urbana/rural."""
+    nomes = LOCAIS_GEO.set_index("local").nome.str.title().to_dict() if LOCAIS_GEO is not None else {}
+    bairros = LOCAIS_GEO.set_index("local").bairro.str.title().to_dict() if LOCAIS_GEO is not None else {}
+    s = SEC.copy()
+    if SEC_CAD is not None:
+        s = s.merge(SEC_CAD[["secao", "local_cadastro", "bairro"]], on="secao", how="left")
+        s["bairro"] = s.bairro.str.title()
+    else:
+        s["local_cadastro"], s["bairro"] = s.local, s.local.map(bairros)
+    s["Local"] = s.local_cadastro.map(lambda x: nomes.get(x, f"Local {x}"))
+    s["zona_tipo"] = np.where(s.bairro.fillna("").str.contains("Rural", case=False), "Zona rural", "Zona urbana")
+    s["faltosos"] = s.aptos - s.comparecimento
+    s["margem_1t"] = s.lula - s.flavio
+    s["em_disputa"] = s[OUTROS_1T].sum(axis=1)
+    return s, nomes
+
+
+def destino_em_disputa(df):
+    """Para onde tendem os votos de Cury, Renan, Caiado, Zema e demais (transferência medida no modelo)."""
+    trf = SIM["componentes"]["estrutural"]["transferencia"]
+    lula = sum(df[c] * trf[c]["decide"] * trf[c]["lula_entre"] for c in OUTROS_1T)
+    flavio = sum(df[c] * trf[c]["decide"] * (1 - trf[c]["lula_entre"]) for c in OUTROS_1T)
+    return lula, flavio
+
+
 aba = st.tabs(["🔮 Previsão", "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum", "📰 Pesquisas e contexto", "🧪 Metodologia"])
 
 
@@ -554,7 +583,41 @@ with aba[1]:
                    tun.get("v_22", pd.Series([0])).iloc[0], tun.vv.iloc[0], "")
         st.caption(f"Boletins publicados: {info_sec.get('publicadas', 0)} · lidos: {info_sec.get('lidas', 0)} de "
                    f"{len(SEC)} seções.")
+        base_t, _ = base_tuntum()
+        lidas = set(sec_v.secao.astype(str).str.zfill(4)) if len(sec_v) else set()
+        prog = base_t.assign(apurada=base_t.secao.isin(lidas)).groupby("bairro", as_index=False).agg(
+            secoes=("secao", "count"), apuradas=("apurada", "sum"), aptos=("aptos", "sum"),
+            aptos_apurados=("aptos", lambda a: a[base_t.loc[a.index, "secao"].isin(lidas)].sum()))
+        faltam = int(base_t.loc[~base_t.secao.isin(lidas), "aptos"].sum())
+        cards([("Seções de Tuntum apuradas", f"{len(lidas)} de {len(base_t)}", "boletins de urna lidos", "#1B2A41"),
+               ("Eleitores aptos ainda não apurados", n(faltam), f"de {n(base_t.aptos.sum())} aptos", "#6D5BA8")])
+        prog = prog.sort_values("aptos", ascending=False)
+        fig = go.Figure()
+        fig.add_bar(y=prog.bairro, x=prog.apuradas, orientation="h", name="apuradas", marker_color="#2E7D5B")
+        fig.add_bar(y=prog.bairro, x=prog.secoes - prog.apuradas, orientation="h", name="faltam",
+                    marker_color="#D6DEE9")
+        fig.update_layout(barmode="stack", title="Seções apuradas por bairro/povoado",
+                          height=max(380, 22 * len(prog) + 110), yaxis=dict(autorange="reversed", tickfont=dict(size=10)),
+                          legend=dict(orientation="h", y=-.06))
+        grafico(fig)
         if len(sec_v):
+            ganho = base_t[["secao", "bairro", "Local", "lula", "flavio", "comparecimento"]].rename(
+                columns={"lula": "lula_1t", "flavio": "flavio_1t", "comparecimento": "comp_1t"}).merge(
+                sec_v.assign(secao=sec_v.secao.astype(str).str.zfill(4))[["secao", "lula", "flavio", "comparecimento"]],
+                on="secao")
+            ganho["Lula ganhou"] = ganho.lula - ganho.lula_1t
+            ganho["Flávio ganhou"] = ganho.flavio - ganho.flavio_1t
+            ganho["Comparecimento (dif.)"] = ganho.comparecimento - ganho.comp_1t
+            cards([("Lula · votos a mais que no 1º turno", f"{int(ganho['Lula ganhou'].sum()):+,}".replace(",", "."),
+                    "nas seções já apuradas", COR_L),
+                   ("Flávio · votos a mais que no 1º turno", f"{int(ganho['Flávio ganhou'].sum()):+,}".replace(",", "."),
+                    "nas seções já apuradas", COR_F),
+                   ("Comparecimento × 1º turno", f"{int(ganho['Comparecimento (dif.)'].sum()):+,}".replace(",", "."),
+                    "eleitores nas seções já apuradas", "#1B2A41")])
+            tabela(ganho.sort_values("Lula ganhou")[["secao", "bairro", "Local", "lula_1t", "lula", "Lula ganhou",
+                                                     "flavio_1t", "flavio", "Flávio ganhou", "Comparecimento (dif.)"]].rename(
+                columns={"secao": "Seção", "bairro": "Bairro/povoado", "lula_1t": "Lula 1º t", "lula": "Lula 2º t",
+                         "flavio_1t": "Flávio 1º t", "flavio": "Flávio 2º t"}), height=360)
             s_ = SEC[["secao", "local", "lula_2t"]].merge(sec_v.assign(secao=sec_v.secao.astype(str).str.zfill(4))
                                                           .drop(columns=["local"], errors="ignore"), on="secao")
             s_["lula_agora"] = 100 * s_.lula / (s_.lula + s_.flavio).replace(0, np.nan)
@@ -647,16 +710,7 @@ with aba[3]:
            ("Votos projetados", f"{n(tt['votos_lula_p50'])} × {n(tt['votos_flavio_p50'])}", "Lula × Flávio", COR_F),
            ("Seções · locais", f"{tt['secoes']} · {tt['locais']}", f"{n(SEC.aptos.sum())} eleitores aptos · zona 79",
             "#6D5BA8")])
-    nomes_loc = LOCAIS_GEO.set_index("local").nome.str.title().to_dict() if LOCAIS_GEO is not None else {}
-    bairro_loc = LOCAIS_GEO.set_index("local").bairro.str.title().to_dict() if LOCAIS_GEO is not None else {}
-    # votos por seção com o bairro e o local do cadastro do TSE (o boletim de 4 seções do Ipu Iru indica outro local)
-    s_ = SEC.copy()
-    if SEC_CAD is not None:
-        s_ = s_.merge(SEC_CAD[["secao", "local_cadastro", "bairro"]], on="secao", how="left")
-        s_["bairro"] = s_.bairro.str.title()
-    else:
-        s_["local_cadastro"], s_["bairro"] = s_.local, s_.local.map(bairro_loc)
-    s_["Local"] = s_.local_cadastro.map(lambda x: nomes_loc.get(x, f"Local {x}"))
+    s_, nomes_loc = base_tuntum()
     c1, c2 = st.columns([1.1, 1], gap="large")
     with c1:
         g_tun = {"type": "FeatureCollection", "features": [f for f in geo("ma")["features"]
@@ -710,6 +764,117 @@ with aba[3]:
                           title=f"{grupo} · votos projetados no 2º turno", yaxis=dict(autorange="reversed"),
                           legend=dict(orientation="h", y=-.04))
         grafico(fig)
+    # ================= indicadores (1º turno oficial + projeção)
+    st.markdown("### 📊 Indicadores de Tuntum")
+    tot = s_[["aptos", "comparecimento", "lula", "flavio", "validos", "brancos", "nulos", "em_disputa"]].sum()
+
+    # 1) urbano × rural
+    zt = s_.groupby("zona_tipo").agg(secoes=("secao", "count"), aptos=("aptos", "sum"),
+                                     comparecimento=("comparecimento", "sum"), lula=("lula", "sum"),
+                                     flavio=("flavio", "sum"), validos=("validos", "sum"), brancos=("brancos", "sum"),
+                                     nulos=("nulos", "sum"), v2l=("votos_lula_2t", "sum"), v2f=("votos_flavio_2t", "sum"))
+    st.markdown("##### Zona urbana × zona rural · 1º turno")
+    itens = []
+    for nome in ("Zona urbana", "Zona rural"):
+        if nome not in zt.index:
+            continue
+        z = zt.loc[nome]
+        itens += [(f"{nome} · Lula", pct(100 * z.lula / z.validos),
+                   f"{n(z.lula)} votos · Flávio {pct(100 * z.flavio / z.validos)} ({n(z.flavio)}) · "
+                   f"2º turno proj.: Lula {pct(100 * z.v2l / (z.v2l + z.v2f))}", COR_L),
+                  (f"{nome} · comparecimento", pct(100 * z.comparecimento / z.aptos),
+                   f"{n(z.aptos - z.comparecimento)} faltaram · {int(z.secoes)} seções · brancos e nulos "
+                   f"{pct(100 * (z.brancos + z.nulos) / z.comparecimento)}", "#1B2A41")]
+    cards(itens)
+
+    # 6) Tuntum × Maranhão × Brasil
+    st.markdown("##### Tuntum comparado ao Maranhão e ao Brasil · 1º turno")
+    uf1 = pd.read_csv(DADOS / "tse_1t_2026" / "presidente_1t_uf.csv").set_index("abrangencia")
+    linhas = [("Tuntum", tot.aptos, tot.comparecimento, tot.lula, tot.flavio, tot.validos, tot.brancos + tot.nulos)]
+    for nome, k in (("Maranhão", "ma"), ("Brasil", "br")):
+        r_ = uf1.loc[k]
+        linhas.append((nome, r_.eleitorado, r_.comparecimento, r_.lula, r_.flavio, r_.validos, r_.brancos + r_.nulos))
+    bench = pd.DataFrame([{"Onde": a_, "Lula %": 100 * l_ / v_, "Flávio %": 100 * f_ / v_,
+                           "Demais candidatos %": 100 * (v_ - l_ - f_) / v_, "Comparecimento %": 100 * c_ / e_,
+                           "Abstenção %": 100 - 100 * c_ / e_, "Brancos e nulos %": 100 * bn / c_}
+                          for a_, e_, c_, l_, f_, v_, bn in linhas])
+    tabela(bench, modo="identidade", height=160)
+
+    # 2) comparecimento e abstenção · 3) brancos e nulos
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        lo = s_.groupby("Local", as_index=False).agg(aptos=("aptos", "sum"), comp=("comparecimento", "sum"))
+        lo["abst"] = 100 - 100 * lo.comp / lo.aptos
+        lo = lo.sort_values("abst", ascending=False)
+        fig = go.Figure(go.Bar(y=lo.Local, x=lo.abst, orientation="h", marker=dict(color=lo.abst, colorscale="Oranges"),
+                               text=[f"{pct(v)} · {n(a - c)}" for v, a, c in zip(lo.abst, lo.aptos, lo.comp)],
+                               textposition="outside", hovertemplate="%{y}<br>abstenção %{x:.1f}%<extra></extra>"))
+        fig.update_layout(title=f"Abstenção por local de votação (Tuntum: {pct(100 - 100 * tot.comparecimento / tot.aptos)}, "
+                                f"{n(tot.aptos - tot.comparecimento)} eleitores)", height=max(420, 22 * len(lo) + 120),
+                          yaxis=dict(autorange="reversed", tickfont=dict(size=10)), xaxis=dict(ticksuffix="%"))
+        grafico(fig)
+    with c2:
+        bb = s_.groupby("bairro", as_index=False).agg(comp=("comparecimento", "sum"), brancos=("brancos", "sum"),
+                                                     nulos=("nulos", "sum"))
+        bb["bn"] = 100 * (bb.brancos + bb.nulos) / bb.comp
+        bb = bb.sort_values("bn", ascending=False)
+        fig = go.Figure()
+        fig.add_bar(y=bb.bairro, x=100 * bb.brancos / bb.comp, orientation="h", name="Brancos", marker_color="#B8C2D1")
+        fig.add_bar(y=bb.bairro, x=100 * bb.nulos / bb.comp, orientation="h", name="Nulos", marker_color="#6B7A90")
+        fig.update_layout(barmode="stack", title=f"Brancos e nulos por bairro/povoado (Tuntum: "
+                                                 f"{pct(100 * (tot.brancos + tot.nulos) / tot.comparecimento)})",
+                          height=max(420, 22 * len(bb) + 120), yaxis=dict(autorange="reversed", tickfont=dict(size=10)),
+                          xaxis=dict(ticksuffix="%"), legend=dict(orientation="h", y=-.06))
+        grafico(fig)
+    st.markdown("###### Seções com mais eleitores que não votaram")
+    tabela(s_.sort_values("faltosos", ascending=False).head(10)[["secao", "bairro", "Local", "aptos", "comparecimento",
+                                                                 "faltosos"]].rename(columns={
+        "secao": "Seção", "bairro": "Bairro/povoado", "aptos": "Aptos", "comparecimento": "Votaram",
+        "faltosos": "Não votaram"}), height=390)
+
+    # 4) margem e redutos
+    st.markdown("##### Margem e redutos · 1º turno")
+    ml = s_.groupby("Local", as_index=False).agg(bairro=("bairro", "first"), lula=("lula", "sum"),
+                                                 flavio=("flavio", "sum"), validos=("validos", "sum"))
+    ml["margem"] = ml.lula - ml.flavio
+    ml["Lula %"] = 100 * ml.lula / ml.validos
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.markdown("**Maiores vantagens de Lula**")
+        tabela(ml.sort_values("margem", ascending=False).head(5)[["Local", "bairro", "lula", "flavio", "margem"]].rename(
+            columns={"bairro": "Bairro/povoado", "lula": "Lula", "flavio": "Flávio", "margem": "Vantagem (votos)"}),
+            height=230)
+    with c2:
+        st.markdown("**Locais em que Flávio foi melhor**")
+        tabela(ml.sort_values("margem").head(5)[["Local", "bairro", "lula", "flavio", "margem"]].rename(
+            columns={"bairro": "Bairro/povoado", "lula": "Lula", "flavio": "Flávio", "margem": "Vantagem de Lula (votos)"}),
+            height=230)
+    ap = s_[s_.margem_1t.abs() < 20].sort_values("margem_1t")
+    st.markdown(f"**Seções apertadas** (diferença menor que 20 votos): {len(ap)} · Flávio venceu em "
+                f"{int((s_.margem_1t < 0).sum())} seção(ões) no 1º turno")
+    tabela(ap[["secao", "bairro", "Local", "lula", "flavio", "margem_1t", "em_disputa"]].rename(columns={
+        "secao": "Seção", "bairro": "Bairro/povoado", "lula": "Lula", "flavio": "Flávio",
+        "margem_1t": "Vantagem de Lula (votos)", "em_disputa": "Votos em disputa"}), height=380)
+
+    # 5) votos em disputa
+    st.markdown(f"##### Votos em disputa · {n(tot.em_disputa)} votos de Cury, Renan, Caiado, Zema e demais")
+    vd = s_.groupby("bairro", as_index=False)[OUTROS_1T + ["em_disputa"]].sum().sort_values("em_disputa",
+                                                                                            ascending=False)
+    vd["para_lula"], vd["para_flavio"] = destino_em_disputa(vd)
+    vd["indefinido"] = vd.em_disputa - vd.para_lula - vd.para_flavio
+    fig = go.Figure()
+    fig.add_bar(y=vd.bairro, x=vd.para_lula, orientation="h", name="tendem a Lula", marker_color=COR_L)
+    fig.add_bar(y=vd.bairro, x=vd.para_flavio, orientation="h", name="tendem a Flávio", marker_color=COR_F)
+    fig.add_bar(y=vd.bairro, x=vd.indefinido, orientation="h", name="branco, nulo ou não vota", marker_color="#C7CED9")
+    tl, tf = destino_em_disputa(s_[OUTROS_1T].sum().to_frame().T)
+    fig.update_layout(barmode="stack", height=max(420, 22 * len(vd) + 120),
+                      title=f"Onde estão e para onde tendem (estimativa: ~{n(float(tl.iloc[0]))} para Lula, "
+                            f"~{n(float(tf.iloc[0]))} para Flávio)",
+                      yaxis=dict(autorange="reversed", tickfont=dict(size=10)), legend=dict(orientation="h", y=-.06))
+    grafico(fig)
+    st.caption("Estimativa com a transferência medida nas pesquisas (AtlasIntel e Quaest) para os eleitores de cada "
+               "candidato; é uma tendência média, não o voto de cada pessoa.")
+
     st.markdown("##### As 97 seções")
     tabela(s_[["secao", "bairro", "Local", "aptos", "comparecimento", "lula", "flavio", "lula_1t_pct", "lula_2t",
                "lula_2t_p10", "lula_2t_p90", "votos_lula_2t", "votos_flavio_2t"]].rename(columns={
@@ -808,5 +973,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 16h (sem cartões de chance)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 16h30 (indicadores de Tuntum)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
