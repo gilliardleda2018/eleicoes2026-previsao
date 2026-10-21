@@ -54,9 +54,11 @@ def dados():
     ctx = pd.read_csv(DADOS / "contexto_2t.csv", parse_dates=["data"])
     trf = pd.read_csv(DADOS / "transferencia_2t.csv")
     cen = np.load(RES / "cenarios_lula_2t.npy") if (RES / "cenarios_lula_2t.npy").exists() else None
-    locais_geo = DADOS / "locais_tuntum.csv"  # opcional: local,nome,endereco,lat,lon
+    locais_geo = DADOS / "locais_tuntum.csv"  # local,nome,bairro,endereco,lat,lon (cadastro do TSE)
     lg = pd.read_csv(locais_geo) if locais_geo.exists() else None
-    return sim, uf, mun, sec, loc, pes, ctx, trf, cen, lg
+    cad = DADOS / "tuntum_secoes_cadastro.csv"  # seção → local e bairro do cadastro
+    sc = pd.read_csv(cad, dtype={"secao": str, "secao_principal": str}) if cad.exists() else None
+    return sim, uf, mun, sec, loc, pes, ctx, trf, cen, lg, sc
 
 
 @st.cache_data(show_spinner=False)
@@ -71,7 +73,7 @@ def foto(nome):
     return "data:image/jpeg;base64," + base64.b64encode(arq.read_bytes()).decode() if arq.exists() else ""
 
 
-SIM, UF, MUN, SEC, LOC, PES, CTX, TRF, CEN, LOCAIS_GEO = dados()
+SIM, UF, MUN, SEC, LOC, PES, CTX, TRF, CEN, LOCAIS_GEO, SEC_CAD = dados()
 R = SIM["resultado"]
 P_L, P_F = R["prob_lula"], R["prob_flavio"]
 L50 = R["lula_validos_p10_p50_p90"][1]
@@ -577,52 +579,76 @@ with aba[3]:
            ("Votos projetados", f"{n(tt['votos_lula_p50'])} × {n(tt['votos_flavio_p50'])}", "Lula × Flávio", COR_F),
            ("Seções · locais", f"{tt['secoes']} · {tt['locais']}", f"{n(SEC.aptos.sum())} eleitores aptos · zona 79",
             "#6D5BA8")])
-    c1, c2 = st.columns([1, 1.25], gap="large")
+    nomes_loc = LOCAIS_GEO.set_index("local").nome.str.title().to_dict() if LOCAIS_GEO is not None else {}
+    bairro_loc = LOCAIS_GEO.set_index("local").bairro.str.title().to_dict() if LOCAIS_GEO is not None else {}
+    # votos por seção com o bairro e o local do cadastro do TSE (o boletim de 4 seções do Ipu Iru indica outro local)
+    s_ = SEC.copy()
+    if SEC_CAD is not None:
+        s_ = s_.merge(SEC_CAD[["secao", "local_cadastro", "bairro"]], on="secao", how="left")
+        s_["bairro"] = s_.bairro.str.title()
+    else:
+        s_["local_cadastro"], s_["bairro"] = s_.local, s_.local.map(bairro_loc)
+    s_["Local"] = s_.local_cadastro.map(lambda x: nomes_loc.get(x, f"Local {x}"))
+    c1, c2 = st.columns([1.1, 1], gap="large")
     with c1:
-        # mapa: Tuntum em destaque entre os vizinhos (e os locais de votação, se houver coordenadas)
-        m = MUN.assign(destaque=np.where(MUN.cd_tse == motor_2t.TUNTUM, MUN.lula_2t, np.nan))
-        fig = px.choropleth_map(m, geojson=geo("ma"), locations="cd_ibge", featureidkey="properties.CD_MUN",
-                                color="lula_2t", color_continuous_scale=ESCALA, range_color=(20, 85),
-                                map_style="carto-positron", zoom=7.6, center={"lat": -5.46, "lon": -44.72}, opacity=.55,
-                                hover_name="municipio", hover_data={"lula_2t": ":.1f", "cd_ibge": False})
         g_tun = {"type": "FeatureCollection", "features": [f for f in geo("ma")["features"]
                                                            if f["properties"]["CD_MUN"] == str(tun.cd_ibge)]}
-        fig.add_choroplethmap(geojson=g_tun, locations=[str(tun.cd_ibge)], z=[1], featureidkey="properties.CD_MUN",
-                              colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]], showscale=False,
-                              marker_line_width=4, marker_line_color="#1B2A41", hoverinfo="skip")
-        if LOCAIS_GEO is not None and {"local", "lat", "lon"} <= set(LOCAIS_GEO.columns):
-            pts = LOC.merge(LOCAIS_GEO, on="local")
-            fig.add_scattermap(lat=pts.lat, lon=pts.lon, mode="markers",
-                               marker=dict(size=np.clip(np.sqrt(pts.aptos) / 2, 8, 30), color=pts.lula_2t,
-                                           colorscale=ESCALA, cmin=20, cmax=85),
-                               text=pts.get("nome", pts.local.astype(str)), name="Locais de votação",
-                               hovertemplate="%{text}<br>Lula %{marker.color:.1f}%<extra></extra>")
-        fig.update_layout(height=560, margin=dict(l=0, r=0, t=36, b=0), title="Tuntum e vizinhos · projeção Lula (%)")
-        grafico(fig)
-        if LOCAIS_GEO is None:
-            st.caption("Para ver os 36 locais de votação como pontos no mapa, adicione segundo_turno/dados/locais_tuntum.csv "
-                       "(local, nome, endereco, lat, lon).")
-    with c2:
-        lo = LOC.sort_values("aptos", ascending=False).copy()
-        nomes_loc = (LOCAIS_GEO.set_index("local").nome.to_dict() if LOCAIS_GEO is not None and "nome" in LOCAIS_GEO
-                     else {})
-        lo["rotulo"] = lo.local.map(lambda x: nomes_loc.get(x, f"Local {x}"))
         fig = go.Figure()
-        fig.add_bar(y=lo.rotulo, x=lo.votos_lula_2t, orientation="h", name="Lula (proj.)", marker_color=COR_L)
-        fig.add_bar(y=lo.rotulo, x=lo.votos_flavio_2t, orientation="h", name="Flávio (proj.)", marker_color=COR_F)
-        fig.add_scatter(y=lo.rotulo, x=lo.lula, mode="markers", name="Lula no 1º turno",
+        fig.add_choroplethmap(geojson=g_tun, locations=[str(tun.cd_ibge)], z=[1], featureidkey="properties.CD_MUN",
+                              colorscale=[[0, "rgba(27,42,65,.06)"], [1, "rgba(27,42,65,.06)"]], showscale=False,
+                              marker_line_width=3, marker_line_color="#1B2A41", hoverinfo="skip")
+        centro = {"lat": -5.46, "lon": -44.72}
+        if LOCAIS_GEO is not None:
+            por_local = s_.groupby("local_cadastro", as_index=False).agg(
+                aptos=("aptos", "sum"), lula=("lula", "sum"), flavio=("flavio", "sum"),
+                votos_lula_2t=("votos_lula_2t", "sum"), votos_flavio_2t=("votos_flavio_2t", "sum"),
+                secoes=("secao", lambda x: ", ".join(sorted(x))))
+            pts = por_local.merge(LOCAIS_GEO.rename(columns={"local": "local_cadastro"}), on="local_cadastro").dropna(
+                subset=["lat", "lon"])
+            pts["lula_2t"] = 100 * pts.votos_lula_2t / (pts.votos_lula_2t + pts.votos_flavio_2t)
+            pts["lula_1t"] = 100 * pts.lula / (pts.lula + pts.flavio)
+            fig.add_scattermap(lat=pts.lat, lon=pts.lon, mode="markers",
+                               marker=dict(size=np.clip(np.sqrt(pts.aptos) / 1.6, 9, 34), color=pts.lula_2t,
+                                           colorscale=ESCALA, cmin=20, cmax=85, opacity=.9,
+                                           colorbar=dict(title="", ticksuffix="%", len=.6, thickness=12)),
+                               customdata=np.column_stack([pts.nome.str.title(), pts.bairro.str.title(), pts.secoes,
+                                                           pts.aptos, pts.lula_1t, pts.lula_2t]),
+                               hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<br>Seções: %{customdata[2]}"
+                                             "<br>%{customdata[3]} aptos<br>Lula 1º turno: %{customdata[4]:.1f}%"
+                                             "<br>Lula 2º turno (proj.): %{customdata[5]:.1f}%<extra></extra>",
+                               name="Locais de votação")
+            centro = {"lat": float(pts.lat.median()), "lon": float(pts.lon.median())}
+        fig.update_layout(height=620, margin=dict(l=0, r=0, t=36, b=0), map_style="carto-positron",
+                          map=dict(center=centro, zoom=8.2), title="Locais de votação · projeção Lula (%)",
+                          showlegend=False)
+        grafico(fig)
+        if LOCAIS_GEO is not None:
+            st.caption("Coordenadas do cadastro do TSE (não auditadas em campo); 35 dos 36 locais têm ponto. Tamanho = "
+                       "eleitores aptos. As seções 64 a 67 (Ipu Iru) seguem o local do cadastro; o boletim indica outro.")
+    with c2:
+        grupo = st.segmented_control("Agrupar por", ["Bairro/povoado", "Local de votação"], default="Bairro/povoado",
+                                     key="t2_tun_grupo") or "Bairro/povoado"
+        chave = "bairro" if grupo.startswith("Bairro") else "Local"
+        g = s_.groupby(chave, as_index=False).agg(aptos=("aptos", "sum"), lula=("lula", "sum"),
+                                                  votos_lula_2t=("votos_lula_2t", "sum"),
+                                                  votos_flavio_2t=("votos_flavio_2t", "sum")).sort_values(
+            "aptos", ascending=False)
+        fig = go.Figure()
+        fig.add_bar(y=g[chave], x=g.votos_lula_2t, orientation="h", name="Lula (proj.)", marker_color=COR_L)
+        fig.add_bar(y=g[chave], x=g.votos_flavio_2t, orientation="h", name="Flávio (proj.)", marker_color=COR_F)
+        fig.add_scatter(y=g[chave], x=g.lula, mode="markers", name="Lula no 1º turno",
                         marker=dict(symbol="line-ns", size=14, line=dict(width=2, color="#1B2A41")))
-        fig.update_layout(barmode="stack", height=900, title="Locais de votação · votos projetados no 2º turno",
-                          yaxis=dict(autorange="reversed"), legend=dict(orientation="h", y=-.04))
+        fig.update_layout(barmode="stack", height=max(420, 26 * len(g) + 120),
+                          title=f"{grupo} · votos projetados no 2º turno", yaxis=dict(autorange="reversed"),
+                          legend=dict(orientation="h", y=-.04))
         grafico(fig)
     st.markdown("##### As 97 seções")
-    s_ = SEC.copy()
-    s_["Local"] = s_.local.map(lambda x: nomes_loc.get(x, f"Local {x}"))
-    tabela(s_[["secao", "Local", "aptos", "comparecimento", "lula", "flavio", "lula_1t_pct", "lula_2t", "lula_2t_p10",
-               "lula_2t_p90", "votos_lula_2t", "votos_flavio_2t"]].rename(columns={
-        "secao": "Seção", "aptos": "Aptos", "comparecimento": "Compareceram (1º t)", "lula": "Lula 1º t",
-        "flavio": "Flávio 1º t", "lula_1t_pct": "Lula 1º t %", "lula_2t": "Lula 2º t %", "lula_2t_p10": "P10 %",
-        "lula_2t_p90": "P90 %", "votos_lula_2t": "Lula (proj.)", "votos_flavio_2t": "Flávio (proj.)"}), height=520)
+    tabela(s_[["secao", "bairro", "Local", "aptos", "comparecimento", "lula", "flavio", "lula_1t_pct", "lula_2t",
+               "lula_2t_p10", "lula_2t_p90", "votos_lula_2t", "votos_flavio_2t"]].rename(columns={
+        "secao": "Seção", "bairro": "Bairro/povoado", "aptos": "Aptos", "comparecimento": "Compareceram (1º t)",
+        "lula": "Lula 1º t", "flavio": "Flávio 1º t", "lula_1t_pct": "Lula 1º t %", "lula_2t": "Lula 2º t %",
+        "lula_2t_p10": "P10 %", "lula_2t_p90": "P90 %", "votos_lula_2t": "Lula (proj.)",
+        "votos_flavio_2t": "Flávio (proj.)"}), height=520)
     st.caption("1º turno: boletins de urna oficiais do TSE (as 97 seções somam exatamente o total do município). "
                "2º turno: projeção do modelo; no domingo, a aba Ao vivo lê os boletins de cada seção assim que o TSE publica.")
 

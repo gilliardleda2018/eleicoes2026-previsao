@@ -1,24 +1,26 @@
 # Google Cloud Build → Cloud Run.
-#   gcloud builds submit --config cloudbuild.yaml --substitutions=_SERVICE=eleicoes2026,_REGION=southamerica-east1
+#   gcloud builds submit --config cloudbuild.yaml --substitutions=_SERVICE=apuracao-teste,_REGION=southamerica-east1
+# Funciona à mão ou por gatilho do GitHub (a imagem leva o ID do build). Mais simples no Cloud Shell:
+#   gcloud run deploy apuracao-teste --source . --region southamerica-east1
 # Ajuste _SERVICE/_REGION ao serviço que já está em produção. A senha (APP_PASSWORD) fica no Secret Manager.
 substitutions:
-  _SERVICE: eleicoes2026
+  _SERVICE: apuracao-teste
   _REGION: southamerica-east1
   _REPO: eleicoes
 images:
-  - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${SHORT_SHA}"
+  - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}"
 steps:
   - name: gcr.io/cloud-builders/docker
-    args: ["build", "-t", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${SHORT_SHA}", "."]
+    args: ["build", "-t", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}", "."]
   - name: gcr.io/cloud-builders/docker
-    args: ["push", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${SHORT_SHA}"]
+    args: ["push", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}"]
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     args:
       - run
       - deploy
       - ${_SERVICE}
-      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${SHORT_SHA}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}
       - --region=${_REGION}
       - --allow-unauthenticated
       # Streamlit usa websocket: sessão presa à mesma instância e conexão longa
