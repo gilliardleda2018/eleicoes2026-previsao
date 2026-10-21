@@ -353,46 +353,26 @@ with aba[0]:
 <div class="vt">{n(br1.flavio)} votos</div></div></div>
 <div class="t2-1t-nota">Resultado oficial do 1º turno (TSE, 4/10), em % dos votos válidos · {n(br1.validos)} válidos</div>""",
                 unsafe_allow_html=True)
-    c1, c2 = st.columns([1.15, 1], gap="large")
-    with c1:
-        if CEN is not None:
-            v = 100 * CEN
-            fig = go.Figure()
-            bins = np.linspace(42, 56, 57)
-            h, e = np.histogram(v, bins=bins)
-            centros = (e[:-1] + e[1:]) / 2
-            fig.add_bar(x=centros, y=100 * h / len(v), marker_color=[COR_L if x > 50 else COR_F for x in centros],
-                        hovertemplate="Lula %{x:.1f}% · %{y:.1f}% dos cenários<extra></extra>")
-            fig.add_vline(x=50, line_dash="dash", line_color="#1B2A41")
-            fig.add_annotation(x=50.2, y=max(100 * h / len(v)) * .95, text="Lula vence →", showarrow=False, xanchor="left",
-                               font=dict(color=COR_L, size=12))
-            fig.add_annotation(x=49.8, y=max(100 * h / len(v)) * .95, text="← Flávio vence", showarrow=False,
-                               xanchor="right", font=dict(color=COR_F, size=12))
-            fig.update_layout(title="Os cenários simulados: Lula nos votos válidos", height=380, bargap=.05,
-                              xaxis_title="Lula (% dos válidos)", yaxis_title="% dos cenários", showlegend=False)
-            grafico(fig)
-    with c2:
-        s = SIM["sensibilidade"]
-        linhas = [("Só pesquisas, sem correção", s["so_pesquisas_sem_correcao"]),
-                  ("Só pesquisas, com erro histórico", s["so_pesquisas_com_correcao"]),
-                  ("Só 1º turno + transferência", s["so_estrutural"]),
-                  ("Modelo completo", {"lula_p50": L50, "prob_lula": P_L}),
-                  ("Alerta: viés do 1º turno se repete", s["alerta_vies_1t_se_repete"])]
+    if CEN is not None:
+        v = 100 * CEN
         fig = go.Figure()
-        fig.add_bar(y=[a for a, _ in linhas], x=[100 * b["prob_lula"] for _, b in linhas], orientation="h",
-                    marker_color=COR_L, name="Lula", text=[chance(b["prob_lula"]) for _, b in linhas],
-                    textposition="inside", insidetextanchor="middle")
-        fig.add_bar(y=[a for a, _ in linhas], x=[100 - 100 * b["prob_lula"] for _, b in linhas], orientation="h",
-                    marker_color=COR_F, name="Flávio", text=[chance(1 - b["prob_lula"]) for _, b in linhas],
-                    textposition="inside", insidetextanchor="middle")
-        fig.update_layout(barmode="stack", title="Chance de vitória por hipótese", height=380,
-                          xaxis=dict(range=[0, 100], ticksuffix="%"), yaxis=dict(autorange="reversed"),
-                          legend=dict(orientation="h", y=-.15), uniformtext_minsize=10, uniformtext_mode="hide")
+        bins = np.linspace(42, 56, 57)
+        h, e = np.histogram(v, bins=bins)
+        centros = (e[:-1] + e[1:]) / 2
+        fig.add_bar(x=centros, y=100 * h / len(v), marker_color=[COR_L if x > 50 else COR_F for x in centros],
+                    hovertemplate="Lula %{x:.1f}% · %{y:.1f}% dos cenários<extra></extra>")
+        fig.add_vline(x=50, line_dash="dash", line_color="#1B2A41")
+        fig.add_annotation(x=50.2, y=max(100 * h / len(v)) * .95, text="Lula acima de 50% →", showarrow=False, xanchor="left",
+                           font=dict(color=COR_L, size=12))
+        fig.add_annotation(x=49.8, y=max(100 * h / len(v)) * .95, text="← Flávio acima de 50%", showarrow=False,
+                           xanchor="right", font=dict(color=COR_F, size=12))
+        fig.update_layout(title="Os cenários simulados: Lula nos votos válidos", height=380, bargap=.05,
+                          xaxis_title="Lula (% dos válidos)", yaxis_title="% dos cenários", showlegend=False)
         grafico(fig)
     c1, c2 = st.columns([1.4, 1], gap="large")
     with c1:
         fig = mapa_br(UF[UF.uf != "ZZ"], "lula_2t", "Projeção por estado · Lula (% dos válidos)",
-                      hover={"lula_1t_pct": ":.1f", "lula_2t": ":.1f", "prob_lula": ":.0%"})
+                      hover={"lula_1t_pct": ":.1f", "lula_2t": ":.1f"})
         grafico(fig)
     with c2:
         reg = SIM["regioes"]
@@ -406,11 +386,9 @@ with aba[0]:
                           xaxis=dict(range=[0, 100], ticksuffix="%"), legend=dict(orientation="h", y=-.08))
         grafico(fig)
     t = UF[UF.uf != "ZZ"].sort_values("saldo_lula_2t", ascending=False)
-    tabela(t[["uf", "regiao", "lula_1t_pct", "lula_2t", "lula_2t_p10", "lula_2t_p90", "prob_lula", "saldo_lula_2t",
-              "favorito"]].rename(columns={
+    tabela(t[["uf", "regiao", "lula_1t_pct", "lula_2t", "lula_2t_p10", "lula_2t_p90", "saldo_lula_2t"]].rename(columns={
         "uf": "UF", "regiao": "Região", "lula_1t_pct": "Lula 1º turno %", "lula_2t": "Lula 2º turno %",
-        "lula_2t_p10": "Lula P10 %", "lula_2t_p90": "Lula P90 %", "prob_lula": "Prob. Lula",
-        "saldo_lula_2t": "Saldo Lula (votos)", "favorito": "Favorito"}), height=420)
+        "lula_2t_p10": "Lula P10 %", "lula_2t_p90": "Lula P90 %", "saldo_lula_2t": "Saldo Lula (votos)"}), height=420)
 
 
 # ================================================================ 2) ao vivo
@@ -439,18 +417,18 @@ def placar(nome_l, votos_l, nome_f, votos_f, total, rotulo=""):
 </div>""", unsafe_allow_html=True)
 
 
-def bloco_projecao(r_, apurado):
+def bloco_projecao(r_, apurado, votos_l=0, votos_f=0):
     if r_.get("sem_dados"):
         st.markdown('<div class="t2-status">Projeção do final aparece quando ao menos 3 unidades tiverem votos.</div>',
                     unsafe_allow_html=True)
         return
     a10, a50, a90 = r_["final_a"]
-    lider = "Lula" if a50 > 50 else "Flávio"
-    p_lider = r_["prob_a_na_frente"] if a50 > 50 else 1 - r_["prob_a_na_frente"]
+    frente = "Lula" if votos_l >= votos_f else "Flávio"
     cards([("Apurado", pct(apurado, 2), "das seções/votos", "#1B2A41"),
+           ("Diferença agora", n(abs(votos_l - votos_f)) + " votos", f"{frente} à frente na apuração",
+            COR_L if frente == "Lula" else COR_F),
            ("Projeção do final · Lula", pct(a50, 2), f"faixa: {pct(a10, 2)} a {pct(a90, 2)}", COR_L),
-           ("Projeção do final · Flávio", pct(100 - a50, 2), f"faixa: {pct(100 - a90, 2)} a {pct(100 - a10, 2)}", COR_F),
-           ("Tendência", lider, f"termina à frente em {chance(p_lider)} das projeções", COR_L if lider == "Lula" else COR_F)])
+           ("Projeção do final · Flávio", pct(100 - a50, 2), f"faixa: {pct(100 - a90, 2)} a {pct(100 - a10, 2)}", COR_F)])
 
 
 def status(info, ensaio):
@@ -499,7 +477,7 @@ with aba[1]:
         st.subheader("🇧🇷 Brasil")
         placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
         _, r_ = motor_2t.projetar(uf_v, UF, "uf")
-        bloco_projecao(r_, br_v.get("pst", 0))
+        bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
         # histórico desta sessão
         h = st.session_state.setdefault("t2_hist_" + modo, [])
         if vl + vf and (not h or h[-1][1] != br_v.get("pst")):
@@ -540,7 +518,7 @@ with aba[1]:
             ml, mf = ma_v["votos"].get("13", 0), ma_v["votos"].get("22", 0)
             placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf)
             _, rm = motor_2t.projetar(mun_v, MUN, "cd_tse")
-            bloco_projecao(rm, ma_v.get("pst", 0))
+            bloco_projecao(rm, ma_v.get("pst", 0), ml, mf)
             m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t"]].merge(
                 mun_v.assign(cd_tse=mun_v.unidade.astype(str)), on="cd_tse", how="left")
             m["lula_agora"] = np.where(m.vv > 0, 100 * m.get("v_13", 0) / m.vv.replace(0, np.nan), np.nan)
@@ -610,8 +588,7 @@ with aba[2]:
             f"favoritos Lula · Flávio ({ma['municipios_indefinidos']} indefinidos)", "#6D5BA8")])
     opcoes = {"Projeção do 2º turno · Lula %": ("lula_2t", (20, 85)),
               "1º turno · Lula %": ("lula_1t_pct", (20, 85)),
-              "Variação projetada (pts)": ("variacao", (-6, 6)),
-              "Chance de Lula vencer no município": ("prob_lula_pct", (0, 100))}
+              "Variação projetada (pts)": ("variacao", (-6, 6))}
     vis = st.segmented_control("Mapa", list(opcoes), default=list(opcoes)[0], key="t2_ma_mapa") or list(opcoes)[0]
     m = MUN.assign(variacao=MUN.lula_2t - MUN.lula_1t_pct, prob_lula_pct=100 * MUN.prob_lula)
     col_, faixa = opcoes[vis]
@@ -796,7 +773,7 @@ with aba[5]:
     comp = SIM["componentes"]
     e = comp["erro"]
     st.markdown(f"""
-**Como o modelo chega à chance de vitória**
+**Como o modelo projeta o 2º turno**
 
 1. **Pesquisas do 2º turno** ({comp['pesquisas']['n']} pesquisas registradas, {comp['pesquisas']['primeira'][8:10]}/10 a
    {comp['pesquisas']['ultima'][8:10]}/10) passam pelos mesmos **6 agregadores** do modelo do 1º turno (média ponderada,
@@ -831,5 +808,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Probabilidades não são certeza nem recomendação de voto.</div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 16h (sem cartões de chance)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
