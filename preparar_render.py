@@ -16,8 +16,8 @@ import os
 import re
 from pathlib import Path
 
-TITULO = "Previsão eleitoral 2026 · Brasil e Maranhão"
-DESCRICAO = "Lula × Flávio Bolsonaro e Braide × Orleans: chances, mapa por estado e município e apuração ao vivo. Desenvolvido por Aggilli Intelligence."
+TITULO = "Eleições 2026 · 2º turno · Lula × Flávio"
+DESCRICAO = "2º turno presidencial: previsão, apuração ao vivo do TSE, Maranhão por município e Tuntum por seção. Desenvolvido por Aggilli Intelligence."
 MARCA = "<!-- og-eleicoes -->"
 
 
@@ -25,9 +25,9 @@ def gravar_open_graph() -> str:
     """Grava as tags no index.html do Streamlit. Só age quando há URL pública."""
     import streamlit
 
-    base = (os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("PUBLIC_URL") or "").rstrip("/")
+    base = (os.environ.get("PUBLIC_URL") or os.environ.get("RENDER_EXTERNAL_URL") or "").rstrip("/")
     if not base:
-        return "sem RENDER_EXTERNAL_URL/PUBLIC_URL — nada feito (uso local)"
+        return "sem PUBLIC_URL/RENDER_EXTERNAL_URL — nada feito (uso local)"
     indice = Path(streamlit.__file__).parent / "static" / "index.html"
     original = indice.read_text(encoding="utf-8")
 

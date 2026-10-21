@@ -135,6 +135,14 @@ st.markdown("""<style>
 [class*="st-key-hc_"] [data-testid="stPageLink"] a:hover {background: rgba(255,255,255,.24);}
 [class*="st-key-hc_"] [data-testid="stPageLink"] a p {color: #FFFFFF !important; font: 700 .92rem 'Montserrat' !important;}
 .st-key-hc_ap [data-testid="stPageLink"] a {background: linear-gradient(100deg, #1FA463, #2BD27A); border-color: transparent;}
+/* destaque do 2º turno e rótulo do arquivo do 1º turno */
+.st-key-hc_2t {max-width: 760px; margin: 0 auto 26px; border-top: 4px solid #FF6B7D !important;
+    background: radial-gradient(circle at 0% 0%, rgba(200,16,46,.35), transparent 50%),
+                radial-gradient(circle at 100% 0%, rgba(29,78,137,.55), transparent 55%),
+                linear-gradient(145deg, #1C3566, #12234A) !important;}
+.st-key-hc_2t [data-testid="stPageLink"] a {background: linear-gradient(100deg, #C8102E, #1D4E89) !important;
+    border-color: transparent !important;}
+.hc-arquivo {text-align: center; font: 700 .74rem 'Montserrat'; letter-spacing: .24em; color: #3E5675; margin: 4px 0 12px;}
 /* compartilhar e créditos */
 .st-key-hs_compartilhar {max-width: 560px; margin: 28px auto 8px; padding: 18px 18px 6px; border-radius: 24px;
     border: 1px solid var(--linha); background: linear-gradient(160deg, var(--az2), var(--az1));
@@ -274,27 +282,53 @@ st.markdown(f"""
 </div>""", unsafe_allow_html=True)
 
 agora = datetime.now(BRT)
-if agora < INICIO_APURACAO:
-    dias = (INICIO_APURACAO.date() - agora.date()).days
-    contagem = {0: "É hoje! Apuração a partir das 17h", 1: "Amanhã! Apuração domingo a partir das 17h"}.get(
-        dias, f"Faltam {dias} dias · apuração domingo, a partir das 17h")
-    selo_ap, chip_ap = "DOMINGO · 4/10 · 17H", "em breve"
+INICIO_2T = datetime(2026, 10, 25, 17, 0, tzinfo=BRT)
+if agora < INICIO_2T:
+    dias = (INICIO_2T.date() - agora.date()).days
+    contagem = {0: "É hoje! Apuração do 2º turno a partir das 17h", 1: "Amanhã! Apuração domingo a partir das 17h"}.get(
+        dias, f"Faltam {dias} dias · 2º turno no domingo, 25/10 · apuração a partir das 17h")
 else:
-    contagem, selo_ap, chip_ap = "Apuração ao vivo agora · atualização a cada 90 segundos", "AO VIVO", "ao vivo"
+    contagem = "2º turno: apuração ao vivo agora"
+selo_ap, chip_ap = "1º TURNO · 4/10", "encerrada"  # a apuração ao vivo do 2º turno fica na página do 2º turno
 
+try:
+    r2 = json.load(open(RAIZ / "segundo_turno" / "resultados" / "simulacao_2t.json", encoding="utf-8"))["resultado"]
+except Exception:
+    r2 = {}
 st.markdown(f"""
 <div class="hm-capa">
-  <div class="hm-selo">ELEIÇÕES 2026 · 1º TURNO · 4 DE OUTUBRO</div>
-  <h1>Modelo Preditivo <span>&amp;</span><br>Apuração em Tempo Real</h1>
-  <p>Modelo independente com pesquisas registradas, histórico oficial do TSE e 20 mil cenários simulados — e, no
-  domingo, os votos do TSE em tempo real.</p>
+  <div class="hm-selo">ELEIÇÕES 2026 · 2º TURNO · 25 DE OUTUBRO</div>
+  <h1>Lula <span>×</span> Flávio<br>Previsão &amp; Apuração em Tempo Real</h1>
+  <p>Modelo ancorado no resultado oficial do 1º turno, com as pesquisas do 2º turno e 20 mil cenários simulados — e,
+  no domingo, os votos do TSE em tempo real, com Maranhão por município e Tuntum seção a seção.</p>
   <div class="hm-contagem"><i></i>{contagem}</div>
   <div class="hm-recursos">
     <div>{ic("grafico")}20 mil cenários simulados</div>
-    <div>{ic("base")}Histórico oficial do TSE</div>
+    <div>{ic("base")}Resultado oficial do 1º turno</div>
     <div>{ic("prancheta")}Pesquisas registradas</div>
   </div>
 </div>""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------------- destaque: página do 2º turno
+with st.container(key="hc_2t"):
+    pl_, pf_ = r2.get("prob_lula"), r2.get("prob_flavio")
+    st.markdown(f"""
+{DUELOS.get("hc_br", "")}
+<div class="hc-selo">2º TURNO · PRESIDENTE<em>{"ao vivo" if agora >= INICIO_2T else "previsão"}</em></div>
+<div class="hc-titulo">Quem leva em 25 de outubro?</div>
+<div class="hc-texto">Previsão, apuração ao vivo, Maranhão por município e Tuntum por seção</div>
+<div class="hc-linhas">
+  <div class="hc-linha"><span><i style="background:#FF6B7D"></i>Lula</span><b style="color:#FF6B7D">{pct(pl_) if pl_ is not None else "—"}</b></div>
+  <div class="hc-barra"><i style="width:{(pl_ or 0) * 100:.0f}%;background:#FF6B7D"></i></div>
+  <div class="hc-linha"><span><i style="background:#9FD0FF"></i>Flávio</span><b style="color:#9FD0FF">{pct(pf_) if pf_ is not None else "—"}</b></div>
+  <div class="hc-barra"><i style="width:{(pf_ or 0) * 100:.0f}%;background:#9FD0FF"></i></div>
+</div>
+<div class="hc-legenda">chance de ser eleito no modelo</div>""", unsafe_allow_html=True)
+    try:
+        st.page_link("segundo_turno/painel_2t.py", label="Abrir o 2º turno →", width="stretch")
+    except Exception:  # página aberta sozinha (fora do app.py)
+        pass
+st.markdown("<div class='hc-arquivo'>ARQUIVO DO 1º TURNO · 4 DE OUTUBRO</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------- três cenários simétricos
 cards = [
@@ -334,14 +368,13 @@ for c, (chave, num, emblema, selo, titulo, texto, itens, legenda, pagina, botao)
             pass
 
 # ---------------------------------------------------------------- compartilhar
-if agora < INICIO_APURACAO:
-    quando = ("A apuração AO VIVO começa no *domingo, 4 de outubro, a partir das 17h* (horário de Brasília). "
+if agora < INICIO_2T:
+    quando = ("A apuração AO VIVO do 2º turno começa no *domingo, 25 de outubro, a partir das 17h* (horário de Brasília). "
               "Salve o link!")
 else:
-    quando = "A apuração está AO VIVO, com atualização a cada 90 segundos."
-texto = ("🗳️ Eleições 2026 com a Aggilli Intelligence: modelo preditivo para Presidente (Lula × Flávio) e Governo do "
-         "Maranhão (Braide × Orleans) e apuração em tempo real.\n\n💗 Vem torcer com a gente pela Bruna e pelo Time do Fernando! "
-         + quando + "\n\n👉 Acompanhe aqui:\n" + LINK)
+    quando = "A apuração do 2º turno está AO VIVO, com dados oficiais do TSE."
+texto = ("🗳️ Eleições 2026 · 2º turno com a Aggilli Intelligence: previsão Lula × Flávio, apuração em tempo real, "
+         "Maranhão município a município e Tuntum seção a seção.\n\n" + quando + "\n\n👉 Acompanhe aqui:\n" + LINK)
 ARTE = "inicio_aggilli.jpg"  # miniatura da Aggilli (gerada por apuracao/arte_inicio.py)
 wa = f"https://wa.me/?text={quote(texto)}"
 with st.container(key="hs_compartilhar"):

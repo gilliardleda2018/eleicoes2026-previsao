@@ -177,11 +177,10 @@ persist = rng.uniform(0, 1, N_SIM)
 ruido_setor = rng.normal(0, 0.6 * e1.std(ddof=1), N_SIM)
 # 1º turno: todas as eleições (2006–2022) — inclui o voto útil de última hora, fenômeno típico de 1º turno
 erro1 = persist * rng.choice(e1, N_SIM) + ruido_setor
-# 2º turno (confronto direto): só evidências da era polarizada — 1º turno de 2018 e 2022 (sem voto útil relevante)
-# e o erro das simulações de 2º turno feitas antes do 1º turno de 2022
-# Principal: erros observados do próprio segundo turno. A hipótese polarizada
-# permanece apenas no cenário de alerta, até validação temporal independente.
-erro2t = persist * rng.choice(e2, N_SIM) + rng.normal(0, 0.6 * e2.std(ddof=1), N_SIM)
+# 2º turno: erros das pesquisas finais de 2º turno de TODAS as eleições (2006–2022), uma média por eleição.
+# (Versões anteriores deste comentário e do README falavam em "só a era polarizada"; o código usa todos os 2º turnos.
+# O erro das simulações de 2º turno feitas antes do 1º turno de 2022 fica só no cenário de alerta.)
+erro2t =persist * rng.choice(e2, N_SIM) + rng.normal(0, 0.6 * e2.std(ddof=1), N_SIM)
 # Cenário de alerta: o padrão de 2022 se repete integralmente
 erro_alerta_1t = rng.choice(e_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
 erro_alerta_2t = rng.choice(e_pre2t_2022, N_SIM) + rng.normal(0, 1.5, N_SIM)
@@ -227,7 +226,7 @@ else:
 usa_pesq = rng.random(N_SIM) < 0.5 if transferencia_disponivel and "lula_2t" in ens["ensemble"] else np.full(N_SIM, "lula_2t" in ens["ensemble"])
 if L2_transf is None:
     L2_transf = L2_pesq.copy()  # fallback declarado; não estima transferência
-# 2º turno: erro da era polarizada (ver erro2t), com a mesma persistência sorteada do 1º turno
+# 2º turno: erro dos 2º turnos de 2006–2022 (ver erro2t), com a mesma persistência sorteada do 1º turno
 L2 = np.clip(np.where(usa_pesq, L2_pesq, L2_transf) + erro2t / 200 + rng.normal(0, 0.01, N_SIM), 0.3, 0.7)
 
 vence_1t_l, vence_1t_f, havera_2t, lula_leva, flavio_leva = decidir(L1, F1, L2)

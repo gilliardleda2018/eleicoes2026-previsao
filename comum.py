@@ -556,8 +556,9 @@ def veredito_simples(a, b, cor_a, cor_b, p2t, pa_1t, va_2t, pa):
         f'<div class="obs">{obs}</div></div>' for perg, fala, cor, obs in cartoes) + "</div>", unsafe_allow_html=True)
 
 
-PAGINAS = {"inicio": ("inicio.py", "🏠 Início"), "br": ("nacional/painel_nacional.py", "🌎 Brasil"),
-           "ma": ("painel_governo_ma.py", "🏛️ Maranhão"), "ap": ("apuracao/painel_apuracao.py", "📡 Apuração")}
+PAGINAS = {"inicio": ("inicio.py", "🏠 Início"), "2t": ("segundo_turno/painel_2t.py", "🗳️ 2º turno"),
+           "br": ("nacional/painel_nacional.py", "🌎 Brasil · 1º t"),
+           "ma": ("painel_governo_ma.py", "🏛️ Maranhão · 1º t"), "ap": ("apuracao/painel_apuracao.py", "📡 Apuração · 1º t")}
 
 
 def barra_navegacao(atual):

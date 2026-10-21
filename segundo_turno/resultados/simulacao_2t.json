@@ -1,0 +1,261 @@
+{
+  "gerado_em": "2026-10-21T07:55-03:00",
+  "data_corte": "2026-10-21",
+  "eleicao": "2026-10-25",
+  "n_cenarios": 20000,
+  "resultado": {
+    "prob_lula": 0.235,
+    "prob_flavio": 0.765,
+    "lula_validos_p10_p50_p90": [
+      46.71,
+      48.82,
+      51.1
+    ],
+    "flavio_validos_p50": 51.18,
+    "votos_lula_p50": 57346134,
+    "votos_flavio_p50": 60108119,
+    "validos_esperados": 117454254
+  },
+  "componentes": {
+    "pesquisas": {
+      "n": 24,
+      "institutos": [
+        "AtlasIntel",
+        "DataTrends",
+        "Datafolha",
+        "Futura",
+        "Gerp",
+        "Ideia",
+        "Indexa",
+        "Ipespe",
+        "MDA",
+        "Nexus",
+        "Palver",
+        "PoderData",
+        "Quaest",
+        "Real Time Big Data",
+        "Vox Brasil"
+      ],
+      "ensemble": {
+        "est": 49.52,
+        "dp": 1.6,
+        "min_modelos": 48.81,
+        "max_modelos": 50.48
+      },
+      "modelos": {
+        "Média ponderada": {
+          "est": 48.83,
+          "dp": 1.02
+        },
+        "Mediana robusta (últimos 30 dias)": {
+          "est": 48.9,
+          "dp": 0.71
+        },
+        "Regressão com efeito-instituto": {
+          "est": 50.48,
+          "dp": 2.77
+        },
+        "Filtro de Kalman": {
+          "est": 48.81,
+          "dp": 0.95
+        },
+        "Processo Gaussiano": {
+          "est": 49.71,
+          "dp": 0.75
+        },
+        "Bayesiano hierárquico (Gibbs)": {
+          "est": 50.38,
+          "dp": 1.05
+        }
+      },
+      "efeito_instituto": {
+        "AtlasIntel": -0.39,
+        "DataTrends": -0.85,
+        "Datafolha": 0.11,
+        "Futura": 0.21,
+        "Gerp": -0.93,
+        "Ideia": -0.37,
+        "Indexa": 0.1,
+        "Ipespe": -0.31,
+        "MDA": 0.55,
+        "Nexus": -0.04,
+        "Palver": 0.81,
+        "PoderData": -0.31,
+        "Quaest": 0.27,
+        "Real Time Big Data": -1.18,
+        "Vox Brasil": 2.34
+      },
+      "primeira": "2026-10-07",
+      "ultima": "2026-10-19"
+    },
+    "erro": {
+      "historico_2t_por_eleicao": {
+        "2006": -0.34,
+        "2010": -0.82,
+        "2014": -1.02,
+        "2018": 4.35,
+        "2022": -0.13
+      },
+      "erro_1t_2026_por_instituto": {
+        "Gerp": 1.87,
+        "Palver": -0.82,
+        "Veritá": 2.28,
+        "American Analytics": -7.58,
+        "Alfa Inteligência": -11.61,
+        "Futura": 0.52,
+        "PoderData": -4.52,
+        "Real Time Big Data": -7.15,
+        "Datafolha": -7.29,
+        "Nexus": -8.35,
+        "AtlasIntel": -5.57,
+        "Quaest": -4.59
+      },
+      "erro_1t_2026_medio": -4.4,
+      "lula_1t_real_disputa_direta": 48.99,
+      "peso_erro_2026": 0.5,
+      "persistencia": "uniforme de 0% a 100%",
+      "aplicado_medio_pts_lula": -0.5
+    },
+    "estrutural": {
+      "transferencia": {
+        "cury": {
+          "lula_entre": 0.546362264725478,
+          "decide": 0.8696267545568834,
+          "dispersao": 0.06,
+          "fontes": [
+            "AtlasIntel",
+            "Quaest"
+          ]
+        },
+        "renan": {
+          "lula_entre": 0.43129737408521923,
+          "decide": 0.6258277049819171,
+          "dispersao": 0.1142541624193,
+          "fontes": [
+            "AtlasIntel",
+            "Quaest"
+          ]
+        },
+        "caiado": {
+          "lula_entre": 0.2830480589962877,
+          "decide": 0.8705922592956291,
+          "dispersao": 0.06,
+          "fontes": [
+            "AtlasIntel",
+            "Quaest"
+          ]
+        },
+        "zema": {
+          "lula_entre": 0.33369565217391306,
+          "decide": 0.92,
+          "dispersao": 0.06,
+          "fontes": [
+            "AtlasIntel"
+          ]
+        },
+        "outros": {
+          "lula_entre": 0.33369565217391306,
+          "decide": 0.92,
+          "dispersao": 0.06,
+          "fontes": [
+            "AtlasIntel"
+          ]
+        }
+      },
+      "troca_entre_bases_max": 0.02,
+      "lula_p10_p50_p90": [
+        47.18,
+        48.6,
+        50.01
+      ]
+    },
+    "peso_pesquisas": 0.6
+  },
+  "sensibilidade": {
+    "so_pesquisas_sem_correcao": {
+      "lula_p50": 49.52,
+      "prob_lula": 0.383
+    },
+    "so_pesquisas_com_correcao": {
+      "lula_p50": 49.08,
+      "prob_lula": 0.329
+    },
+    "so_estrutural": {
+      "lula_p50": 48.6,
+      "prob_lula": 0.102
+    },
+    "alerta_vies_1t_se_repete": {
+      "lula_p50": 47.32,
+      "prob_lula": 0.056
+    }
+  },
+  "geografia": {
+    "polarizacao_2022": {
+      "transferencia": 0.5700000000000001,
+      "k": 0.06392674993578866,
+      "k_ep": 0.01687272971980752,
+      "ruido_logit": 0.017952102807676756
+    },
+    "regioes_datafolha": {
+      "Nordeste": {
+        "datafolha": 66.0,
+        "estrutural": 67.1,
+        "ajuste_logit": -0.034,
+        "ep": 0.1
+      },
+      "Sudeste": {
+        "datafolha": 44.0,
+        "estrutural": 43.3,
+        "ajuste_logit": 0.005,
+        "ep": 0.08
+      },
+      "Sul": {
+        "datafolha": 38.0,
+        "estrutural": 34.3,
+        "ajuste_logit": 0.072,
+        "ep": 0.136
+      },
+      "Norte+Centro-Oeste": {
+        "datafolha": 42.0,
+        "estrutural": 42.1,
+        "ajuste_logit": -0.01,
+        "ep": 0.127
+      }
+    }
+  },
+  "regioes": {
+    "Centro-Oeste": 35.94,
+    "Exterior": 51.83,
+    "Nordeste": 66.48,
+    "Norte": 47.36,
+    "Sudeste": 43.66,
+    "Sul": 36.13
+  },
+  "maranhao": {
+    "prob_lula": 1.0,
+    "lula_p10_p50_p90": [
+      63.9,
+      66.53,
+      69.31
+    ],
+    "municipios_favorito_lula": 209,
+    "municipios_favorito_flavio": 6,
+    "municipios_indefinidos": 2
+  },
+  "tuntum": {
+    "lula_p10_p50_p90": [
+      62.56,
+      65.46,
+      68.46
+    ],
+    "secoes": 97,
+    "locais": 36,
+    "votos_lula_p50": 14091,
+    "votos_flavio_p50": 7392
+  },
+  "limites": [
+    "Probabilidades descrevem as premissas do modelo, não certeza.",
+    "Cruzamentos de transferência têm subamostras pequenas.",
+    "O erro das pesquisas pode se repetir mais ou menos do que no 1º turno."
+  ]
+}

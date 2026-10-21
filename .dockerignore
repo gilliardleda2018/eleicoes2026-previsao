@@ -1,0 +1,9 @@
+.git
+__pycache__
+*.pyc
+.streamlit/secrets.toml
+*.bat
+render.yaml
+segundo_turno/testes
+nacional/test_*.py
+apuracao/test_*.py

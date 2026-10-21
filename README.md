@@ -1,11 +1,40 @@
-# Eleições 2026 — Previsão: Cenário Nacional (Lula × Flávio) e Estadual MA (Braide × Orleans)
+# Eleições 2026 — Previsão e apuração: 2º turno (Lula × Flávio) e arquivo do 1º turno
 
 ## Rodar o painel
 ```
 streamlit run app.py
 ```
-Três páginas no topo: **Cenário Nacional**, **Cenário Estadual MA** e **Apuração ao vivo**. Senha: variável `APP_PASSWORD`.
+Páginas: **2º turno** (`segundo_turno/painel_2t.py`: previsão, apuração ao vivo, Maranhão por município, Tuntum por
+seção, pesquisas e metodologia) e, como arquivo do 1º turno, **Cenário Nacional**, **Cenário Estadual MA** e
+**Apuração ao vivo**. Senha opcional: variável `APP_PASSWORD` (sem ela, o painel é público).
 O painel estratégico da Bruna Pessoa não faz parte deste app (fica no app próprio, bruna_api_webapp_v2_mapa).
+
+## 2º turno (25/10/2026)
+- **Dados oficiais do 1º turno** (TSE, conferidos: as partes somam exatamente os totais) em
+  `segundo_turno/dados/tse_1t_2026/`: 27 UFs + exterior + Brasil, 217 municípios do MA e as 97 seções de Tuntum
+  (lidas dos boletins de urna, agrupadas em 36 locais de votação).
+- **Pesquisas e contexto** em `segundo_turno/dados/`: `pesquisas_2t_2026.csv` (registro no TSE, válidos),
+  `pesquisas_2t_regioes.csv` (Datafolha por região), `transferencia_2t.csv` (para onde vão os eleitores de Cury, Renan,
+  Caiado e Zema) e `contexto_2t.csv` (apoios, debates, agenda, índice digital — com fonte).
+- **Modelo**: `python segundo_turno/modelo_2t.py` (gera `segundo_turno/resultados/`). Mesmo método do nacional:
+  6 agregadores + erro das pesquisas com persistência incerta (2º turnos 2006–2022 e o erro de cada instituto no
+  1º turno de 2026) + base estrutural (1º turno real + transferência medida). Geografia Brasil → UF → município → seção,
+  calibrada em logit. Para incluir uma pesquisa nova: acrescente a linha no CSV e rode o modelo de novo.
+- **Ao vivo** (`segundo_turno/motor_2t.py`), com fallback em camadas: códigos manuais (`segundo_turno/codigos_2t.json`)
+  → config do TSE → códigos publicados (6258, pleito 3221); arquivo unificado → simplificado; Brasil → soma das UFs;
+  boletins de urna por seção (cache em disco); TSE fora do ar → última leitura boa. Modo **Ensaio** na própria página.
+  Antes do domingo, a aba Ao vivo tem um diagnóstico que testa cada camada a partir do servidor.
+- **Testes**: `python -m unittest discover -s segundo_turno/testes -p "test_*.py"` e
+  `python segundo_turno/testes/smoke_painel.py` (executa a página inteira sem navegador).
+- Pontos dos locais de votação de Tuntum no mapa: opcional, `segundo_turno/dados/locais_tuntum.csv`
+  (`local,nome,endereco,lat,lon`).
+
+## Google Cloud (Cloud Run)
+`Dockerfile` + `cloudbuild.yaml`: `gcloud builds submit --config cloudbuild.yaml --substitutions=_SERVICE=<serviço>,_REGION=<região>`.
+O deploy liga afinidade de sessão (websocket do Streamlit), timeout de 1 h, 1 instância mínima e CPU sempre ligada, para
+o domingo não ter "cold start". Variáveis: `APP_PASSWORD` (Secret Manager), `PUBLIC_URL` (miniatura do link),
+`TSE_AMBIENTE` (`oficial` ou `simulado`), `APURACAO_CACHE_DIR`. O cache em `/tmp` é por instância e some ao reiniciar
+(é só cache: o TSE continua sendo a fonte).
 
 ## Apuração ao vivo (domingo)
 - Lê a apuração oficial do TSE (resultados.tse.jus.br) a cada 90 s: 27 estados (presidente) e 217 municípios (governador MA).
@@ -46,5 +75,6 @@ cd nacional && python preparar_base_nacional.py && python modelos_pesquisas_naci
 | Mídia | 63 itens | 71 itens |
 
 Regra do erro histórico: erro de uma eleição real sorteada × persistência incerta (0 a 100%) + ruído.
-No nacional, o 2º turno usa só os erros da era polarizada (2018, 2022 e as simulações de 2º turno feitas antes do 1º turno
-de 2022), porque os grandes erros de 2006–2014 vieram de voto útil de 1º turno.
+No nacional (1º turno), o 2º turno usa os erros das pesquisas finais de 2º turno de 2006–2022 (uma média por eleição);
+o erro das simulações de 2º turno feitas antes do 1º turno de 2022 fica só no cenário de alerta. (Este README dizia
+"só a era polarizada", o que não correspondia ao código.)
