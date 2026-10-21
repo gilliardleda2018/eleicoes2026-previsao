@@ -414,6 +414,38 @@ def zona_tuntum(nome):
     return "Zona rural" if "RURAL" in up or up.startswith("POVOADO") else "Zona urbana"
 
 
+def _br(x, casas=1):
+    return f"{x:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def cartao_local(r):
+    """Cartão do local de votação no mapa de Tuntum (HTML do hover do Plotly)."""
+    nome = re.sub(r"\b(Da|De|Do|Das|Dos|E)\b", lambda m: m.group(1).lower(), str(r.nome).title())
+    nome = escape(re.sub(r"\s+", " ", nome).strip())
+    bairro = escape(bairro_tuntum(r.bairro))
+    zona = zona_tuntum(r.bairro).replace("Zona ", "zona ")
+    secs = [s for s in str(r.secoes).split(", ") if s]
+    l1, l2 = float(r.lula_1t), float(r.lula_2t)
+    vl, vf = int(round(r.votos_lula_2t)), int(round(r.votos_flavio_2t))
+    k = int(round(l2 / 5))  # barra de 20 blocos
+    barra = (f'<span style="color:#E3243B">{"█" * k}</span>'
+             f'<span style="color:#3C7DD9">{"█" * (20 - k)}</span>')
+    lider = ("<span style='color:#FF6B7D'><b>Lula na frente</b></span>" if l2 >= 50
+             else "<span style='color:#7FB2FF'><b>Flávio na frente</b></span>")
+    linha = '<span style="color:#3A5277">──────────────────────────</span>'
+    return (f'<span style="font-size:15px"><b>{nome}</b></span><br>'
+            f'<span style="color:#9FB7D9;font-size:11px">📍 {bairro.upper()} · {zona.upper()}</span><br>{linha}<br>'
+            f'<span style="color:#9FB7D9">Seções</span>  <b>{" · ".join(secs)}</b> ({len(secs)})<br>'
+            f'<span style="color:#9FB7D9">Eleitores aptos</span>  <b>{_br(r.aptos, 0)}</b><br>{linha}<br>'
+            f'<span style="color:#FF6B7D"><b>● Lula</b></span>     1º t {_br(l1)}%  →  '
+            f'<span style="font-size:14px"><b>{_br(l2)}%</b></span> <span style="color:#9FB7D9">proj.</span><br>'
+            f'<span style="color:#7FB2FF"><b>● Flávio</b></span>  1º t {_br(100 - l1)}%  →  '
+            f'<span style="font-size:14px"><b>{_br(100 - l2)}%</b></span> <span style="color:#9FB7D9">proj.</span><br>'
+            f'{barra}<br>'
+            f'<span style="color:#9FB7D9">Votos projetados</span>  <b>{_br(vl, 0)} × {_br(vf, 0)}</b>  · {lider}<br>'
+            f'<span style="color:#6F86A8;font-size:10px">% entre Lula e Flávio · projeção do modelo Aggilli</span>')
+
+
 def base_tuntum():
     """Seções de Tuntum (1º turno + projeção) com bairro, local do cadastro do TSE e zona urbana/rural."""
     nomes = LOCAIS_GEO.set_index("local").nome.str.title().to_dict() if LOCAIS_GEO is not None else {}
@@ -978,16 +1010,18 @@ with aba[3]:
                 subset=["lat", "lon"])
             pts["lula_2t"] = 100 * pts.votos_lula_2t / (pts.votos_lula_2t + pts.votos_flavio_2t)
             pts["lula_1t"] = 100 * pts.lula / (pts.lula + pts.flavio)
+            pts["card"] = [cartao_local(r) for r in pts.itertuples()]
+            tam = np.clip(np.sqrt(pts.aptos) / 1.6, 9, 34)
+            # halo branco por baixo: destaca cada bolinha sobre o mapa
+            fig.add_scattermap(lat=pts.lat, lon=pts.lon, mode="markers", hoverinfo="skip", showlegend=False,
+                               marker=dict(size=tam + 6, color="rgba(255,255,255,.95)"))
             fig.add_scattermap(lat=pts.lat, lon=pts.lon, mode="markers",
-                               marker=dict(size=np.clip(np.sqrt(pts.aptos) / 1.6, 9, 34), color=pts.lula_2t,
-                                           colorscale=ESCALA, cmin=20, cmax=85, opacity=.9,
+                               marker=dict(size=tam, color=pts.lula_2t, colorscale=ESCALA, cmin=20, cmax=85, opacity=.95,
                                            colorbar=dict(title="", ticksuffix="%", len=.6, thickness=12)),
-                               customdata=np.column_stack([pts.nome.str.title(), pts.bairro.map(bairro_tuntum), pts.secoes,
-                                                           pts.aptos, pts.lula_1t, pts.lula_2t]),
-                               hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<br>Seções: %{customdata[2]}"
-                                             "<br>%{customdata[3]} aptos<br>Lula 1º turno: %{customdata[4]:.1f}%"
-                                             "<br>Lula 2º turno (proj.): %{customdata[5]:.1f}%<extra></extra>",
-                               name="Locais de votação")
+                               text=pts.card, hovertemplate="%{text}<extra></extra>", name="Locais de votação",
+                               hoverlabel=dict(bgcolor="#0F1E36", bordercolor="#C8102E", align="left",
+                                               font=dict(family="Montserrat, Manrope, Arial, sans-serif", size=12,
+                                                         color="#EAF1FB")))
             centro = {"lat": float(pts.lat.median()), "lon": float(pts.lon.median())}
         fig.update_layout(height=620, margin=dict(l=0, r=0, t=36, b=0), map_style="carto-positron",
                           map=dict(center=centro, zoom=8.2), title="Locais de votação · projeção Lula (%)",
@@ -1222,5 +1256,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 22h (produção eleicoes2026)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 22h30 (cartão do mapa)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
