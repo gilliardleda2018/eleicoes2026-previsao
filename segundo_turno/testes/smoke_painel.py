@@ -56,7 +56,11 @@ class FakeSt(types.ModuleType):
     def container(self, *a, **k):
         return Ctx()
 
-    expander = spinner = form = container
+    spinner = form = container
+
+    def expander(self, rotulo, *a, **k):
+        CHAMADAS.append(("expander", rotulo))
+        return Ctx()
 
     def segmented_control(self, rotulo, opcoes, default=None, **k):
         CHAMADAS.append(("segmented_control", rotulo))
@@ -118,7 +122,15 @@ def rodar(titulo, estado=None, botoes=(), params=None):
     n_graf = sum(1 for c in CHAMADAS if c[0] == "plotly_chart")
     n_tab = sum(1 for c in CHAMADAS if c[0] == "dataframe")
     erros = [c for c in CHAMADAS if c[0] == "error"]
-    print(f"OK {titulo}: {n_graf} gráficos, {n_tab} tabelas, {len(CHAMADAS)} chamadas" + (f", erros na tela: {erros}" if erros else ""))
+    textos = " ".join(c[1] for c in CHAMADAS if c[0] == "markdown")
+    # o que tem de aparecer igual na simulação e no ao vivo (inclusive antes de começar e com o TSE fora)
+    for item in ('[role="tab"][aria-selected="true"]', "Por região geográfica do IBGE", "Cidades-polo das regiões",
+                 "Apuração por bairro e povoado", "Astolfo Seabra / Vila Luizão"):
+        assert item in textos or any(item in c[1] for c in CHAMADAS if c[0] == "expander"), f"{titulo}: faltou {item}"
+    n_bairros = sum(1 for c in CHAMADAS if c[0] == "expander" and " seções" in c[1])
+    assert n_bairros >= 20, f"{titulo}: só {n_bairros} tabelas de bairro"
+    print(f"OK {titulo}: {n_graf} gráficos, {n_tab} tabelas, {n_bairros} bairros/povoados, {len(CHAMADAS)} chamadas"
+          + (f", erros na tela: {erros}" if erros else ""))
     return n_graf, n_tab
 
 
@@ -144,7 +156,17 @@ if __name__ == "__main__":
     motor_2t.apuracao_ma = lambda cod=None: (mun, ma, {"consultado": 0, "avisos": []})
     motor_2t.apuracao_secoes = lambda cod=None, cdmun=None: (sec, {"publicadas": len(sec), "lidas": len(sec)})
     rodar("ao vivo (simulado)", {"t2_modo": "Ao vivo"}, botoes={"t2_ler_sec"})
+    # ao vivo antes das 17h: TSE respondendo com 0% apurado
+    import pandas as pd
+    zero_uf = pd.DataFrame({"unidade": motor_2t.UFS, "pst": 0.0, "vv": 0.0, "v_13": 0.0, "v_22": 0.0})
+    motor_2t.apuracao_nacional = lambda cod=None: (zero_uf, {"pst": 0.0, "validos": 0.0, "votos": {"13": 0.0, "22": 0.0}},
+                                                   {"consultado": 0, "eleicao": "6258", "avisos": []})
+    motor_2t.apuracao_ma = lambda cod=None: (pd.DataFrame({"unidade": mun.unidade, "pst": 0.0, "vv": 0.0}),
+                                             {"pst": 0.0, "validos": 0.0, "votos": {}}, {"consultado": 0, "avisos": []})
+    motor_2t.apuracao_secoes = lambda cod=None, cdmun=None: (pd.DataFrame(), {"publicadas": 0, "lidas": 0})
+    rodar("ao vivo 0% (antes de começar)", {"t2_modo": "Ao vivo"})
     # ao vivo com o TSE fora do ar e sem leitura anterior
     motor_2t.apuracao_nacional = lambda cod=None: (None, None, {"consultado": 0, "erro": "TSE fora", "avisos": []})
+    motor_2t.apuracao_ma = lambda cod=None: (None, None, {"consultado": 0, "erro": "TSE fora", "avisos": []})
     rodar("ao vivo (TSE fora)", {"t2_modo": "Ao vivo"})
     print("Painel executado sem exceções.")

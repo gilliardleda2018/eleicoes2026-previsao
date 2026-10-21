@@ -729,88 +729,94 @@ with aba[1]:
                 if st.button("Testar agora", key="t2_diag"):
                     for etapa, ok, det in motor_2t.diagnostico():
                         st.write(("✅ " if ok else "❌ ") + f"**{etapa}** · {det}")
-            return
-        vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
-        st.subheader("🇧🇷 Brasil")
-        placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
-        r_ = motor_2t.projetar(uf_v, UF, "uf")[1] if ensaio else proj_vivo("uf")
-        bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
-        # histórico desta sessão
-        h = st.session_state.setdefault("t2_hist_" + modo, [])
-        if vl + vf and (not h or h[-1][1] != br_v.get("pst")):
-            h.append((datetime.now(BRT).strftime("%H:%M:%S"), br_v.get("pst", 0), 100 * vl / (vl + vf),
-                      r_.get("final_a", [None, None, None])[1]))
-        c1, c2 = st.columns([1.4, 1], gap="large")
-        with c1:
-            u = uf_v.copy()
-            u["uf"] = u.unidade.astype(str)
-            u["lula_agora"] = np.where(u.vv > 0, 100 * u.get("v_13", 0) / u.vv.replace(0, np.nan), np.nan)
-            u = u[u.uf != "ZZ"]
-            todas = sorted(set(UF.uf) - {"ZZ"})
-            faltam = [x for x in todas if x not in set(u.loc[u.lula_agora.notna(), "uf"])]
-            fig = mapa_br(u[u.lula_agora.notna()], "lula_agora", "Apuração por estado · Lula (% dos válidos apurados)",
-                          hover={"pst": ":.1f", "lula_agora": ":.1f"})
-            grafico(sem_votos(fig, geo("br"), "properties.uf", faltam, faltam))
-            if faltam:
-                st.caption(f"Em cinza: {len(faltam)} estado(s) ainda sem votos apurados.")
-        with c2:
-            if len(h) >= 2:
-                hh = pd.DataFrame(h, columns=["hora", "apurado", "lula_agora", "lula_proj"])
-                fig = go.Figure()
-                fig.add_scatter(x=hh.apurado, y=hh.lula_agora, name="Lula apurado", line=dict(color=COR_L))
-                fig.add_scatter(x=hh.apurado, y=hh.lula_proj, name="Lula projetado", line=dict(color=COR_L, dash="dot"))
-                fig.add_hline(y=50, line_dash="dash", line_color="#5B6477")
-                fig.update_layout(title="Evolução nesta sessão", height=520, xaxis_title="% apurado",
-                                  yaxis_title="Lula (% dos válidos)", legend=dict(orientation="h", y=-.15))
-                grafico(fig)
-            else:
-                t = uf_v.assign(Lula=uf_v.get("v_13", 0), Flávio=uf_v.get("v_22", 0))
-                t = t.assign(saldo=t.Lula - t.Flávio).sort_values("saldo")
-                tabela(t[["unidade", "pst", "Lula", "Flávio", "saldo"]].rename(
-                    columns={"unidade": "UF", "pst": "% apurado", "saldo": "Saldo Lula"}), height=500)
+        else:
+            vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
+            st.subheader("🇧🇷 Brasil")
+            placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
+            r_ = motor_2t.projetar(uf_v, UF, "uf")[1] if ensaio else proj_vivo("uf")
+            bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
+            # histórico desta sessão
+            h = st.session_state.setdefault("t2_hist_" + modo, [])
+            if vl + vf and (not h or h[-1][1] != br_v.get("pst")):
+                h.append((datetime.now(BRT).strftime("%H:%M:%S"), br_v.get("pst", 0), 100 * vl / (vl + vf),
+                          r_.get("final_a", [None, None, None])[1]))
+            c1, c2 = st.columns([1.4, 1], gap="large")
+            with c1:
+                u = uf_v.copy()
+                u["uf"] = u.unidade.astype(str)
+                u["lula_agora"] = np.where(u.vv > 0, 100 * u.get("v_13", 0) / u.vv.replace(0, np.nan), np.nan)
+                u = u[u.uf != "ZZ"]
+                todas = sorted(set(UF.uf) - {"ZZ"})
+                faltam = [x for x in todas if x not in set(u.loc[u.lula_agora.notna(), "uf"])]
+                fig = mapa_br(u[u.lula_agora.notna()], "lula_agora", "Apuração por estado · Lula (% dos válidos apurados)",
+                              hover={"pst": ":.1f", "lula_agora": ":.1f"})
+                grafico(sem_votos(fig, geo("br"), "properties.uf", faltam, faltam))
+                if faltam:
+                    st.caption(f"Em cinza: {len(faltam)} estado(s) ainda sem votos apurados.")
+            with c2:
+                if len(h) >= 2:
+                    hh = pd.DataFrame(h, columns=["hora", "apurado", "lula_agora", "lula_proj"])
+                    fig = go.Figure()
+                    fig.add_scatter(x=hh.apurado, y=hh.lula_agora, name="Lula apurado", line=dict(color=COR_L))
+                    fig.add_scatter(x=hh.apurado, y=hh.lula_proj, name="Lula projetado", line=dict(color=COR_L, dash="dot"))
+                    fig.add_hline(y=50, line_dash="dash", line_color="#5B6477")
+                    fig.update_layout(title="Evolução nesta sessão", height=520, xaxis_title="% apurado",
+                                      yaxis_title="Lula (% dos válidos)", legend=dict(orientation="h", y=-.15))
+                    grafico(fig)
+                else:
+                    t = uf_v.assign(Lula=uf_v.get("v_13", 0), Flávio=uf_v.get("v_22", 0))
+                    t = t.assign(saldo=t.Lula - t.Flávio).sort_values("saldo")
+                    tabela(t[["unidade", "pst", "Lula", "Flávio", "saldo"]].rename(
+                        columns={"unidade": "UF", "pst": "% apurado", "saldo": "Saldo Lula"}), height=500)
 
         # ---- Maranhão
         st.subheader("🏛️ Maranhão")
-        if ma_v is not None and ma_v.get("validos"):
-            ml, mf = ma_v["votos"].get("13", 0), ma_v["votos"].get("22", 0)
-            placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf)
+        # mesma tela na simulação e no ao vivo; antes de começar, tudo aparece zerado/cinza
+        comecou = ma_v is not None and bool(ma_v.get("validos"))
+        if not comecou:
+            st.markdown('<div class="t2-status">O Maranhão ainda não começou a apurar: as tabelas abaixo se preenchem '
+                        'sozinhas assim que o TSE publicar os primeiros votos.</div>', unsafe_allow_html=True)
+            mun_v = pd.DataFrame({"unidade": MUN.cd_tse, "pst": 0.0, "vv": 0.0, "v_13": 0.0, "v_22": 0.0})
+        ml, mf = (ma_v["votos"].get("13", 0), ma_v["votos"].get("22", 0)) if comecou else (0, 0)
+        placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf)
+        if comecou:
             rm = motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ensaio else proj_vivo("ma")
             bloco_projecao(rm, ma_v.get("pst", 0), ml, mf)
-            m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t", "lula", "flavio", "validos", "validos_2t_est", "votos_lula_2t",
-                     "votos_flavio_2t", "regiao_imediata", "regiao_intermediaria", "polo_imediata",
-                     "polo_intermediaria"]].merge(
-                mun_v.assign(cd_tse=mun_v.unidade.astype(str)), on="cd_tse", how="left")
-            m["lula_agora"] = np.where(m.vv > 0, 100 * m.get("v_13", 0) / m.vv.replace(0, np.nan), np.nan)
-            m["desvio"] = m.lula_agora - m.lula_2t
-            c1, c2 = st.columns([1.3, 1], gap="large")
-            with c1:
-                m_ok = m[m.lula_agora.notna()]
+        m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t", "lula", "flavio", "validos", "validos_2t_est",
+                 "votos_lula_2t", "votos_flavio_2t", "regiao_imediata", "regiao_intermediaria", "polo_imediata",
+                 "polo_intermediaria"]].merge(mun_v.assign(cd_tse=mun_v.unidade.astype(str)), on="cd_tse", how="left")
+        for c_ in ("vv", "pst", "v_13", "v_22"):
+            m[c_] = m[c_].fillna(0) if c_ in m else 0.0
+        m["lula_agora"] = np.where(m.vv > 0, 100 * m.v_13 / m.vv.replace(0, np.nan), np.nan)
+        m["desvio"] = m.lula_agora - m.lula_2t
+        c1, c2 = st.columns([1.3, 1], gap="large")
+        with c1:
+            m_ok = m[m.lula_agora.notna()]
+            if len(m_ok):
                 fig = px.choropleth_map(m_ok, geojson=geo_recorte(geo("ma"), "properties.CD_MUN", m_ok.cd_ibge),
-                                        locations="cd_ibge",
-                                        featureidkey="properties.CD_MUN",
+                                        locations="cd_ibge", featureidkey="properties.CD_MUN",
                                         color="lula_agora", color_continuous_scale=ESCALA, range_color=(20, 80),
                                         map_style="carto-positron", zoom=5.3, center={"lat": -5.2, "lon": -45.2},
-                                        opacity=.85, hover_name="municipio", hover_data={"pst": ":.1f",
-                                                                                        "lula_agora": ":.1f",
-                                                                                        "lula_2t": ":.1f",
-                                                                                        "cd_ibge": False})
-                fig.update_layout(height=560, margin=dict(l=0, r=0, t=36, b=0), title="Municípios · Lula apurado (%)")
-                falt = m[m.lula_agora.isna()]
-                grafico(sem_votos(fig, geo("ma"), "properties.CD_MUN", falt.cd_ibge, falt.municipio))
-                if len(falt):
-                    st.caption(f"Em cinza: {len(falt)} município(s) ainda sem votos apurados.")
-            with c2:
-                t = m[m.vv > 0].sort_values("desvio")
-                tabela(t[["municipio", "pst", "lula_agora", "lula_2t", "desvio"]].rename(columns={
-                    "municipio": "Município", "pst": "% apurado", "lula_agora": "Lula agora %",
-                    "lula_2t": "Lula previsto %", "desvio": "Diferença (pts)"}), height=540)
-            c1, c2 = st.columns([1, 1.15], gap="large")
-            with c1:
-                tabela_regioes(m, True, "t2_reg_vivo")
-            with c2:
-                tabela_polos(m, True)
-        else:
-            st.markdown('<div class="t2-status">O Maranhão ainda não começou a apurar.</div>', unsafe_allow_html=True)
+                                        opacity=.85, hover_name="municipio",
+                                        hover_data={"pst": ":.1f", "lula_agora": ":.1f", "lula_2t": ":.1f", "cd_ibge": False})
+            else:
+                fig = go.Figure()
+                fig.update_layout(map=dict(style="carto-positron", zoom=5.3, center={"lat": -5.2, "lon": -45.2}))
+            fig.update_layout(height=560, margin=dict(l=0, r=0, t=36, b=0), title="Municípios · Lula apurado (%)")
+            falt = m[m.lula_agora.isna()]
+            grafico(sem_votos(fig, geo("ma"), "properties.CD_MUN", falt.cd_ibge, falt.municipio))
+            if len(falt):
+                st.caption(f"Em cinza: {len(falt)} município(s) ainda sem votos apurados.")
+        with c2:
+            t = m[m.vv > 0].sort_values("desvio") if (m.vv > 0).any() else m.sort_values("validos_2t_est", ascending=False)
+            tabela(t[["municipio", "pst", "lula_agora", "lula_2t", "desvio"]].rename(columns={
+                "municipio": "Município", "pst": "% apurado", "lula_agora": "Lula agora %",
+                "lula_2t": "Lula previsto %", "desvio": "Diferença (pts)"}), height=540)
+        c1, c2 = st.columns([1, 1.15], gap="large")
+        with c1:
+            tabela_regioes(m, True, "t2_reg_vivo")
+        with c2:
+            tabela_polos(m, True)
 
         # ---- Tuntum
         st.subheader("📍 Tuntum · boletins de urna por seção")
@@ -1216,5 +1222,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 21h30 (bairros de Tuntum)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 22h (produção eleicoes2026)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
