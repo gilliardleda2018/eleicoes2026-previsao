@@ -74,9 +74,25 @@ def local():
     return max(int(n), 1)  # quem está vendo conta
 
 
+_ultimo = {"ts": 0.0, "valor": (1, "esta instância")}
+INTERVALO = 15  # s: com 1.000 pessoas o fragmento roda ~30 vezes/s; o arquivo é lido/gravado no máximo 1x a cada 15 s
+
+
 def contar():
     """(total, detalhe): total de pessoas conectadas agora e de onde veio o número."""
     bater()
+    agora = time.time()
+    with _trava:
+        if agora - _ultimo["ts"] < INTERVALO:
+            return _ultimo["valor"]
+        _ultimo["ts"] = agora
+    valor = _contar()
+    with _trava:
+        _ultimo["valor"] = valor
+    return valor
+
+
+def _contar():
     n_local = local()
     pasta = _pasta()
     if pasta is None:

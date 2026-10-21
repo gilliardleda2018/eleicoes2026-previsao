@@ -62,10 +62,25 @@ def dados():
     return sim, uf, mun, sec, loc, pes, ctx, trf, cen, lg, sc
 
 
+def _arred(c, k=4):
+    return [_arred(x, k) for x in c] if c and isinstance(c[0], list) else [round(v, k) for v in c]
+
+
 @st.cache_data(show_spinner=False)
 def geo(nome):
+    """Malha leve: coordenadas com 4 casas (~11 m) — o mapa do MA cai de ~490 KB para ~280 KB por envio."""
     arq = {"br": RAIZ / "nacional" / "dados" / "br_ufs.json", "ma": RAIZ / "dados" / "ma_leve.geojson"}[nome]
-    return json.loads(arq.read_text(encoding="utf-8"))
+    g = json.loads(arq.read_text(encoding="utf-8"))
+    for f in g["features"]:
+        f["geometry"]["coordinates"] = _arred(f["geometry"]["coordinates"])
+    return g
+
+
+def geo_recorte(geojson, chave_geo, ids):
+    """Só as feições pedidas (cada mapa envia a malha uma vez, não duas)."""
+    prop = chave_geo.split(".", 1)[1]
+    ids = {str(i) for i in ids}
+    return {"type": "FeatureCollection", "features": [f for f in geojson["features"] if str(f["properties"].get(prop)) in ids]}
 
 
 @st.cache_data(show_spinner=False)
@@ -301,8 +316,8 @@ if SOMENTE_2T:
     st.markdown('<style>[class*="st-key-barra_nav"] {display: none !important;}</style>', unsafe_allow_html=True)
 
 
-# pessoas conectadas agora (também no link ?so2t=1): atualiza sozinho a cada 20 s
-@st.fragment(run_every="20s")
+# pessoas conectadas agora (também no link ?so2t=1): atualiza sozinho a cada 30 s
+@st.fragment(run_every="30s")
 def conectados():
     try:
         import presenca
@@ -310,7 +325,7 @@ def conectados():
     except Exception:  # noqa: BLE001
         return
     rotulo = "pessoa conectada agora" if total == 1 else "pessoas conectadas agora"
-    st.markdown(f'<div class="t2-online" title="Contagem por {origem}; atualiza a cada 20 s">'
+    st.markdown(f'<div class="t2-online" title="Contagem por {origem}; atualiza a cada 30 s">'
                 f'<span class="pulso"></span><b>{n(total)}</b> {rotulo}</div>', unsafe_allow_html=True)
 
 
@@ -325,7 +340,11 @@ if agora < INICIO:
     vivo = ""
 else:
     quando, vivo = "Apuração em andamento · dados oficiais do TSE", "vivo"
-fl, ff = foto("lula.jpg"), foto("flavio.jpg")  # usadas no placar do ao vivo
+def foto_url(nome):
+    return f"/app/static/fotos_2t/{nome}" if (RAIZ / "static" / "fotos_2t" / nome).exists() else foto(nome)
+
+
+fl, ff = foto_url("lula.jpg"), foto_url("flavio.jpg")  # placar do ao vivo: URL estática, o navegador guarda em cache
 # capa no estilo pôster de luta: só a foto do confronto, nomes e os slogans (sem números)
 st.markdown("""
 <div class="t2-ufc" role="img" aria-label="Flávio Bolsonaro e Lula frente a frente">
@@ -402,7 +421,7 @@ aba = st.tabs(["🔮 Previsão", "🔴 Ao vivo · agora" if ao_vivo_agora else "
 
 # ================================================================ 1) previsão
 def mapa_br(df, cor, titulo, rng=(20, 80), escala=ESCALA, hover=None):
-    fig = px.choropleth_map(df, geojson=geo("br"), locations="uf", featureidkey="properties.uf", color=cor,
+    fig = px.choropleth_map(df, geojson=geo_recorte(geo("br"), "properties.uf", df["uf"]), locations="uf", featureidkey="properties.uf", color=cor,
                             color_continuous_scale=escala, range_color=rng, map_style="carto-positron", zoom=2.7,
                             center={"lat": -14.5, "lon": -52}, opacity=.85, hover_name="uf", hover_data=hover)
     fig.update_layout(height=520, margin=dict(l=0, r=0, t=36, b=0), title=titulo,
@@ -414,7 +433,7 @@ def sem_votos(fig, geojson, chave_geo, locais, nomes):
     """Unidades ainda sem voto apurado: camada cinza por baixo (senão o mapa as deixa em branco)."""
     if not len(locais):
         return fig
-    base = go.Choroplethmap(geojson=geojson, locations=list(locais), z=[0] * len(locais), featureidkey=chave_geo,
+    base = go.Choroplethmap(geojson=geo_recorte(geojson, chave_geo, locais), locations=list(locais), z=[0] * len(locais), featureidkey=chave_geo,
                             colorscale=[[0, "#C7CED9"], [1, "#C7CED9"]], showscale=False, marker_opacity=.75,
                             marker_line_color="#FFFFFF", marker_line_width=.6, text=list(nomes),
                             hovertemplate="<b>%{text}</b><br>ainda sem votos apurados<extra></extra>")
@@ -490,6 +509,16 @@ def vivo_secoes(cd):
     return motor_2t.apuracao_secoes(cdmun=cd)
 
 
+@st.cache_data(ttl=60, show_spinner=False)
+def proj_vivo(nivel):
+    """Projeção do final a partir da leitura ao vivo — uma vez por minuto por servidor (não por pessoa)."""
+    if nivel == "uf":
+        uf_v, br_v, _ = vivo_nacional()
+        return motor_2t.projetar(uf_v, UF, "uf")[1] if br_v is not None else {"sem_dados": True}
+    mun_v, ma_v, _ = vivo_ma()
+    return motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ma_v is not None else {"sem_dados": True}
+
+
 def placar(nome_l, votos_l, nome_f, votos_f, total, rotulo=""):
     pl_, pf_ = (100 * votos_l / total, 100 * votos_f / total) if total else (0, 0)
     st.markdown(f"""<div class="t2-placar">
@@ -526,8 +555,10 @@ def status(info, ensaio):
 
 with aba[1]:
     c = st.columns([1.3, 1, 1])
-    modo = c[0].segmented_control("Modo", ["Ao vivo", "Ensaio"], default="Ao vivo" if agora >= INICIO - timedelta(hours=1)
-                                  else "Ensaio", key="t2_modo", selection_mode="single") or "Ensaio"
+    # ?modo=vivo abre direto no ao vivo (link de divulgação no domingo e teste de carga antes dele)
+    abre_vivo = agora >= INICIO - timedelta(hours=1) or _param("modo").lower() in ("vivo", "aovivo", "ao-vivo")
+    modo = c[0].segmented_control("Modo", ["Ao vivo", "Ensaio"], default="Ao vivo" if abre_vivo else "Ensaio",
+                                  key="t2_modo", selection_mode="single") or "Ensaio"
     ensaio = modo == "Ensaio"
     fracao = c[1].slider("Ensaio: quanto apurar", 2, 100, 35, 1, format="%d%%", disabled=not ensaio, key="t2_frac") / 100
     semente = c[2].number_input("Ensaio: cenário nº", 1, 99, 7, disabled=not ensaio, key="t2_sem")
@@ -559,7 +590,7 @@ with aba[1]:
         vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
         st.subheader("🇧🇷 Brasil")
         placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
-        _, r_ = motor_2t.projetar(uf_v, UF, "uf")
+        r_ = motor_2t.projetar(uf_v, UF, "uf")[1] if ensaio else proj_vivo("uf")
         bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
         # histórico desta sessão
         h = st.session_state.setdefault("t2_hist_" + modo, [])
@@ -600,7 +631,7 @@ with aba[1]:
         if ma_v is not None and ma_v.get("validos"):
             ml, mf = ma_v["votos"].get("13", 0), ma_v["votos"].get("22", 0)
             placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf)
-            _, rm = motor_2t.projetar(mun_v, MUN, "cd_tse")
+            rm = motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ensaio else proj_vivo("ma")
             bloco_projecao(rm, ma_v.get("pst", 0), ml, mf)
             m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t"]].merge(
                 mun_v.assign(cd_tse=mun_v.unidade.astype(str)), on="cd_tse", how="left")
@@ -608,7 +639,9 @@ with aba[1]:
             m["desvio"] = m.lula_agora - m.lula_2t
             c1, c2 = st.columns([1.3, 1], gap="large")
             with c1:
-                fig = px.choropleth_map(m[m.lula_agora.notna()], geojson=geo("ma"), locations="cd_ibge",
+                m_ok = m[m.lula_agora.notna()]
+                fig = px.choropleth_map(m_ok, geojson=geo_recorte(geo("ma"), "properties.CD_MUN", m_ok.cd_ibge),
+                                        locations="cd_ibge",
                                         featureidkey="properties.CD_MUN",
                                         color="lula_agora", color_continuous_scale=ESCALA, range_color=(20, 80),
                                         map_style="carto-positron", zoom=5.3, center={"lat": -5.2, "lon": -45.2},
@@ -1027,5 +1060,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 19h (menu + conectados)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 20h30 (escala 1.000+)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)

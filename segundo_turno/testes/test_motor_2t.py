@@ -138,5 +138,52 @@ class TestMotor(unittest.TestCase):
         self.assertAlmostEqual(r["final_a"][1], real, delta=0.3)
 
 
+
+class LeituraCompartilhada(unittest.TestCase):
+    """Várias instâncias: só uma consulta o TSE por vez; as outras leem a leitura dela."""
+
+    def setUp(self):
+        import pandas as pd
+        self.tmp = tempfile.TemporaryDirectory()
+        self.antes = (motor_2t.COMPARTILHADO, motor_2t._apuracao_nacional, motor_2t._EU)
+        motor_2t.COMPARTILHADO = self.tmp.name
+        self.chamadas = 0
+
+        def falso(cod=None):
+            self.chamadas += 1
+            return (pd.DataFrame({"unidade": ["MA", "SP"], "pst": [10.0, 5.0], "vv": [100.0, 200.0]}),
+                    {"pst": 7.5, "votos": {"13": 150.0, "22": 150.0}}, {"consultado": 1.0, "avisos": []})
+        motor_2t._apuracao_nacional = falso
+
+    def tearDown(self):
+        motor_2t.COMPARTILHADO, motor_2t._apuracao_nacional, motor_2t._EU = self.antes
+        self.tmp.cleanup()
+
+    def test_segunda_leitura_e_outra_instancia_nao_consultam_o_tse(self):
+        uf1, br1, _ = motor_2t.apuracao_nacional()
+        motor_2t._EU = "outra-instancia"
+        uf2, br2, info2 = motor_2t.apuracao_nacional()
+        self.assertEqual(self.chamadas, 1)
+        self.assertTrue(info2.get("compartilhado"))
+        self.assertEqual(list(uf2.unidade), ["MA", "SP"])
+        self.assertEqual(br2["votos"]["13"], 150.0)
+
+    def test_leitura_velha_consulta_de_novo(self):
+        motor_2t.apuracao_nacional()
+        arq = Path(self.tmp.name) / "leituras" / "nacional.json"
+        s = json.loads(arq.read_text())
+        s["ts"] -= 600
+        arq.write_text(json.dumps(s))
+        (Path(self.tmp.name) / "leituras" / "nacional.lock").unlink()
+        motor_2t.apuracao_nacional()
+        self.assertEqual(self.chamadas, 2)
+
+    def test_sem_pasta_compartilhada_consulta_direto(self):
+        motor_2t.COMPARTILHADO = ""
+        motor_2t.apuracao_nacional()
+        motor_2t.apuracao_nacional()
+        self.assertEqual(self.chamadas, 2)
+
+
 if __name__ == "__main__":
     unittest.main()

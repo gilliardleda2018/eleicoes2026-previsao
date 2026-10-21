@@ -160,7 +160,7 @@ def ler_total(cod, abr):
     raise erro
 
 
-def apuracao_nacional(cod=None):
+def _apuracao_nacional(cod=None):
     """Brasil + 27 UFs + exterior. Retorna (tabela por UF, total Brasil, info)."""
     cod = cod or codigos()
     info = {"eleicao": cod["eleicao"], "origem_codigos": cod.get("origem"), "consultado": time.time(), "avisos": []}
@@ -190,7 +190,7 @@ def apuracao_nacional(cod=None):
     return uf, br, info
 
 
-def apuracao_ma(cod=None):
+def _apuracao_ma(cod=None):
     """217 municípios do MA (pede os arquivos só quando o MA já começou a apurar)."""
     cod = cod or codigos()
     info = {"eleicao": cod["eleicao"], "consultado": time.time(), "avisos": []}
@@ -272,7 +272,7 @@ def boletim(cod, cdmun, zona, secao, uf="ma"):
     return r
 
 
-def apuracao_secoes(cod=None, cdmun=TUNTUM):
+def _apuracao_secoes(cod=None, cdmun=TUNTUM):
     """Boletins das seções já publicadas de um município. Retorna (tabela, info)."""
     cod = cod or codigos()
     info = {"consultado": time.time(), "avisos": []}
@@ -293,6 +293,93 @@ def apuracao_secoes(cod=None, cdmun=TUNTUM):
                        "hora": hora})
     info["publicadas"], info["lidas"] = len(lista), len(linhas)
     return pd.DataFrame(linhas), info
+
+
+# ------------------------------------------------------------------ leitura compartilhada entre servidores
+# Com muita gente conectada o Cloud Run sobe várias instâncias; sem isto, CADA uma consultaria o TSE
+# (~250 arquivos por minuto cada). Com APURACAO_COMPARTILHADO apontando para uma pasta comum (bucket montado),
+# só uma instância por vez consulta o TSE e as demais leem a leitura dela (no máximo ~50 s de idade).
+COMPARTILHADO = os.environ.get("APURACAO_COMPARTILHADO", "").strip()
+IDADE_OK, TRAVA_S, IDADE_MAX = 50, 40, 180
+_EU = f"{os.environ.get('K_REVISION', 'local')}-{os.getpid()}-{int(time.time() * 1000) % 100000}"
+
+
+def _json_seguro(o):
+    return o.item() if hasattr(o, "item") else str(o)
+
+
+def _ler_json(arq):
+    try:
+        return json.loads(arq.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _escrever_json(arq, obj):
+    try:
+        arq.parent.mkdir(parents=True, exist_ok=True)
+        arq.write_text(json.dumps(obj, ensure_ascii=False, default=_json_seguro), encoding="utf-8")
+        return True
+    except OSError:
+        return False
+
+
+def _via_compartilhado(nome, gerar, para_json, de_json, valido):
+    if not COMPARTILHADO:
+        return gerar()
+    pasta = Path(COMPARTILHADO) / "leituras"
+    agora = time.time()
+    snap = _ler_json(pasta / f"{nome}.json")
+    idade = agora - float(snap.get("ts", 0)) if snap else None
+    if snap and idade < IDADE_OK:
+        return de_json(snap)
+    trava = _ler_json(pasta / f"{nome}.lock")
+    if (snap and idade < IDADE_MAX and trava and trava.get("por") != _EU
+            and agora - float(trava.get("ts", 0)) < TRAVA_S):
+        return de_json(snap)  # outra instância já está consultando o TSE agora
+    _escrever_json(pasta / f"{nome}.lock", {"ts": agora, "por": _EU})
+    res = gerar()
+    if valido(res):
+        _escrever_json(pasta / f"{nome}.json", dict(para_json(res), ts=time.time(), por=_EU))
+    return res
+
+
+def _tab_para_json(res):
+    tab, br, info = res
+    return {"uf": tab.to_dict("list"), "br": br, "info": info}
+
+
+def _tab_de_json(s):
+    return pd.DataFrame(s["uf"]), s["br"], dict(s["info"], compartilhado=True)
+
+
+def _ok_tab(res):
+    return res[1] is not None and not res[2].get("desatualizado")
+
+
+def apuracao_nacional(cod=None):
+    """Brasil + 27 UFs + exterior. Retorna (tabela por UF, total Brasil, info)."""
+    if cod is not None:
+        return _apuracao_nacional(cod)
+    return _via_compartilhado("nacional", _apuracao_nacional, _tab_para_json, _tab_de_json, _ok_tab)
+
+
+def apuracao_ma(cod=None):
+    """217 municípios do MA. Retorna (tabela por município, total MA, info)."""
+    if cod is not None:
+        return _apuracao_ma(cod)
+    return _via_compartilhado("ma", _apuracao_ma, _tab_para_json, _tab_de_json, _ok_tab)
+
+
+def apuracao_secoes(cod=None, cdmun=TUNTUM):
+    """Boletins das seções já publicadas de um município. Retorna (tabela, info)."""
+    if cod is not None or cdmun != TUNTUM:
+        return _apuracao_secoes(cod, cdmun)
+    return _via_compartilhado(
+        "secoes_tuntum", _apuracao_secoes,
+        lambda r: {"tab": r[0].to_dict("list"), "info": r[1]},
+        lambda s: (pd.DataFrame(s["tab"]), dict(s["info"], compartilhado=True)),
+        lambda r: r[1].get("publicadas", 0) > 0)
 
 
 # ------------------------------------------------------------------ projeção do final
