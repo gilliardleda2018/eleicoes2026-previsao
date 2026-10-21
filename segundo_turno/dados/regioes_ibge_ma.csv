@@ -1,0 +1,218 @@
+cd_ibge,municipio,regiao_imediata,regiao_intermediaria,polo_imediata,polo_intermediaria
+2100105,Afonso Cunha,Caxias,Caxias,0,0
+2100303,Aldeias Altas,Caxias,Caxias,0,0
+2103000,Caxias,Caxias,Caxias,1,1
+2103406,Coelho Neto,Caxias,Caxias,0,0
+2103901,Duque Bacelar,Caxias,Caxias,0,0
+2111078,São João do Soter,Caxias,Caxias,0,0
+2103307,Codó,Codó,Caxias,1,0
+2103604,Coroatá,Codó,Caxias,0,0
+2108454,Peritoró,Codó,Caxias,0,0
+2112100,Timbiras,Codó,Caxias,0,0
+2102309,Buriti Bravo,Timon,Caxias,0,0
+2106607,Matões,Timon,Caxias,0,0
+2107803,Parnarama,Timon,Caxias,0,0
+2112209,Timon,Timon,Caxias,1,0
+2100055,Açailândia,Açailândia,Imperatriz,1,0
+2102036,Bom Jesus das Selvas,Açailândia,Imperatriz,0,0
+2102325,Buriticupu,Açailândia,Imperatriz,0,0
+2105427,Itinga do Maranhão,Açailândia,Imperatriz,0,0
+2110856,São Francisco do Brejão,Açailândia,Imperatriz,0,0
+2100501,Alto Parnaíba,Balsas,Imperatriz,0,0
+2101400,Balsas,Balsas,Imperatriz,1,0
+2102804,Carolina,Balsas,Imperatriz,0,0
+2104073,Feira Nova do Maranhão,Balsas,Imperatriz,0,0
+2104107,Fortaleza dos Nogueiras,Balsas,Imperatriz,0,0
+2106102,Loreto,Balsas,Imperatriz,0,0
+2107258,Nova Colinas,Balsas,Imperatriz,0,0
+2109502,Riachão,Balsas,Imperatriz,0,0
+2109700,Sambaíba,Balsas,Imperatriz,0,0
+2110807,São Félix de Balsas,Balsas,Imperatriz,0,0
+2111607,São Raimundo das Mangabeiras,Balsas,Imperatriz,0,0
+2112001,Tasso Fragoso,Balsas,Imperatriz,0,0
+2100956,Arame,Barra do Corda,Imperatriz,0,0
+2101608,Barra do Corda,Barra do Corda,Imperatriz,1,0
+2104081,Fernando Falcão,Barra do Corda,Imperatriz,0,0
+2104099,Formosa da Serra Negra,Barra do Corda,Imperatriz,0,0
+2104800,Grajaú,Barra do Corda,Imperatriz,0,0
+2105351,Itaipava do Grajaú,Barra do Corda,Imperatriz,0,0
+2105476,Jenipapo dos Vieiras,Barra do Corda,Imperatriz,0,0
+2111573,São Pedro dos Crentes,Barra do Corda,Imperatriz,0,0
+2111805,Sítio Novo,Barra do Corda,Imperatriz,0,0
+2100600,Amarante do Maranhão,Imperatriz,Imperatriz,0,0
+2102358,Buritirana,Imperatriz,Imperatriz,0,0
+2102556,Campestre do Maranhão,Imperatriz,Imperatriz,0,0
+2103257,Cidelândia,Imperatriz,Imperatriz,0,0
+2103752,Davinópolis,Imperatriz,Imperatriz,0,0
+2104057,Estreito,Imperatriz,Imperatriz,0,0
+2104552,Governador Edison Lobão,Imperatriz,Imperatriz,0,0
+2105302,Imperatriz,Imperatriz,Imperatriz,1,1
+2105500,João Lisboa,Imperatriz,Imperatriz,0,0
+2105989,Lajeado Novo,Imperatriz,Imperatriz,0,0
+2107001,Montes Altos,Imperatriz,Imperatriz,0,0
+2109007,Porto Franco,Imperatriz,Imperatriz,0,0
+2109551,Ribamar Fiquene,Imperatriz,Imperatriz,0,0
+2111763,Senador La Rocque,Imperatriz,Imperatriz,0,0
+2111052,São João do Paraíso,Imperatriz,Imperatriz,0,0
+2111532,São Pedro da Água Branca,Imperatriz,Imperatriz,0,0
+2112852,Vila Nova dos Martírios,Imperatriz,Imperatriz,0,0
+2103505,Colinas,Colinas,Presidente Dutra,1,0
+2105450,Jatobá,Colinas,Presidente Dutra,0,0
+2106706,Mirador,Colinas,Presidente Dutra,0,0
+2111904,Sucupira do Norte,Colinas,Presidente Dutra,0,0
+2103802,Dom Pedro,Presidente Dutra,Presidente Dutra,0,0
+2104206,Fortuna,Presidente Dutra,Presidente Dutra,0,0
+2104404,Gonçalves Dias,Presidente Dutra,Presidente Dutra,0,0
+2104503,Governador Archer,Presidente Dutra,Presidente Dutra,0,0
+2104602,Governador Eugênio Barros,Presidente Dutra,Presidente Dutra,0,0
+2104628,Governador Luiz Rocha,Presidente Dutra,Presidente Dutra,0,0
+2104701,Graça Aranha,Presidente Dutra,Presidente Dutra,0,0
+2109106,Presidente Dutra,Presidente Dutra,Presidente Dutra,1,1
+2109759,Santa Filomena do Maranhão,Presidente Dutra,Presidente Dutra,0,0
+2111748,Senador Alexandre Costa,Presidente Dutra,Presidente Dutra,0,0
+2110708,São Domingos do Maranhão,Presidente Dutra,Presidente Dutra,0,0
+2111250,São José dos Basílios,Presidente Dutra,Presidente Dutra,0,0
+2112308,Tuntum,Presidente Dutra,Presidente Dutra,0,0
+2101509,Barão de Grajaú,São João dos Patos,Presidente Dutra,0,0
+2101806,Benedito Leite,São João dos Patos,Presidente Dutra,0,0
+2105922,Lagoa do Mato,São João dos Patos,Presidente Dutra,0,0
+2107308,Nova Iorque,São João dos Patos,Presidente Dutra,0,0
+2107704,Paraibano,São João dos Patos,Presidente Dutra,0,0
+2107902,Passagem Franca,São João dos Patos,Presidente Dutra,0,0
+2108009,Pastos Bons,São João dos Patos,Presidente Dutra,0,0
+2111953,Sucupira do Riachão,São João dos Patos,Presidente Dutra,0,0
+2110658,São Domingos do Azeitão,São João dos Patos,Presidente Dutra,0,0
+2110906,São Francisco do Maranhão,São João dos Patos,Presidente Dutra,0,0
+2111102,São João dos Patos,São João dos Patos,Presidente Dutra,1,0
+2100402,Altamira do Maranhão,Bacabal,Santa Inês - Bacabal,0,0
+2100436,Alto Alegre do Maranhão,Bacabal,Santa Inês - Bacabal,0,0
+2101202,Bacabal,Bacabal,Santa Inês - Bacabal,1,1
+2102077,Bom Lugar,Bacabal,Santa Inês - Bacabal,0,0
+2102150,Brejo de Areia,Bacabal,Santa Inês - Bacabal,0,0
+2103554,Conceição do Lago-Açu,Bacabal,Santa Inês - Bacabal,0,0
+2105906,Lago Verde,Bacabal,Santa Inês - Bacabal,0,0
+2105708,Lago da Pedra,Bacabal,Santa Inês - Bacabal,0,0
+2105963,Lagoa Grande do Maranhão,Bacabal,Santa Inês - Bacabal,0,0
+2106359,Marajá do Sena,Bacabal,Santa Inês - Bacabal,0,0
+2107407,Olho d'Água das Cunhãs,Bacabal,Santa Inês - Bacabal,0,0
+2108108,Paulo Ramos,Bacabal,Santa Inês - Bacabal,0,0
+2111722,Satubinha,Bacabal,Santa Inês - Bacabal,0,0
+2111409,São Luís Gonzaga do Maranhão,Bacabal,Santa Inês - Bacabal,0,0
+2111508,São Mateus do Maranhão,Bacabal,Santa Inês - Bacabal,0,0
+2113009,Vitorino Freire,Bacabal,Santa Inês - Bacabal,0,0
+2100550,Amapá do Maranhão,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2101970,Boa Vista do Gurupi,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2102903,Carutapera,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2103174,Centro Novo do Maranhão,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2103158,Centro do Guilherme,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2102606,Cândido Mendes,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2104305,Godofredo Viana,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2104677,Governador Nunes Freire,Governador Nunes Freire,Santa Inês - Bacabal,1,0
+2105658,Junco do Maranhão,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2106201,Luís Domingues,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2106326,Maracaçumé,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2106375,Maranhãozinho,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2109239,Presidente Médici,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2110039,Santa Luzia do Paruá,Governador Nunes Freire,Santa Inês - Bacabal,0,0
+2101939,Bernardo do Mearim,Pedreiras,Santa Inês - Bacabal,0,0
+2102754,Capinzal do Norte,Pedreiras,Santa Inês - Bacabal,0,0
+2104008,Esperantinópolis,Pedreiras,Santa Inês - Bacabal,0,0
+2105203,Igarapé Grande,Pedreiras,Santa Inês - Bacabal,0,0
+2105609,Joselândia,Pedreiras,Santa Inês - Bacabal,0,0
+2105807,Lago do Junco,Pedreiras,Santa Inês - Bacabal,0,0
+2105948,Lago dos Rodrigues,Pedreiras,Santa Inês - Bacabal,0,0
+2106003,Lima Campos,Pedreiras,Santa Inês - Bacabal,0,0
+2108207,Pedreiras,Pedreiras,Santa Inês - Bacabal,1,0
+2108900,Poção de Pedras,Pedreiras,Santa Inês - Bacabal,0,0
+2110302,Santo Antônio dos Lopes,Pedreiras,Santa Inês - Bacabal,0,0
+2111631,São Raimundo do Doca Bezerra,Pedreiras,Santa Inês - Bacabal,0,0
+2111672,São Roberto,Pedreiras,Santa Inês - Bacabal,0,0
+2112233,Trizidela do Vale,Pedreiras,Santa Inês - Bacabal,0,0
+2100477,Alto Alegre do Pindaré,Santa Inês,Santa Inês - Bacabal,0,0
+2100873,Araguanã,Santa Inês,Santa Inês - Bacabal,0,0
+2101772,Bela Vista do Maranhão,Santa Inês,Santa Inês - Bacabal,0,0
+2102002,Bom Jardim,Santa Inês,Santa Inês - Bacabal,0,0
+2104651,Governador Newton Bello,Santa Inês,Santa Inês - Bacabal,0,0
+2105153,Igarapé do Meio,Santa Inês,Santa Inês - Bacabal,0,0
+2106904,Monção,Santa Inês,Santa Inês - Bacabal,0,0
+2107357,Nova Olinda do Maranhão,Santa Inês,Santa Inês - Bacabal,0,0
+2108504,Pindaré-Mirim,Santa Inês,Santa Inês - Bacabal,0,0
+2108702,Pio XII,Santa Inês,Santa Inês - Bacabal,0,0
+2109908,Santa Inês,Santa Inês,Santa Inês - Bacabal,1,1
+2110005,Santa Luzia,Santa Inês,Santa Inês - Bacabal,0,0
+2111029,São João do Carú,Santa Inês,Santa Inês - Bacabal,0,0
+2112274,Tufilândia,Santa Inês,Santa Inês - Bacabal,0,0
+2114007,Zé Doca,Santa Inês,Santa Inês - Bacabal,0,0
+2101707,Barreirinhas,Barreirinhas,São Luís,1,0
+2105005,Humberto de Campos,Barreirinhas,São Luís,0,0
+2109403,Primeira Cruz,Barreirinhas,São Luís,0,0
+2110278,Santo Amaro do Maranhão,Barreirinhas,São Luís,0,0
+2100808,Anapurus,Chapadinha,São Luís,0,0
+2101731,Belágua,Chapadinha,São Luís,0,0
+2102101,Brejo,Chapadinha,São Luís,0,0
+2102200,Buriti,Chapadinha,São Luís,0,0
+2103208,Chapadinha,Chapadinha,São Luís,1,0
+2106409,Mata Roma,Chapadinha,São Luís,0,0
+2106672,Milagres do Maranhão,Chapadinha,São Luís,0,0
+2110104,Santa Quitéria do Maranhão,Chapadinha,São Luís,0,0
+2110401,São Benedito do Rio Preto,Chapadinha,São Luís,0,0
+2112605,Urbano Santos,Chapadinha,São Luís,0,0
+2100832,Apicum-Açu,Cururupu,São Luís,0,0
+2101301,Bacuri,Cururupu,São Luís,0,0
+2103109,Cedral,Cururupu,São Luís,0,0
+2103125,Central do Maranhão,Cururupu,São Luís,0,0
+2103703,Cururupu,Cururupu,São Luís,1,0
+2104909,Guimarães,Cururupu,São Luís,0,0
+2106805,Mirinzal,Cururupu,São Luís,0,0
+2109056,Porto Rico do Maranhão,Cururupu,São Luís,0,0
+2111789,Serrano do Maranhão,Cururupu,São Luís,0,0
+2100709,Anajatuba,Itapecuru Mirim,São Luís,0,0
+2102705,Cantanhede,Itapecuru Mirim,São Luís,0,0
+2105401,Itapecuru Mirim,Itapecuru Mirim,São Luís,1,0
+2106631,Matões do Norte,Itapecuru Mirim,São Luís,0,0
+2106755,Miranda do Norte,Itapecuru Mirim,São Luís,0,0
+2107209,Nina Rodrigues,Itapecuru Mirim,São Luís,0,0
+2108801,Pirapemas,Itapecuru Mirim,São Luís,0,0
+2109304,Presidente Vargas,Itapecuru Mirim,São Luís,0,0
+2112704,Vargem Grande,Itapecuru Mirim,São Luís,0,0
+2101350,Bacurituba,Pinheiro,São Luís,0,0
+2101905,Bequimão,Pinheiro,São Luís,0,0
+2107605,Palmeirândia,Pinheiro,São Luís,0,0
+2108256,Pedro do Rosário,Pinheiro,São Luís,0,0
+2108405,Peri Mirim,Pinheiro,São Luís,0,0
+2108603,Pinheiro,Pinheiro,São Luís,1,0
+2109270,Presidente Sarney,Pinheiro,São Luís,0,0
+2109809,Santa Helena,Pinheiro,São Luís,0,0
+2110500,São Bento,Pinheiro,São Luís,0,0
+2112407,Turiaçu,Pinheiro,São Luís,0,0
+2112456,Turilândia,Pinheiro,São Luís,0,0
+2100204,Alcântara,São Luís,São Luís,0,0
+2101103,Axixá,São Luís,São Luís,0,0
+2101251,Bacabeira,São Luís,São Luís,0,0
+2102374,Cachoeira Grande,São Luís,São Luís,0,0
+2105104,Icatu,São Luís,São Luís,0,0
+2107100,Morros,São Luís,São Luís,0,0
+2107506,Paço do Lumiar,São Luís,São Luís,0,0
+2109205,Presidente Juscelino,São Luís,São Luís,0,0
+2109452,Raposa,São Luís,São Luís,0,0
+2109601,Rosário,São Luís,São Luís,0,0
+2110203,Santa Rita,São Luís,São Luís,0,0
+2111201,São José de Ribamar,São Luís,São Luís,0,0
+2111300,São Luís,São Luís,São Luís,1,1
+2100907,Araioses,Tutóia - Araioses,São Luís,1,0
+2106300,Magalhães de Almeida,Tutóia - Araioses,São Luís,0,0
+2108058,Paulino Neves,Tutóia - Araioses,São Luís,0,0
+2110237,Santana do Maranhão,Tutóia - Araioses,São Luís,0,0
+2110609,São Bernardo,Tutóia - Araioses,São Luís,0,0
+2112506,Tutóia,Tutóia - Araioses,São Luís,1,0
+2100154,Água Doce do Maranhão,Tutóia - Araioses,São Luís,0,0
+2101004,Arari,Viana,São Luís,0,0
+2102408,Cajapió,Viana,São Luís,0,0
+2102507,Cajari,Viana,São Luís,0,0
+2106508,Matinha,Viana,São Luís,0,0
+2107456,Olinda Nova do Maranhão,Viana,São Luís,0,0
+2108306,Penalva,Viana,São Luís,0,0
+2111003,São João Batista,Viana,São Luís,0,0
+2111706,São Vicente Ferrer,Viana,São Luís,0,0
+2112803,Viana,Viana,São Luís,1,0
+2112902,Vitória do Mearim,Viana,São Luís,0,0

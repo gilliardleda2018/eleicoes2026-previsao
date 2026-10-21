@@ -49,6 +49,9 @@ def dados():
     ref["cd_tse"] = ref.CD_MUNICIPIO.map(lambda c: f"{int(c):05d}")
     mun = mun.merge(ref[["cd_tse", "cd_ibge", "municipio"]], on="cd_tse", how="left")
     mun["cd_ibge"] = mun.cd_ibge.astype("Int64").astype(str)
+    # regiões geográficas do IBGE (divisão de 2017: 5 intermediárias, 22 imediatas) e cidades-polo
+    reg = pd.read_csv(DADOS / "regioes_ibge_ma.csv", dtype={"cd_ibge": str})
+    mun = mun.merge(reg.drop(columns=["municipio"]), on="cd_ibge", how="left")
     sec = pd.read_csv(RES / "tuntum_secoes_2t.csv", dtype={"zona": str, "secao": str})
     loc = pd.read_csv(RES / "tuntum_locais_2t.csv")
     pes = pd.read_csv(RES / "pesquisas_2t_tratadas.csv", parse_dates=["inicio", "fim", "meio"])
@@ -509,6 +512,80 @@ def vivo_secoes(cd):
     return motor_2t.apuracao_secoes(cdmun=cd)
 
 
+NIVEIS_REG = {"Regiões intermediárias (5)": "regiao_intermediaria", "Regiões imediatas (22)": "regiao_imediata"}
+
+
+def por_regiao(m, chave, ao_vivo=True):
+    """Soma por região do IBGE. m: municípios com regiões, previsão e (ao vivo) v_13, v_22, vv, pst."""
+    d = m.copy()
+    if ao_vivo:
+        for c in ("v_13", "v_22", "vv", "pst"):
+            d[c] = d[c].fillna(0) if c in d else 0
+        d["apurado_pond"] = d.pst / 100 * d.validos_2t_est
+    g = d.groupby(chave).agg(
+        municipios=("cd_ibge", "count"), esperado=("validos_2t_est", "sum"), prev_l=("votos_lula_2t", "sum"),
+        prev_f=("votos_flavio_2t", "sum"), l1=("lula", "sum"), v1=("validos", "sum"),
+        **({"lula": ("v_13", "sum"), "flavio": ("v_22", "sum"), "apurado_pond": ("apurado_pond", "sum")} if ao_vivo else {}))
+    g["previsto"] = 100 * g.prev_l / (g.prev_l + g.prev_f)
+    g["primeiro"] = 100 * g.l1 / g.v1  # % dos válidos, como no resto da página
+    if ao_vivo:
+        g["apurado"] = 100 * g.apurado_pond / g.esperado
+        g["lula_pct"] = 100 * g.lula / (g.lula + g.flavio).replace(0, np.nan)
+        g["dif"] = g.lula_pct - g.previsto
+        g["saldo"] = g.lula - g.flavio
+    return g.reset_index()
+
+
+def tabela_regioes(m, ao_vivo, key):
+    st.markdown("##### Por região geográfica do IBGE")
+    nivel = st.segmented_control("Agrupar por", list(NIVEIS_REG), default=list(NIVEIS_REG)[0], key=key) \
+        or list(NIVEIS_REG)[0]
+    chave = NIVEIS_REG[nivel]
+    g = por_regiao(m, chave, ao_vivo)
+    nome = "Região intermediária" if chave == "regiao_intermediaria" else "Região imediata"
+    if ao_vivo:
+        g = g.sort_values("saldo", ascending=False)
+        tabela(g[[chave, "municipios", "apurado", "lula", "flavio", "lula_pct", "previsto", "dif", "saldo"]].rename(
+            columns={chave: nome, "municipios": "Municípios", "apurado": "% apurado", "lula": "Lula", "flavio": "Flávio",
+                     "lula_pct": "Lula %", "previsto": "Previsto %", "dif": "Diferença (pts)", "saldo": "Saldo Lula"}),
+            height=min(60 + 36 * len(g), 560))
+    else:
+        g["saldo_prev"] = g.prev_l - g.prev_f
+        g = g.sort_values("saldo_prev", ascending=False)
+        tabela(g[[chave, "municipios", "esperado", "primeiro", "previsto", "prev_l", "prev_f", "saldo_prev"]].rename(
+            columns={chave: nome, "municipios": "Municípios", "esperado": "Válidos esperados",
+                     "primeiro": "Lula 1º turno %", "previsto": "Lula 2º turno % (proj.)", "prev_l": "Votos Lula (proj.)",
+                     "prev_f": "Votos Flávio (proj.)", "saldo_prev": "Saldo Lula (proj.)"}),
+            height=min(60 + 36 * len(g), 560))
+    st.caption("Divisão regional do IBGE (2017). Cada região leva o nome da sua cidade-polo.")
+
+
+def tabela_polos(m, ao_vivo):
+    st.markdown("##### Cidades-polo das regiões")
+    d = m[m.polo_imediata == 1].copy()
+    d["Polo de"] = np.where(d.polo_intermediaria == 1, "intermediária e imediata", "região imediata")
+    if ao_vivo:
+        for c in ("v_13", "v_22", "pst"):
+            d[c] = d[c].fillna(0) if c in d else 0
+        d["lula_pct"] = 100 * d.v_13 / (d.v_13 + d.v_22).replace(0, np.nan)
+        d["dif"] = d.lula_pct - d.lula_2t
+        d = d.sort_values("validos_2t_est", ascending=False)
+        tabela(d[["municipio", "regiao_intermediaria", "Polo de", "pst", "v_13", "v_22", "lula_pct", "lula_2t", "dif"]].rename(
+            columns={"municipio": "Cidade-polo", "regiao_intermediaria": "Região intermediária", "pst": "% apurado",
+                     "v_13": "Lula", "v_22": "Flávio", "lula_pct": "Lula %", "lula_2t": "Previsto %",
+                     "dif": "Diferença (pts)"}), height=min(60 + 36 * len(d), 600))
+    else:
+        d = d.sort_values("validos_2t_est", ascending=False)
+        tabela(d[["municipio", "regiao_intermediaria", "Polo de", "validos", "lula_1t_pct", "lula_2t", "votos_lula_2t",
+                  "votos_flavio_2t"]].rename(
+            columns={"municipio": "Cidade-polo", "regiao_intermediaria": "Região intermediária",
+                     "validos": "Válidos 1º turno", "lula_1t_pct": "Lula 1º turno %", "lula_2t": "Lula 2º turno % (proj.)",
+                     "votos_lula_2t": "Votos Lula (proj.)", "votos_flavio_2t": "Votos Flávio (proj.)"}),
+            height=min(60 + 36 * len(d), 600))
+    st.caption(f"{len(d)} cidades-polo: as que dão nome às 22 regiões imediatas (Tutóia e Araioses dividem uma). "
+               "As 6 que também nomeiam regiões intermediárias estão marcadas.")
+
+
 @st.cache_data(ttl=60, show_spinner=False)
 def proj_vivo(nivel):
     """Projeção do final a partir da leitura ao vivo — uma vez por minuto por servidor (não por pessoa)."""
@@ -633,7 +710,9 @@ with aba[1]:
             placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf)
             rm = motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ensaio else proj_vivo("ma")
             bloco_projecao(rm, ma_v.get("pst", 0), ml, mf)
-            m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t"]].merge(
+            m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t", "lula", "flavio", "validos", "validos_2t_est", "votos_lula_2t",
+                     "votos_flavio_2t", "regiao_imediata", "regiao_intermediaria", "polo_imediata",
+                     "polo_intermediaria"]].merge(
                 mun_v.assign(cd_tse=mun_v.unidade.astype(str)), on="cd_tse", how="left")
             m["lula_agora"] = np.where(m.vv > 0, 100 * m.get("v_13", 0) / m.vv.replace(0, np.nan), np.nan)
             m["desvio"] = m.lula_agora - m.lula_2t
@@ -659,6 +738,11 @@ with aba[1]:
                 tabela(t[["municipio", "pst", "lula_agora", "lula_2t", "desvio"]].rename(columns={
                     "municipio": "Município", "pst": "% apurado", "lula_agora": "Lula agora %",
                     "lula_2t": "Lula previsto %", "desvio": "Diferença (pts)"}), height=540)
+            c1, c2 = st.columns([1, 1.15], gap="large")
+            with c1:
+                tabela_regioes(m, True, "t2_reg_vivo")
+            with c2:
+                tabela_polos(m, True)
         else:
             st.markdown('<div class="t2-status">O Maranhão ainda não começou a apurar.</div>', unsafe_allow_html=True)
 
@@ -763,6 +847,11 @@ with aba[2]:
             "municipio": "Município", "validos": "Válidos 1º turno", "lula_1t_pct": "Lula 1º turno %",
             "lula_2t": "Lula 2º turno %", "votos_lula_2t": "Votos Lula (proj.)", "votos_flavio_2t": "Votos Flávio (proj.)",
             "saldo_lula_2t": "Saldo Lula"}), height=560)
+    c1, c2 = st.columns([1, 1.15], gap="large")
+    with c1:
+        tabela_regioes(MUN, False, "t2_reg_prev")
+    with c2:
+        tabela_polos(MUN, False)
     st.markdown("##### Seções de um município (boletins de urna do TSE)")
     nomes = MUN.sort_values("municipio").set_index("cd_tse").municipio
     cd_esc = st.selectbox("Município", list(nomes.index), format_func=lambda c: nomes[c],
@@ -1060,5 +1149,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 20h30 (escala 1.000+)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 21h (regiões do IBGE)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
