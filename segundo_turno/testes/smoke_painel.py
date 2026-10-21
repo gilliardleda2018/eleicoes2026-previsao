@@ -107,7 +107,9 @@ sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "segundo_turno"))
 
 
-def rodar(titulo, estado=None, botoes=()):
+def rodar(titulo, estado=None, botoes=(), params=None):
+    ST.query_params.clear()
+    ST.query_params.update(params or {})
     ST.session_state.clear()
     ST.session_state.update(estado or {})
     ST.botoes = set(botoes)
@@ -126,6 +128,13 @@ if __name__ == "__main__":
     print("plotly:", PLOTLY)
     rodar("ensaio 35%", {"t2_modo": "Ensaio"})
     rodar("ensaio 100%", {"t2_modo": "Ensaio", "t2_frac": 100})
+    import os
+    os.environ["LINK_2T"] = "https://exemplo.aggillintelligence.com.br/2turno"
+    rodar("só o 2º turno (?so2t=1) + compartilhar", {"t2_modo": "Ensaio"}, params={"so2t": "1"})
+    navegou = any(c[0] == "page_link" for c in CHAMADAS)
+    assert not navegou, "com ?so2t=1 a barra de navegação não deve aparecer"
+    assert any(c[0] == "link_button" for c in CHAMADAS), "faltou o botão de compartilhar"
+    del os.environ["LINK_2T"]
     rodar("ensaio 2% + busca", {"t2_modo": "Ensaio", "t2_frac": 2, "t2_busca_ma": "imperatriz"})
     # ao vivo com o TSE "respondendo" (dados do ensaio no formato do motor)
     uf, br, mun, ma, sec = motor_2t.ensaio(0.6, semente=3)

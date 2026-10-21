@@ -6,6 +6,7 @@ Ao vivo: segundo_turno/motor_2t.py (TSE com fallback em camadas).
 """
 import base64
 import json
+import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -140,6 +141,10 @@ st.markdown("""<style>
   .ufc-topo span {font-size: .5rem; letter-spacing: .14em;} .ufc-canto {bottom: 14px; max-width: 46%;}
   .ufc-azul {left: 12px;} .ufc-vermelho {right: 12px;} .ufc-nome {font-size: 1.5rem;}
   .ufc-faixa {font-size: .55rem; padding: 5px 8px; letter-spacing: .06em; margin-top: 6px;} .ufc-vs {bottom: 18px; font-size: 2rem;}}
+.st-key-t2_compartilhar {background: #FFFFFF; border: 1px solid #D6DEE9; border-radius: 16px; padding: 8px 12px 0;
+  margin: 0 0 12px;}
+.st-key-t2_compartilhar [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
+  color: #FFFFFF !important; font-weight: 800; border-radius: 12px;}
 /* capa: o duelo */
 .t2-hero {position: relative; overflow: hidden; border-radius: 28px; padding: 22px 26px 18px; color: #FFFFFF;
   border: 1px solid var(--linha); margin-bottom: 12px;
@@ -234,7 +239,20 @@ CREDITO = "<b>Gilliard Cardoso Léda</b> · Cientista de Dados | Aggilli Intelli
 
 st.markdown(f'<div class="t2-topo">{LOGO_IMG}<div class="t2-cred">{CREDITO}<br>Modelo preditivo e apuração em '
             f'tempo real · 2º turno 2026</div><div class="t2-redes">{REDES}</div></div>', unsafe_allow_html=True)
-barra_navegacao("2t")
+# Link "só o 2º turno": ?so2t=1 (ou SOMENTE_2T=1 no serviço) esconde a navegação para as outras páginas
+def _param(nome):
+    try:
+        return str(st.query_params.get(nome, "") or "")
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+SOMENTE_2T = _param("so2t") == "1" or os.environ.get("SOMENTE_2T", "") == "1"
+# endereço divulgado: a página de redirecionamento da Aggilli, quando configurada no serviço
+LINK_2T = os.environ.get("LINK_2T") or (os.environ.get("PUBLIC_URL", "").rstrip("/") + "/segundo_turno?so2t=1"
+                                        if os.environ.get("PUBLIC_URL") else "")
+if not SOMENTE_2T:
+    barra_navegacao("2t")
 
 # ================================================================ capa
 agora = datetime.now(BRT)
@@ -263,6 +281,23 @@ st.markdown("""
 st.markdown(f'<div class="t2-chips claro"><span class="{vivo}">{quando}</span></div>', unsafe_allow_html=True)
 
 
+def compartilhar_2t():
+    """Compartilhar só esta página: WhatsApp com mensagem pronta e o link para copiar."""
+    link = LINK_2T
+    if not link:
+        return
+    from urllib.parse import quote
+    texto = ("🗳️ 2º turno · Lula × Flávio, com a Aggilli Intelligence: previsão, apuração ao vivo do TSE, Maranhão "
+             "município a município e Tuntum seção a seção.\n\n👉 Acompanhe aqui: " + link)
+    with st.container(key="t2_compartilhar"):
+        c1, c2 = st.columns([1, 2.2], vertical_alignment="center")
+        c1.link_button("📲 Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto)}", width="stretch")
+        c2.code(link, language=None)
+
+
+compartilhar_2t()
+
+
 def cards(itens):
     st.markdown('<div class="t2-cards">' + "".join(
         f'<div class="t2-card" style="--cor:{c}"><div class="r">{r}</div><div class="v">{v}</div><div class="s">{s}</div></div>'
@@ -279,6 +314,19 @@ def mapa_br(df, cor, titulo, rng=(20, 80), escala=ESCALA, hover=None):
                             center={"lat": -14.5, "lon": -52}, opacity=.85, hover_name="uf", hover_data=hover)
     fig.update_layout(height=520, margin=dict(l=0, r=0, t=36, b=0), title=titulo,
                       coloraxis_colorbar=dict(title="", ticksuffix="%"))
+    return fig
+
+
+def sem_votos(fig, geojson, chave_geo, locais, nomes):
+    """Unidades ainda sem voto apurado: camada cinza por baixo (senão o mapa as deixa em branco)."""
+    if not len(locais):
+        return fig
+    base = go.Choroplethmap(geojson=geojson, locations=list(locais), z=[0] * len(locais), featureidkey=chave_geo,
+                            colorscale=[[0, "#C7CED9"], [1, "#C7CED9"]], showscale=False, marker_opacity=.75,
+                            marker_line_color="#FFFFFF", marker_line_width=.6, text=list(nomes),
+                            hovertemplate="<b>%{text}</b><br>ainda sem votos apurados<extra></extra>")
+    fig.add_trace(base)
+    fig.data = (fig.data[-1],) + fig.data[:-1]  # cinza por baixo das unidades já apuradas
     return fig
 
 
@@ -449,8 +497,13 @@ with aba[1]:
             u["uf"] = u.unidade.astype(str)
             u["lula_agora"] = np.where(u.vv > 0, 100 * u.get("v_13", 0) / u.vv.replace(0, np.nan), np.nan)
             u = u[u.uf != "ZZ"]
-            grafico(mapa_br(u, "lula_agora", "Apuração por estado · Lula (% dos válidos apurados)",
-                            hover={"pst": ":.1f", "lula_agora": ":.1f"}))
+            todas = sorted(set(UF.uf) - {"ZZ"})
+            faltam = [x for x in todas if x not in set(u.loc[u.lula_agora.notna(), "uf"])]
+            fig = mapa_br(u[u.lula_agora.notna()], "lula_agora", "Apuração por estado · Lula (% dos válidos apurados)",
+                          hover={"pst": ":.1f", "lula_agora": ":.1f"})
+            grafico(sem_votos(fig, geo("br"), "properties.uf", faltam, faltam))
+            if faltam:
+                st.caption(f"Em cinza: {len(faltam)} estado(s) ainda sem votos apurados.")
         with c2:
             if len(h) >= 2:
                 hh = pd.DataFrame(h, columns=["hora", "apurado", "lula_agora", "lula_proj"])
@@ -480,7 +533,8 @@ with aba[1]:
             m["desvio"] = m.lula_agora - m.lula_2t
             c1, c2 = st.columns([1.3, 1], gap="large")
             with c1:
-                fig = px.choropleth_map(m, geojson=geo("ma"), locations="cd_ibge", featureidkey="properties.CD_MUN",
+                fig = px.choropleth_map(m[m.lula_agora.notna()], geojson=geo("ma"), locations="cd_ibge",
+                                        featureidkey="properties.CD_MUN",
                                         color="lula_agora", color_continuous_scale=ESCALA, range_color=(20, 80),
                                         map_style="carto-positron", zoom=5.3, center={"lat": -5.2, "lon": -45.2},
                                         opacity=.85, hover_name="municipio", hover_data={"pst": ":.1f",
@@ -488,7 +542,10 @@ with aba[1]:
                                                                                         "lula_2t": ":.1f",
                                                                                         "cd_ibge": False})
                 fig.update_layout(height=560, margin=dict(l=0, r=0, t=36, b=0), title="Municípios · Lula apurado (%)")
-                grafico(fig)
+                falt = m[m.lula_agora.isna()]
+                grafico(sem_votos(fig, geo("ma"), "properties.CD_MUN", falt.cd_ibge, falt.municipio))
+                if len(falt):
+                    st.caption(f"Em cinza: {len(falt)} município(s) ainda sem votos apurados.")
             with c2:
                 t = m[m.vv > 0].sort_values("desvio")
                 tabela(t[["municipio", "pst", "lula_agora", "lula_2t", "desvio"]].rename(columns={
