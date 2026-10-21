@@ -145,6 +145,16 @@ st.markdown("""<style>
   margin: 0 0 12px;}
 .st-key-t2_compartilhar [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
   color: #FFFFFF !important; font-weight: 800; border-radius: 12px;}
+.t2-1t {display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0 4px;}
+.t2-1t-l {position: relative; overflow: hidden; border-radius: 20px; padding: 16px 20px; color: #FFFFFF;
+  background: linear-gradient(145deg, var(--cor), var(--escuro)); box-shadow: 0 12px 28px rgba(27,42,65,.18);}
+.t2-1t-l .nm {font: 700 .78rem 'Montserrat'; letter-spacing: .14em; opacity: .92;}
+.t2-1t-l .pc {font: 800 clamp(2rem, 4.4vw, 3rem)/1.05 'Montserrat'; letter-spacing: -.03em; margin: 6px 0 2px;}
+.t2-1t-l .vt {font: 700 1.05rem 'Montserrat'; opacity: .95; font-variant-numeric: tabular-nums;}
+.t2-1t-l .ft {position: absolute; right: -10px; bottom: -14px; width: 120px; height: 120px; border-radius: 50%;
+  background-size: cover; background-position: center top; opacity: .30;}
+.t2-1t-nota {font: 600 .78rem 'Montserrat'; color: #5B6477; margin: 0 0 12px;}
+@media (max-width: 760px) {.t2-1t {grid-template-columns: 1fr;}}
 /* capa: o duelo */
 .t2-hero {position: relative; overflow: hidden; border-radius: 28px; padding: 22px 26px 18px; color: #FFFFFF;
   border: 1px solid var(--linha); margin-bottom: 12px;
@@ -332,13 +342,17 @@ def sem_votos(fig, geojson, chave_geo, locais, nomes):
 
 with aba[0]:
     r = SIM["resultado"]
-    cards([("Chance de Lula", chance(P_L), "probabilidade no modelo", COR_L),
-           ("Chance de Flávio", chance(P_F), "probabilidade no modelo", COR_F),
-           ("Lula nos válidos", pct(L50), f"faixa de 80%: {pct(r['lula_validos_p10_p50_p90'][0])} a "
-                                          f"{pct(r['lula_validos_p10_p50_p90'][2])}", "#6D5BA8"),
-           ("Diferença projetada", mil(abs(r["votos_flavio_p50"] - r["votos_lula_p50"])) + " votos",
-            f"para {'Flávio' if r['votos_flavio_p50'] > r['votos_lula_p50'] else 'Lula'} · "
-            f"{mil(r['validos_esperados'])} válidos esperados", "#1B2A41")])
+    # votação oficial de cada um no 1º turno (TSE), em percentual dos válidos e em votos
+    br1 = pd.read_csv(DADOS / "tse_1t_2026" / "presidente_1t_uf.csv").set_index("abrangencia").loc["br"]
+    st.markdown(f"""<div class="t2-1t">
+<div class="t2-1t-l" style="--cor:{COR_L};--escuro:#7A0A1C"><div class="ft" style="background-image:url('{fl}')"></div>
+<div class="nm">LULA · PT · 1º TURNO</div><div class="pc">{pct(100 * br1.lula / br1.validos, 2)}</div>
+<div class="vt">{n(br1.lula)} votos</div></div>
+<div class="t2-1t-l" style="--cor:{COR_F};--escuro:#0B2648"><div class="ft" style="background-image:url('{ff}')"></div>
+<div class="nm">FLÁVIO BOLSONARO · PL · 1º TURNO</div><div class="pc">{pct(100 * br1.flavio / br1.validos, 2)}</div>
+<div class="vt">{n(br1.flavio)} votos</div></div></div>
+<div class="t2-1t-nota">Resultado oficial do 1º turno (TSE, 4/10), em % dos votos válidos · {n(br1.validos)} válidos</div>""",
+                unsafe_allow_html=True)
     c1, c2 = st.columns([1.15, 1], gap="large")
     with c1:
         if CEN is not None:
