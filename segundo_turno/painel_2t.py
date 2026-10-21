@@ -93,6 +93,7 @@ def mil(x):
 
 # ================================================================ visual
 st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 .block-container {padding-top: 3.2rem;}
 .t2-topo, .t2-hero, .t2-rodape {--linha: rgba(210,230,255,.30);}
 /* barra superior com a marca e os créditos */
@@ -111,6 +112,34 @@ st.markdown("""<style>
 .t2-redes img, .t2-redes .bola {width: 20px; height: 20px; border-radius: 50%;}
 .t2-redes .bola {display: inline-flex; align-items: center; justify-content: center; background: #8FE3FF; color: #12233F;
   font: 800 .66rem 'Montserrat';}
+/* capa: pôster de luta (foto do confronto em alta definição, servida por /app/static) */
+.t2-ufc {position: relative; overflow: hidden; border-radius: 28px; aspect-ratio: 3 / 2; max-height: 640px; width: 100%;
+  margin-bottom: 10px; color: #FFFFFF; background: #0B1628 url('/app/static/duelo_2t_hd.webp') center 18% / cover no-repeat;
+  box-shadow: 0 22px 48px rgba(11,22,40,.38);}
+.t2-ufc:before {content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(12,40,110,.55) 0%, rgba(12,40,110,0) 38%, rgba(160,10,30,0) 62%, rgba(160,10,30,.55) 100%),
+              linear-gradient(180deg, rgba(5,10,22,.70) 0%, rgba(5,10,22,0) 24%, rgba(5,10,22,0) 52%, rgba(5,10,22,.92) 100%);}
+.t2-ufc > * {position: absolute; z-index: 1;}
+.ufc-topo {top: 20px; left: 0; right: 0; text-align: center;}
+.ufc-topo span {display: block; font: 700 .76rem 'Montserrat'; letter-spacing: .3em; color: #DCE8FF;}
+.ufc-topo b {display: block; font: 400 clamp(2rem, 5vw, 3.6rem)/1 'Anton', 'Impact', sans-serif; letter-spacing: .06em;
+  margin-top: 6px; text-shadow: 0 4px 18px rgba(0,0,0,.6);}
+.ufc-vs {left: 50%; bottom: 42px; transform: translateX(-50%) skewX(-8deg); font: 400 clamp(2.6rem, 6vw, 4.6rem)/1 'Anton', 'Impact', sans-serif;
+  background: linear-gradient(180deg, #FFFFFF 20%, #C9D2DE 55%, #8A96A8); -webkit-background-clip: text; background-clip: text;
+  color: transparent; filter: drop-shadow(0 4px 10px rgba(0,0,0,.7));}
+.ufc-canto {bottom: 28px; max-width: 42%;}
+.ufc-azul {left: 30px;} .ufc-vermelho {right: 30px; text-align: right;}
+.ufc-nome {font: 400 clamp(2.2rem, 5.6vw, 4.6rem)/.92 'Anton', 'Impact', sans-serif; letter-spacing: .02em; font-style: italic;
+  text-shadow: 0 6px 22px rgba(0,0,0,.65);}
+.ufc-faixa {display: inline-block; margin-top: 12px; padding: 8px 16px; font: 800 clamp(.72rem, 1.5vw, 1rem)/1.2 'Montserrat';
+  letter-spacing: .12em; transform: skewX(-10deg); box-shadow: 0 10px 24px rgba(0,0,0,.4);}
+.ufc-azul .ufc-faixa {background: linear-gradient(100deg, #0B3A8C, #1D4E89 60%, #2F6FD0); border-left: 5px solid #8FC3FF;}
+.ufc-vermelho .ufc-faixa {background: linear-gradient(100deg, #E0213F, #C8102E 40%, #7A0A1C); border-right: 5px solid #FF8A9A;}
+.t2-chips.claro {margin: 2px 0 12px;} .t2-chips.claro span {color: #1B2A41; background: #FFFFFF; border-color: #D6DEE9;}
+@media (max-width: 760px) {.t2-ufc {aspect-ratio: 4 / 3; border-radius: 20px;} .ufc-topo {top: 10px;}
+  .ufc-topo span {font-size: .5rem; letter-spacing: .14em;} .ufc-canto {bottom: 14px; max-width: 46%;}
+  .ufc-azul {left: 12px;} .ufc-vermelho {right: 12px;} .ufc-nome {font-size: 1.5rem;}
+  .ufc-faixa {font-size: .55rem; padding: 5px 8px; letter-spacing: .06em; margin-top: 6px;} .ufc-vs {bottom: 18px; font-size: 2rem;}}
 /* capa: o duelo */
 .t2-hero {position: relative; overflow: hidden; border-radius: 28px; padding: 22px 26px 18px; color: #FFFFFF;
   border: 1px solid var(--linha); margin-bottom: 12px;
@@ -216,31 +245,22 @@ if agora < INICIO:
     vivo = ""
 else:
     quando, vivo = "Apuração em andamento · dados oficiais do TSE", "vivo"
-fl, ff = foto("lula.jpg"), foto("flavio.jpg")
-st.markdown(f"""
-<div class="t2-hero">
-  <div class="selo">ELEIÇÕES 2026 · 2º TURNO · PRESIDENTE DA REPÚBLICA</div>
-  <h1>Quem leva em 25 de outubro?</h1>
-  <div class="t2-duelo">
-    <div class="t2-lado" style="--cor:{COR_L};--claro:{COR_L_CLARO}">
-      <div class="t2-foto" style="background-image:url('{fl}')"></div>
-      <div><div class="t2-nome">LULA · PT</div><div class="t2-prob">{chance(P_L)}</div>
-      <div class="t2-sub">chance de vitória · {pct(L50)} dos válidos (mediana)</div></div>
-    </div>
-    <div class="t2-x"><b>×</b><span>20 MIL<br>CENÁRIOS</span></div>
-    <div class="t2-lado dir" style="--cor:{COR_F};--claro:{COR_F_CLARO}">
-      <div class="t2-foto" style="background-image:url('{ff}')"></div>
-      <div><div class="t2-nome">FLÁVIO BOLSONARO · PL</div><div class="t2-prob">{chance(P_F)}</div>
-      <div class="t2-sub">chance de vitória · {pct(100 - L50)} dos válidos (mediana)</div></div>
-    </div>
+fl, ff = foto("lula.jpg"), foto("flavio.jpg")  # usadas no placar do ao vivo
+# capa no estilo pôster de luta: só a foto do confronto, nomes e os slogans (sem números)
+st.markdown("""
+<div class="t2-ufc" role="img" aria-label="Flávio Bolsonaro e Lula frente a frente">
+  <div class="ufc-topo"><span>ELEIÇÕES 2026 · 2º TURNO · PRESIDENTE DA REPÚBLICA</span><b>25 DE OUTUBRO</b></div>
+  <div class="ufc-vs">VS</div>
+  <div class="ufc-canto ufc-azul">
+    <div class="ufc-nome">FLÁVIO<br>BOLSONARO</div>
+    <div class="ufc-faixa">UMA OPORTUNIDADE DE VIDA</div>
   </div>
-  <div class="t2-barra"><i style="width:{100 * P_L:.1f}%;background:linear-gradient(90deg,#8E0B20,{COR_L})"></i>
-    <i style="width:{100 * P_F:.1f}%;background:linear-gradient(90deg,{COR_F},#0E2D55)"></i></div>
-  <div class="t2-legenda"><span>Lula</span><span>chance de vitória no modelo</span><span>Flávio</span></div>
-  <div class="t2-chips"><span class="{vivo}">{quando}</span>
-    <span>1º turno: Flávio {pct(47.03, 2)} × Lula {pct(45.16, 2)}</span>
-    <span>{SIM['componentes']['pesquisas']['n']} pesquisas até {datetime.strptime(SIM['data_corte'], '%Y-%m-%d').strftime('%d/%m')}</span></div>
+  <div class="ufc-canto ufc-vermelho">
+    <div class="ufc-nome">LULA</div>
+    <div class="ufc-faixa">A ÚLTIMA DANÇA DO VELHO ESTADISTA</div>
+  </div>
 </div>""", unsafe_allow_html=True)
+st.markdown(f'<div class="t2-chips claro"><span class="{vivo}">{quando}</span></div>', unsafe_allow_html=True)
 
 
 def cards(itens):
