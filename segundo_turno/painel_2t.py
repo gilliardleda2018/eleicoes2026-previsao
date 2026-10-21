@@ -7,6 +7,7 @@ Ao vivo: segundo_turno/motor_2t.py (TSE com fallback em camadas).
 import base64
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -391,6 +392,28 @@ def cards(itens):
 OUTROS_1T = ["cury", "renan", "caiado", "zema", "outros"]
 
 
+# Astolfo Seabra e Vila Luizão são o mesmo bairro (o cadastro do TSE só usa "Residencial Astolfo Seabra de Carvalho").
+# A escola "Astolfo Seabra de Carvalho" do Povoado Belém é outra coisa (zona rural) e fica no povoado.
+BAIRRO_UNIFICADO = "Astolfo Seabra / Vila Luizão"
+
+
+def bairro_tuntum(nome):
+    """Nome de bairro/povoado para exibição: sem o sufixo de zona e com bairros iguais unificados."""
+    if not isinstance(nome, str) or not nome.strip():
+        return "Sem bairro no cadastro"
+    up = nome.upper()
+    if ("ASTOLFO SEABRA" in up and "POVOADO" not in up) or "LUIZÃO" in up or "LUIZAO" in up:
+        return BAIRRO_UNIFICADO
+    limpo = re.sub(r"\s*-\s*ZONA\s+(URBANA|RURAL)\s*$", "", nome.strip(), flags=re.I).title()
+    limpo = re.sub(r"\b(Da|De|Do|Das|Dos|E)\b", lambda m: m.group(1).lower(), limpo)
+    return re.sub(r"\bSao\b", "São", limpo).replace("Belem", "Belém")
+
+
+def zona_tuntum(nome):
+    up = str(nome).upper()
+    return "Zona rural" if "RURAL" in up or up.startswith("POVOADO") else "Zona urbana"
+
+
 def base_tuntum():
     """Seções de Tuntum (1º turno + projeção) com bairro, local do cadastro do TSE e zona urbana/rural."""
     nomes = LOCAIS_GEO.set_index("local").nome.str.title().to_dict() if LOCAIS_GEO is not None else {}
@@ -402,7 +425,8 @@ def base_tuntum():
     else:
         s["local_cadastro"], s["bairro"] = s.local, s.local.map(bairros)
     s["Local"] = s.local_cadastro.map(lambda x: nomes.get(x, f"Local {x}"))
-    s["zona_tipo"] = np.where(s.bairro.fillna("").str.contains("Rural", case=False), "Zona rural", "Zona urbana")
+    s["zona_tipo"] = s.bairro.map(zona_tuntum)
+    s["bairro"] = s.bairro.map(bairro_tuntum)
     s["faltosos"] = s.aptos - s.comparecimento
     s["margem_1t"] = s.lula - s.flavio
     s["em_disputa"] = s[OUTROS_1T].sum(axis=1)
@@ -584,6 +608,48 @@ def tabela_polos(m, ao_vivo):
             height=min(60 + 36 * len(d), 600))
     st.caption(f"{len(d)} cidades-polo: as que dão nome às 22 regiões imediatas (Tutóia e Araioses dividem uma). "
                "As 6 que também nomeiam regiões intermediárias estão marcadas.")
+
+
+def apuracao_por_bairro(base_t, sec_v):
+    """Ao vivo em Tuntum: um resumo por bairro/povoado e uma tabela de seções para cada um."""
+    st.markdown("##### Apuração por bairro e povoado")
+    s = base_t[["secao", "bairro", "zona_tipo", "Local", "aptos", "lula", "flavio", "lula_2t"]].rename(
+        columns={"lula": "lula_1t", "flavio": "flavio_1t"})
+    if len(sec_v):
+        v = sec_v.assign(secao=sec_v.secao.astype(str).str.zfill(4))[["secao", "lula", "flavio", "comparecimento",
+                                                                      "brancos", "nulos"]]
+        s = s.merge(v, on="secao", how="left")
+    else:
+        s = s.assign(lula=np.nan, flavio=np.nan, comparecimento=np.nan, brancos=np.nan, nulos=np.nan)
+    s["apurada"] = s.lula.notna()
+    ap = s[s.apurada]
+    g = s.groupby(["zona_tipo", "bairro"], as_index=False).agg(secoes=("secao", "count"), apuradas=("apurada", "sum"),
+                                                               aptos=("aptos", "sum"))
+    a = ap.groupby("bairro", as_index=False).agg(lula=("lula", "sum"), flavio=("flavio", "sum"),
+                                                 l1=("lula_1t", "sum"), f1=("flavio_1t", "sum"))
+    g = g.merge(a, on="bairro", how="left").fillna({"lula": 0, "flavio": 0, "l1": 0, "f1": 0})
+    g["lula_pct"] = 100 * g.lula / (g.lula + g.flavio).replace(0, np.nan)
+    g["lula_1t_pct"] = 100 * g.l1 / (g.l1 + g.f1).replace(0, np.nan)
+    g["saldo"] = g.lula - g.flavio
+    g = g.sort_values(["zona_tipo", "aptos"], ascending=[False, False])  # zona urbana primeiro, maiores primeiro
+    tabela(g[["bairro", "zona_tipo", "apuradas", "secoes", "lula", "flavio", "lula_pct", "lula_1t_pct", "saldo"]].rename(
+        columns={"bairro": "Bairro/povoado", "zona_tipo": "Zona", "apuradas": "Seções apuradas", "secoes": "Seções",
+                 "lula": "Lula", "flavio": "Flávio", "lula_pct": "Lula %", "lula_1t_pct": "Lula % no 1º t (mesmas seções)",
+                 "saldo": "Saldo Lula"}), height=min(60 + 36 * len(g), 640))
+    st.caption("Lula % = Lula ÷ (Lula + Flávio). O 1º turno é comparado nas mesmas seções já apuradas. "
+               f"{BAIRRO_UNIFICADO} são um bairro só.")
+    for _, b in g.iterrows():
+        d = s[s.bairro == b.bairro].sort_values("secao")
+        rot = (f"{b.bairro} · {int(b.apuradas)}/{int(b.secoes)} seções · Lula {n(b.lula)} × Flávio {n(b.flavio)}"
+               if b.apuradas else f"{b.bairro} · {int(b.secoes)} seções · aguardando boletins")
+        with st.expander(rot):
+            d = d.assign(lula_pct=100 * d.lula / (d.lula + d.flavio).replace(0, np.nan),
+                         situacao=np.where(d.apurada, "apurada", "aguardando"))
+            tabela(d[["secao", "Local", "situacao", "aptos", "comparecimento", "lula", "flavio", "lula_pct", "lula_1t",
+                      "flavio_1t", "lula_2t"]].rename(columns={
+                "secao": "Seção", "situacao": "Situação", "aptos": "Aptos", "comparecimento": "Votaram", "lula": "Lula",
+                "flavio": "Flávio", "lula_pct": "Lula %", "lula_1t": "Lula 1º t", "flavio_1t": "Flávio 1º t",
+                "lula_2t": "Previsto Lula %"}), height=min(60 + 36 * len(d), 520))
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -771,6 +837,7 @@ with aba[1]:
                           height=max(380, 22 * len(prog) + 110), yaxis=dict(autorange="reversed", tickfont=dict(size=10)),
                           legend=dict(orientation="h", y=-.06))
         grafico(fig)
+        apuracao_por_bairro(base_t, sec_v)
         if len(sec_v):
             ganho = base_t[["secao", "bairro", "Local", "lula", "flavio", "comparecimento"]].rename(
                 columns={"lula": "lula_1t", "flavio": "flavio_1t", "comparecimento": "comp_1t"}).merge(
@@ -909,7 +976,7 @@ with aba[3]:
                                marker=dict(size=np.clip(np.sqrt(pts.aptos) / 1.6, 9, 34), color=pts.lula_2t,
                                            colorscale=ESCALA, cmin=20, cmax=85, opacity=.9,
                                            colorbar=dict(title="", ticksuffix="%", len=.6, thickness=12)),
-                               customdata=np.column_stack([pts.nome.str.title(), pts.bairro.str.title(), pts.secoes,
+                               customdata=np.column_stack([pts.nome.str.title(), pts.bairro.map(bairro_tuntum), pts.secoes,
                                                            pts.aptos, pts.lula_1t, pts.lula_2t]),
                                hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<br>Seções: %{customdata[2]}"
                                              "<br>%{customdata[3]} aptos<br>Lula 1º turno: %{customdata[4]:.1f}%"
@@ -1149,5 +1216,5 @@ with aba[5]:
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 21h (regiões do IBGE)</span></div></div>
+apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 21h30 (bairros de Tuntum)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
