@@ -8,7 +8,11 @@ REGIAO=${REGIAO:-southamerica-east1}
 SERVICO=${SERVICO:-apuracao-teste}
 BUCKET=${BUCKET:-${PROJETO}-aovivo}
 MIN=${MIN:-2}            # instâncias sempre ligadas (no domingo: 6)
-MAX=${MAX:-40}           # teto de instâncias (40 × 60 = 2.400 pessoas)
+# Cota atual do projeto em southamerica-east1: 20 vCPU e 40 GiB por região → 20 instâncias de 1 vCPU / 2 GiB.
+# O Streamlit roda o Python num processo só (1 núcleo efetivo), então 1 vCPU por instância rende quase o mesmo que 2.
+CPU=${CPU:-1}
+MEM=${MEM:-2Gi}
+MAX=${MAX:-20}           # teto de instâncias (20 × 60 = 1.200 pessoas); com mais cota: MAX=40
 POR_INST=${POR_INST:-60} # pessoas por instância (o Streamlit roda o Python de todas no mesmo processo)
 
 echo "== 1/4 bucket compartilhado entre as instâncias: gs://$BUCKET"
@@ -31,11 +35,14 @@ gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" --member="serviceAc
 echo "== 3/4 publicando com escala para muitas conexões"
 COMUM=(--region "$REGIAO" --execution-environment gen2
   --session-affinity --timeout=3600 --concurrency="$POR_INST" --min-instances="$MIN" --max-instances="$MAX"
-  --cpu=2 --memory=4Gi --no-cpu-throttling --cpu-boost
+  --cpu="$CPU" --memory="$MEM" --no-cpu-throttling --cpu-boost
   --update-env-vars "TZ=America/Sao_Paulo,APURACAO_COMPARTILHADO=/mnt/aovivo/apuracao,PRESENCA_DIR=/mnt/aovivo,STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION=true,STREAMLIT_SERVER_WEBSOCKET_PING_INTERVAL=25,STREAMLIT_SERVER_DISCONNECTED_SESSION_TTL=60")
 VOL="name=aovivo,type=cloud-storage,bucket=$BUCKET"
 if ! gcloud run deploy "$SERVICO" --source . "${COMUM[@]}" \
-      --add-volume "$VOL,mount-options=metadata-cache-ttl-secs=0" --add-volume-mount volume=aovivo,mount-path=/mnt/aovivo; then
+      --add-volume "$VOL,mount-options=metadata-cache-ttl-secs=0" --add-volume-mount volume=aovivo,mount-path=/mnt/aovivo 2>&1 | tee /tmp/deploy_aovivo.log; [ "${PIPESTATUS[0]}" = 0 ]; then
+  if grep -q "Quota violated" /tmp/deploy_aovivo.log; then
+    echo "PARE: cota de CPU/memória da região. Use um MAX menor (ex.: MAX=10) ou peça aumento da cota." >&2; exit 1
+  fi
   echo "   (o gcloud recusou mount-options: tentando sem — o código tolera leituras com alguns segundos de atraso)"
   gcloud run deploy "$SERVICO" --source . "${COMUM[@]}" \
     --add-volume "$VOL" --add-volume-mount volume=aovivo,mount-path=/mnt/aovivo
