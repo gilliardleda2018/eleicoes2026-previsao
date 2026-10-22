@@ -9,7 +9,7 @@ NOVO=${NOVO:-eleicoes2026}
 DESTINO=$(gcloud run services describe "$NOVO" --region "$REGIAO" --format='value(status.url)')
 echo "Redirecionando $ANTIGO → $DESTINO"
 gcloud run deploy "$ANTIGO" --source "$(dirname "$0")/../redirecionador" --region "$REGIAO" --allow-unauthenticated \
-  --set-env-vars "DESTINO=$DESTINO" --cpu 1 --memory 512Mi --cpu-throttling --execution-environment gen1 \
+  --set-env-vars "DESTINO=$DESTINO" --cpu 1 --memory 512Mi --cpu-throttling --execution-environment gen2 \
   --min-instances 0 --max-instances 2 --no-session-affinity
 gcloud run services update-traffic "$ANTIGO" --region "$REGIAO" --to-latest
 URL_ANTIGA=$(gcloud run services describe "$ANTIGO" --region "$REGIAO" --format='value(status.url)')
