@@ -125,7 +125,9 @@ def rodar(titulo, estado=None, botoes=(), params=None):
     textos = " ".join(c[1] for c in CHAMADAS if c[0] == "markdown")
     # o que tem de aparecer igual na simulação e no ao vivo (inclusive antes de começar e com o TSE fora)
     for item in ('[role="tab"][aria-selected="true"]', "Por região geográfica do IBGE", "Cidades-polo das regiões",
-                 "Apuração por bairro e povoado", "Astolfo Seabra / Vila Luizão"):
+                 "Apuração por bairro e povoado", "Astolfo Seabra / Vila Luizão",
+                 "cv-mega", "Votos a recuperar por estado", "Onde eles estão no Maranhão", "Votos a recuperar por bairro",
+                 "Onde Lula vence e mais gente ficou em casa", "conversar"):
         assert item in textos or any(item in c[1] for c in CHAMADAS if c[0] == "expander"), f"{titulo}: faltou {item}"
     n_bairros = sum(1 for c in CHAMADAS if c[0] == "expander" and " seções" in c[1])
     assert n_bairros >= 20, f"{titulo}: só {n_bairros} tabelas de bairro"
@@ -147,7 +149,7 @@ if __name__ == "__main__":
         "com ?so2t=1 a barra de navegação deve ficar escondida"
     assert any(c[0] == "markdown" and "t2-online" in c[1] and "conectad" in c[1] for c in CHAMADAS), \
         "faltou o contador de pessoas conectadas"
-    assert any(c[0] == "link_button" for c in CHAMADAS), "faltou o botão de compartilhar"
+    assert sum(c[0] == "link_button" for c in CHAMADAS) >= 2, "faltou o botão de compartilhar (topo e chamada final)"
     del os.environ["LINK_2T"]
     rodar("ensaio 2% + busca", {"t2_modo": "Ensaio", "t2_frac": 2, "t2_busca_ma": "imperatriz"})
     # ao vivo com o TSE "respondendo" (dados do ensaio no formato do motor)

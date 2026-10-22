@@ -1,4 +1,4 @@
-"""Página — 2º turno presidencial (25/10/2026): previsão, apuração ao vivo, Maranhão e Tuntum.
+"""Página — 2º turno presidencial (25/10/2026): Projeto Convencimento (abstenção), apuração ao vivo, Maranhão e Tuntum.
 
 Tudo do 2º turno fica nesta página; as páginas do 1º turno seguem como arquivo.
 Dados do modelo: segundo_turno/resultados/ (gerados por segundo_turno/modelo_2t.py).
@@ -26,6 +26,7 @@ sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(AQUI))
 from comum import CSS, _logo_base64, barra_navegacao, grafico, n, tabela  # noqa: E402
 import motor_2t  # noqa: E402
+import convencimento as cv  # noqa: E402
 
 if __name__ == "__main__":
     st.set_page_config(page_title="2º turno · Presidente", page_icon=str(RAIZ / "assets" / "aggilli_logo.png"),
@@ -160,9 +161,9 @@ st.markdown("""<style>
   .ufc-topo span {font-size: .5rem; letter-spacing: .14em;} .ufc-canto {bottom: 14px; max-width: 46%;}
   .ufc-azul {left: 12px;} .ufc-vermelho {right: 12px;} .ufc-nome {font-size: 1.5rem;}
   .ufc-faixa {font-size: .55rem; padding: 5px 8px; letter-spacing: .06em; margin-top: 6px;} .ufc-vs {bottom: 18px; font-size: 2rem;}}
-.st-key-t2_compartilhar {background: #FFFFFF; border: 1px solid #D6DEE9; border-radius: 16px; padding: 8px 12px 0;
+[class*="st-key-t2_compartilhar"] {background: #FFFFFF; border: 1px solid #D6DEE9; border-radius: 16px; padding: 8px 12px 0;
   margin: 0 0 12px;}
-.st-key-t2_compartilhar [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
+[class*="st-key-t2_compartilhar"] [data-testid="stLinkButton"] a {background: #25D366 !important; border-color: #25D366 !important;
   color: #FFFFFF !important; font-weight: 800; border-radius: 12px;}
 .t2-1t {display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0 4px;}
 .t2-1t-l {position: relative; overflow: hidden; border-radius: 20px; padding: 16px 20px; color: #FFFFFF;
@@ -253,6 +254,51 @@ st.markdown("""<style>
   animation: t2pulso 1.8s infinite;}
 @keyframes t2pulso {70% {box-shadow: 0 0 0 9px rgba(46,204,113,0);} 100% {box-shadow: 0 0 0 0 rgba(46,204,113,0);}}
 @media (prefers-reduced-motion: reduce) {.t2-online .pulso {animation: none;}}
+/* ===== Projeto Convencimento: cards de mobilização (papel claro, vermelho, Anton) ===== */
+[class*="st-key-cv_papel"] {background: #F3F0EA radial-gradient(rgba(0,0,0,.035) 1px, transparent 1px) 0 0/5px 5px;
+  border-radius: 22px; padding: 26px 26px 18px; margin: 4px 0 22px; box-shadow: 0 16px 34px rgba(60,20,20,.10);
+  border: 1px solid #E6DED2;}
+[class*="st-key-cv_verm"] {background: #E1302A radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px) 0 0/6px 6px;
+  border-radius: 22px; padding: 26px 26px 18px; margin: 4px 0 22px; box-shadow: 0 18px 38px rgba(160,20,20,.28);}
+.cv-tag {display: inline-block; border: 2px solid #D3252B; color: #D3252B; font: 800 .78rem 'Montserrat', sans-serif;
+  letter-spacing: .24em; padding: 5px 14px; text-transform: uppercase; background: transparent;}
+.cv-h {font: 400 clamp(2.1rem, 5.4vw, 3.9rem)/.98 'Anton', 'Impact', sans-serif; color: #D3252B; text-transform: uppercase;
+  margin: 14px 0 6px; letter-spacing: .01em;}
+.cv-h .ln {display: inline-block; width: clamp(40px, 16%, 180px); height: 3px; background: currentColor; vertical-align: middle;
+  margin: 0 12px;} .cv-h .st {font-size: .45em; vertical-align: middle;}
+.cv-sub {font: 800 .8rem/1.35 'Montserrat', sans-serif; letter-spacing: .05em; color: #A61E24; text-transform: uppercase;
+  margin-bottom: 14px;}
+.cv-fonte {font: 500 .74rem/1.4 'Manrope', sans-serif; color: #5E3B3B; margin-top: 10px;}
+.cv-verm .cv-tag, [class*="st-key-cv_verm"] .cv-tag {border-color: #fff; color: #fff;}
+[class*="st-key-cv_verm"] .cv-h, [class*="st-key-cv_verm"] .cv-sub, [class*="st-key-cv_verm"] .cv-fonte {color: #fff;}
+.cv-mega {font: 400 clamp(4.2rem, 13vw, 9.5rem)/.86 'Anton', 'Impact', sans-serif; color: #fff; letter-spacing: -.01em;}
+.cv-big {font: 400 clamp(2rem, 5.6vw, 3.9rem)/1 'Anton', 'Impact', sans-serif; color: #fff; text-transform: uppercase;}
+.cv-big .ln {display: inline-block; width: clamp(40px, 26%, 300px); height: 3px; background: #fff; vertical-align: middle; margin: 0 14px;}
+.cv-faixa {display: inline-block; background: #fff; color: #D3252B; padding: 2px 12px; margin: 6px 0;
+  font: 400 clamp(2rem, 5.6vw, 3.9rem)/1 'Anton', 'Impact', sans-serif; text-transform: uppercase;}
+.cv-amarelo {color: #FFD86B !important;}
+.cv-lista .it {display: grid; grid-template-columns: 3.2rem 1fr auto; align-items: center; gap: 10px;
+  border-top: 2px solid #D3252B; padding: 7px 0;}
+.cv-lista .it:last-child {border-bottom: 2px solid #D3252B;}
+.cv-lista .n {font: 400 2rem/1 'Anton', sans-serif; color: #D3252B;}
+.cv-lista .nm {font: 400 1.32rem/1.05 'Anton', sans-serif; color: #D3252B; text-transform: uppercase;}
+.cv-lista .bx {font: 500 .8rem 'Manrope', sans-serif; color: #2B2B2B;}
+.cv-lista .v {font: 400 2rem/1 'Anton', sans-serif; color: #D3252B; text-align: right; white-space: nowrap;}
+.cv-barras .it {display: grid; grid-template-columns: minmax(110px, 34%) 1fr 7.2rem; align-items: center; gap: 12px; margin: 7px 0;}
+.cv-barras .nm {font: 400 1.35rem/1 'Anton', sans-serif; color: #fff; text-transform: uppercase; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;}
+.cv-barras .tr {height: 30px; background: rgba(255,255,255,.22);} .cv-barras .fi {height: 100%; background: #fff;}
+.cv-barras .v {font: 400 1.6rem/1 'Anton', sans-serif; color: #fff; text-align: right; white-space: nowrap;}
+.cv-bloco {border-top: 5px solid var(--c); padding: 6px 0 10px; margin-bottom: 4px;}
+.cv-bloco .r {font: 800 .74rem 'Montserrat', sans-serif; letter-spacing: .14em; color: var(--c); text-transform: uppercase;}
+.cv-bloco .q {font: 400 2.5rem/1 'Anton', sans-serif; color: var(--c); margin: 2px 0;}
+.cv-bloco .d {font: 600 .8rem 'Manrope', sans-serif; color: #2B2B2B;}
+.cv-total .q {font: 400 2.9rem/1 'Anton', sans-serif; color: #D3252B;}
+.cv-cta {font: 400 clamp(3rem, 10vw, 7rem)/.9 'Anton', 'Impact', sans-serif; color: #D3252B; text-transform: uppercase;}
+.cv-cta .e {display: flex; align-items: center; gap: 14px; font-size: .45em;} .cv-cta .e:before, .cv-cta .e:after {content: "";
+  flex: 1; height: 4px; background: #D3252B;}
+@media (max-width: 760px) {.cv-barras .it {grid-template-columns: 34% 1fr 5.4rem;} .cv-barras .v {font-size: 1.2rem;} .cv-barras .nm {font-size: 1.05rem;}
+  .cv-lista .nm {font-size: 1.05rem;} .cv-lista .v, .cv-lista .n {font-size: 1.5rem;}}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -366,15 +412,16 @@ st.markdown("""
 st.markdown(f'<div class="t2-chips claro"><span class="{vivo}">{quando}</span></div>', unsafe_allow_html=True)
 
 
-def compartilhar_2t():
+def compartilhar_2t(chave="t2_compartilhar"):
     """Compartilhar só esta página: WhatsApp com mensagem pronta e o link para copiar."""
     link = LINK_2T
     if not link:
         return
     from urllib.parse import quote
-    texto = ("🗳️ 2º turno · Lula × Flávio, com a Aggilli Intelligence: previsão, apuração ao vivo do TSE, Maranhão "
-             "município a município e Tuntum seção a seção.\n\n👉 Acompanhe aqui: " + link)
-    with st.container(key="t2_compartilhar"):
+    texto = ("🗳️ Mais de 14 milhões de eleitores de Lula não foram votar no 1º turno. Veja onde eles estão no Brasil, "
+             "no Maranhão e em Tuntum — e acompanhe a apuração ao vivo no domingo, 25/10.\n\n"
+             "Cada um leva um! 👉 " + link)
+    with st.container(key=chave):
         c1, c2 = st.columns([1, 2.2], vertical_alignment="center")
         c1.link_button("📲 Compartilhar no WhatsApp", f"https://wa.me/?text={quote(texto)}", width="stretch")
         c2.code(link, language=None)
@@ -531,7 +578,7 @@ def destino_em_disputa(df):
 
 
 ao_vivo_agora = agora >= INICIO - timedelta(hours=1)
-aba = st.tabs(["🔮 Previsão", "🔴 Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
+aba = st.tabs(["📣 Convencimento", "🔴 Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
                "📰 Pesquisas e contexto", "🧪 Metodologia"])
 
 
@@ -560,55 +607,225 @@ def sem_votos(fig, geojson, chave_geo, locais, nomes):
     return fig
 
 
+CORES_REG = {"São Luís": "#B3141B", "Santa Inês - Bacabal": "#E8892B", "Imperatriz": "#2E8B3E",
+             "Caxias": "#D8B226", "Presidente Dutra": "#1E1E1E",
+             "Nordeste": "#B3141B", "Sudeste": "#E8892B", "Sul": "#2E8B3E", "Norte": "#D8B226", "Centro-Oeste": "#1E1E1E",
+             "Zona urbana": "#B3141B", "Zona rural": "#E8892B"}
+
+
+def _cab(tag, titulo, sub, estrela=True):
+    st.markdown(f'<span class="cv-tag">{tag}</span><div class="cv-h">{titulo}'
+                + ('<span class="ln"></span><span class="st">★</span>' if estrela else "") + f'</div>'
+                + (f'<div class="cv-sub">{sub}</div>' if sub else ""), unsafe_allow_html=True)
+
+
+def _lista(itens):
+    """itens: (nome, detalhe, valor) — lista numerada no estilo do card 'os 10 locais'."""
+    st.markdown('<div class="cv-lista">' + "".join(
+        f'<div class="it"><div class="n">{k}</div><div><div class="nm">{escape(nm)}</div><div class="bx">{escape(dt)}</div></div>'
+        f'<div class="v">{cv.fmt_qtd(v)}</div></div>' for k, (nm, dt, v) in enumerate(itens, 1)) + "</div>",
+        unsafe_allow_html=True)
+
+
+def _barras(itens):
+    """itens: (nome, valor) — barras brancas no card vermelho."""
+    mx = max(v for _, v in itens) or 1
+    st.markdown('<div class="cv-barras">' + "".join(
+        f'<div class="it"><div class="nm">{escape(nm)}</div><div class="tr"><div class="fi" style="width:{100 * v / mx:.1f}%">'
+        f'</div></div><div class="v">{cv.fmt_qtd(v)}</div></div>' for nm, v in itens) + "</div>", unsafe_allow_html=True)
+
+
+def _blocos(grupos, total_rotulo, total):
+    """grupos: (rótulo, cor, valor, detalhe) — blocos coloridos no estilo 'Recife por RPA'."""
+    st.markdown("".join(
+        f'<div class="cv-bloco" style="--c:{c}"><div class="r">{escape(r)}</div><div class="q">{cv.fmt_qtd(v)}</div>'
+        f'<div class="d">{escape(d)}</div></div>' for r, c, v, d in grupos)
+        + f'<div class="cv-bloco cv-total" style="--c:#D3252B"><div class="r">{escape(total_rotulo)}</div>'
+          f'<div class="q">{cv.fmt_qtd(total)}</div></div>', unsafe_allow_html=True)
+
+
+@st.cache_data(show_spinner=False)
+def _contorno(nome, cd=None, passo=3):
+    """Linhas finas dos limites (estados do Brasil, municípios do MA ou só Tuntum) para dar contexto às bolhas."""
+    xs, ys = [], []
+    for f in geo(nome)["features"]:
+        if cd and f["properties"].get("CD_MUN") != cd:
+            continue
+        g = f["geometry"]
+        for pol in (g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]):
+            anel = pol[0][::passo] + [pol[0][0]]
+            xs += [c[0] for c in anel] + [None]
+            ys += [c[1] for c in anel] + [None]
+    return xs, ys
+
+
+def _bolhas(df, lat, lon, grupo, valor, nome, rotulos=None, altura=520, tam_max=38, contorno=None):
+    """Mapa de bolhas sem fundo (papel): cada ponto é um lugar; maior = mais eleitores de Lula em casa."""
+    fig = go.Figure()
+    if contorno:
+        xs, ys = contorno
+        fig.add_scatter(x=xs, y=ys, mode="lines", line=dict(color="rgba(120,90,80,.35)", width=.8),
+                        hoverinfo="skip", showlegend=False)
+    mx = float(df[valor].max()) or 1
+    for g, d in df.groupby(grupo, sort=False):
+        fig.add_scatter(x=d[lon], y=d[lat], mode="markers", name=str(g),
+                        marker=dict(size=np.clip(tam_max * np.sqrt(d[valor] / mx), 5, tam_max),
+                                    color=CORES_REG.get(str(g), "#B3141B"), opacity=.82,
+                                    line=dict(width=1.2, color="rgba(255,255,255,.9)")),
+                        text=[f'<span style="font-size:14px"><b>{escape(str(a))}</b></span><br>'
+                              f'<span style="color:#9FB7D9">{escape(str(g))}</span><br>{_LINHA}<br>'
+                              f'{_rot("Eleitores de Lula que ficaram em casa")}  <b>{cv.fmt_qtd(b)}</b><br>'
+                              f'{_rot("Lula no 1º turno")}  <b>{_br(c)}%</b> dos válidos'
+                              for a, b, c in zip(d[nome], d[valor], d["lula_pct"])],
+                        hovertemplate="%{text}<extra></extra>", hoverlabel=HOVER_CARD)
+    for (rx, ry, rt) in (rotulos or []):
+        fig.add_annotation(x=rx, y=ry, text=f"<b>{escape(rt.upper())}</b>", showarrow=False,
+                           font=dict(family="Montserrat, sans-serif", size=10, color="#3A2A2A"),
+                           bgcolor="rgba(243,240,234,.85)")
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False, scaleanchor="x", scaleratio=1)
+    fig.update_layout(height=altura, margin=dict(l=0, r=0, t=6, b=0), showlegend=True, paper_bgcolor="rgba(0,0,0,0)",
+                      plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=-.02, font=dict(size=11)))
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
+
 with aba[0]:
-    r = SIM["resultado"]
-    # votação oficial de cada um no 1º turno (TSE), em percentual dos válidos e em votos
-    br1 = pd.read_csv(DADOS / "tse_1t_2026" / "presidente_1t_uf.csv").set_index("abrangencia").loc["br"]
-    st.markdown(f"""<div class="t2-1t">
-<div class="t2-1t-l" style="--cor:{COR_L};--escuro:#7A0A1C"><div class="ft" style="background-image:url('{fl}')"></div>
-<div class="nm">LULA · PT · 1º TURNO</div><div class="pc">{pct(100 * br1.lula / br1.validos, 2)}</div>
-<div class="vt">{n(br1.lula)} votos</div></div>
-<div class="t2-1t-l" style="--cor:{COR_F};--escuro:#0B2648"><div class="ft" style="background-image:url('{ff}')"></div>
-<div class="nm">FLÁVIO BOLSONARO · PL · 1º TURNO</div><div class="pc">{pct(100 * br1.flavio / br1.validos, 2)}</div>
-<div class="vt">{n(br1.flavio)} votos</div></div></div>
-<div class="t2-1t-nota">Resultado oficial do 1º turno (TSE, 4/10), em % dos votos válidos · {n(br1.validos)} válidos</div>""",
-                unsafe_allow_html=True)
-    if CEN is not None:
-        v = 100 * CEN
-        fig = go.Figure()
-        bins = np.linspace(42, 56, 57)
-        h, e = np.histogram(v, bins=bins)
-        centros = (e[:-1] + e[1:]) / 2
-        fig.add_bar(x=centros, y=100 * h / len(v), marker_color=[COR_L if x > 50 else COR_F for x in centros],
-                    hovertemplate="Lula %{x:.1f}% · %{y:.1f}% dos cenários<extra></extra>")
-        fig.add_vline(x=50, line_dash="dash", line_color="#1B2A41")
-        fig.add_annotation(x=50.2, y=max(100 * h / len(v)) * .95, text="Lula acima de 50% →", showarrow=False, xanchor="left",
-                           font=dict(color=COR_L, size=12))
-        fig.add_annotation(x=49.8, y=max(100 * h / len(v)) * .95, text="← Flávio acima de 50%", showarrow=False,
-                           xanchor="right", font=dict(color=COR_F, size=12))
-        fig.update_layout(title="Os cenários simulados: Lula nos votos válidos", height=380, bargap=.05,
-                          xaxis_title="Lula (% dos válidos)", yaxis_title="% dos cenários", showlegend=False)
-        grafico(fig)
-    c1, c2 = st.columns([1.4, 1], gap="large")
+    est, BR_T = cv.brasil()
+    vezes = int(1 / BR_T["fracao_para_virar"]) if BR_T["fracao_para_virar"] > 0 else 0
+    # ---- capa
+    with st.container(key="cv_verm_capa"):
+        st.markdown(f'''<span class="cv-tag">Brasil · 2º turno · 25 de outubro</span>
+<div class="cv-big" style="margin-top:16px">Mais de<span class="ln"></span>★</div>
+<div class="cv-mega">{cv.fmt_qtd(BR_T["lula_casa"]).upper()}</div>
+<div class="cv-big">de eleitores de Lula<span class="ln"></span>★</div>
+<div class="cv-faixa">não foram votar no 1º turno</div>
+<div class="cv-big">A diferença foi de {cv.fmt_qtd(BR_T["diferenca"])}<span class="ln"></span>★</div>
+<div class="cv-big cv-amarelo">Basta 1 em cada {vezes} voltar às urnas</div>
+<div class="cv-fonte">Fonte: TSE, resultado oficial do 1º turno (4/10/2026): Flávio {n(BR_T["flavio_1t"])} × Lula
+{n(BR_T["lula_1t"])} votos. Eleitor de Lula estimado pela votação do estado onde cada pessoa vota (exterior fora da
+conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</div>''', unsafe_allow_html=True)
+
+    # ---- Brasil por estado
+    with st.container(key="cv_papel_br"):
+        _cab("Brasil por estado", "Onde eles estão",
+             "Eleitores de Lula que não votaram no 1º turno, por estado. Quanto maior a bolha, mais gente de Lula ficou em casa.")
+        c1, c2 = st.columns([1.5, 1], gap="large")
+        with c1:
+            cen = cv.centroides_uf()
+            b = est.assign(lat=est.uf.map(lambda u: cen.get(u, (np.nan, np.nan))[0]),
+                           lon=est.uf.map(lambda u: cen.get(u, (np.nan, np.nan))[1])).dropna(subset=["lat"])
+            _bolhas(b, "lat", "lon", "regiao", "lula_casa", "nome",
+                    rotulos=[(r.lon, r.lat - 1.6, r.uf) for r in b.head(8).itertuples()], altura=600, tam_max=60,
+                    contorno=_contorno("br", passo=4))
+        with c2:
+            rg = est.groupby("regiao")
+            blocos = []
+            for nome_r, v in est.groupby("regiao").lula_casa.sum().sort_values(ascending=False).items():
+                top = rg.get_group(nome_r).sort_values("lula_casa", ascending=False).head(2)
+                blocos.append((nome_r, CORES_REG[nome_r], v,
+                               " · ".join(f"{x.nome} {cv.fmt_qtd(x.lula_casa)}" for x in top.itertuples())))
+            _blocos(blocos, "Brasil", BR_T["lula_casa"])
+        st.markdown('<div class="cv-fonte">Fonte: TSE, 1º turno de 2026, por estado. Eleitor de Lula estimado pela votação '
+                    'de Lula no estado.</div>', unsafe_allow_html=True)
+    with st.container(key="cv_verm_br"):
+        _cab("Os 10 estados", "Votos a recuperar por estado", "Eleitores de Lula que não votaram no 1º turno")
+        _barras([(x.nome, x.lula_casa) for x in est.head(10).itertuples()])
+        st.markdown(f'<div class="cv-fonte">Só esses 10 estados somam {cv.fmt_qtd(est.head(10).lula_casa.sum())}: mais que '
+                    f'o necessário para virar a diferença de {cv.fmt_qtd(BR_T["diferenca"])}. Fonte: TSE, 1º turno de 2026.'
+                    '</div>', unsafe_allow_html=True)
+
+    # ---- Maranhão
+    MA_C = cv.maranhao(MUN)
+    with st.container(key="cv_papel_ma"):
+        _cab("Maranhão por região", "Onde eles estão no Maranhão",
+             f"{cv.fmt_qtd(MA_C.lula_casa.sum())} eleitores de Lula não votaram no 1º turno no Maranhão. Cada ponto é um "
+             "município: quanto maior, mais gente de Lula ficou em casa.")
+        c1, c2 = st.columns([1.5, 1], gap="large")
+        with c1:
+            polos = MA_C[MA_C.polo_intermediaria == 1]
+            _bolhas(MA_C, "lat", "lon", "regiao_intermediaria", "lula_casa", "municipio",
+                    rotulos=[(r.lon, r.lat - .28, r.municipio) for r in polos.itertuples()], altura=640, tam_max=46,
+                    contorno=_contorno("ma", passo=3))
+        with c2:
+            rg = MA_C.groupby("regiao_intermediaria")
+            blocos = []
+            for nome_r, v in rg.lula_casa.sum().sort_values(ascending=False).items():
+                top = rg.get_group(nome_r).head(2)
+                blocos.append((f"Região de {nome_r}", CORES_REG.get(nome_r, "#B3141B"), v,
+                               " · ".join(f"{x.municipio} {cv.fmt_qtd(x.lula_casa)}" for x in top.itertuples())))
+            _blocos(blocos, "Maranhão", MA_C.lula_casa.sum())
+        st.markdown(f'<div class="cv-fonte">Só o Maranhão pode cobrir {pct(100 * MA_C.lula_casa.sum() / BR_T["diferenca"], 0)} '
+                    'da diferença nacional do 1º turno. Fonte: TSE, 1º turno de 2026; regiões geográficas do IBGE (2017). '
+                    'Eleitor de Lula estimado pela votação de Lula no município.</div>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2, gap="large")
     with c1:
-        fig = mapa_br(UF[UF.uf != "ZZ"], "lula_2t", "Projeção por estado · Lula (% dos válidos)",
-                      hover={"lula_1t_pct": ":.1f", "lula_2t": ":.1f"})
-        grafico(fig)
+        with st.container(key="cv_verm_ma"):
+            _cab("Os 10 municípios", "Votos a recuperar no MA", "Eleitores de Lula que não votaram no 1º turno")
+            _barras([(x.municipio, x.lula_casa) for x in MA_C.head(10).itertuples()])
+            st.markdown('<div class="cv-fonte">Fonte: TSE, 1º turno de 2026.</div>', unsafe_allow_html=True)
     with c2:
-        reg = SIM["regioes"]
-        fig = go.Figure()
-        ordem = ["Nordeste", "Norte", "Sudeste", "Centro-Oeste", "Sul", "Exterior"]
-        fig.add_bar(y=ordem, x=[reg[r_] for r_ in ordem], orientation="h", marker_color=COR_L, name="Lula",
-                    text=[pct(reg[r_]) for r_ in ordem], textposition="inside")
-        fig.add_bar(y=ordem, x=[100 - reg[r_] for r_ in ordem], orientation="h", marker_color=COR_F, name="Flávio",
-                    text=[pct(100 - reg[r_]) for r_ in ordem], textposition="inside")
-        fig.update_layout(barmode="stack", height=520, title="Por região (projeção)", yaxis=dict(autorange="reversed"),
-                          xaxis=dict(range=[0, 100], ticksuffix="%"), legend=dict(orientation="h", y=-.08))
-        grafico(fig)
-    t = UF[UF.uf != "ZZ"].sort_values("saldo_lula_2t", ascending=False)
-    tabela(t[["uf", "regiao", "lula_1t_pct", "lula_2t", "lula_2t_p10", "lula_2t_p90", "saldo_lula_2t"]].rename(columns={
-        "uf": "UF", "regiao": "Região", "lula_1t_pct": "Lula 1º turno %", "lula_2t": "Lula 2º turno %",
-        "lula_2t_p10": "Lula P10 %", "lula_2t_p90": "Lula P90 %", "saldo_lula_2t": "Saldo Lula (votos)"}), height=420)
+        with st.container(key="cv_papel_ma10"):
+            fortes = MA_C[MA_C.lula_pct >= 60].head(10)
+            _cab("Os 10 municípios", "Onde Lula vence e mais gente ficou em casa",
+                 "Municípios onde Lula teve 60% ou mais dos votos válidos", estrela=False)
+            _lista([(x.municipio, f"Região {x.regiao_imediata} · Lula {_br(x.lula_pct)}%", x.lula_casa)
+                    for x in fortes.itertuples()])
+
+    # ---- Tuntum
+    base_c, _ = base_tuntum()
+    TU = cv.tuntum(base_c)
+    with st.container(key="cv_papel_tun"):
+        _cab("Tuntum por bairro e povoado", "Onde eles estão em Tuntum",
+             f"{cv.fmt_qtd(TU.lula_casa.sum())} eleitores de Lula não votaram no 1º turno em Tuntum "
+             f"({n(TU.faltaram.sum())} faltaram ao todo). Cada ponto é um local de votação.")
+        loc = TU.groupby("local_cadastro", as_index=False).agg(
+            lula_casa=("lula_casa", "sum"), faltaram=("faltaram", "sum"), lula=("lula", "sum"), validos=("validos", "sum"),
+            Local=("Local", "first"), bairro=("bairro", "first"), zona_tipo=("zona_tipo", "first"))
+        loc["lula_pct"] = 100 * loc.lula / loc.validos.replace(0, np.nan)
+        loc = loc.sort_values("lula_casa", ascending=False)
+        c1, c2 = st.columns([1.5, 1], gap="large")
+        with c1:
+            if LOCAIS_GEO is not None:
+                pts = loc.merge(LOCAIS_GEO[["local", "lat", "lon"]].rename(columns={"local": "local_cadastro"}),
+                                on="local_cadastro").dropna(subset=["lat", "lon"])
+                cd_tun = str(MUN.loc[MUN.cd_tse == motor_2t.TUNTUM, "cd_ibge"].iloc[0])
+                _bolhas(pts, "lat", "lon", "zona_tipo", "lula_casa", "Local", altura=640, tam_max=44,
+                        contorno=_contorno("ma", cd=cd_tun, passo=1))
+        with c2:
+            zg = TU.groupby("zona_tipo")
+            blocos = []
+            for z, v in zg.lula_casa.sum().sort_values(ascending=False).items():
+                top = zg.get_group(z).groupby("bairro").lula_casa.sum().sort_values(ascending=False).head(2)
+                blocos.append((z, CORES_REG[z], v, " · ".join(f"{b_} {cv.fmt_qtd(x_)}" for b_, x_ in top.items())))
+            _blocos(blocos, "Tuntum", TU.lula_casa.sum())
+        st.markdown('<div class="cv-fonte">Fonte: TSE, boletins de urna do 1º turno de 2026 (97 seções). Eleitor de Lula '
+                    'estimado pela votação de Lula na própria seção. Bairro conforme o cadastro do local de votação no TSE.'
+                    '</div>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        with st.container(key="cv_verm_tun"):
+            por_b = TU.groupby("bairro").lula_casa.sum().sort_values(ascending=False).head(10)
+            _cab("Os 10 bairros e povoados", "Votos a recuperar por bairro", "Eleitores de Lula que não votaram no 1º turno")
+            _barras(list(por_b.items()))
+            st.markdown('<div class="cv-fonte">Astolfo Seabra e Vila Luizão contam como um bairro só. Fonte: TSE, '
+                        'boletins de urna do 1º turno de 2026.</div>', unsafe_allow_html=True)
+    with c2:
+        with st.container(key="cv_papel_tun10"):
+            fortes = loc[loc.lula_pct >= 60].head(10)
+            _cab("Os 10 locais de votação", "Onde Lula vence e mais gente ficou em casa",
+                 "Locais onde Lula teve 60% ou mais dos votos válidos", estrela=False)
+            _lista([(x.Local, f"{x.bairro} · Lula {_br(x.lula_pct)}%", x.lula_casa) for x in fortes.itertuples()])
+
+    # ---- chamada final
+    with st.container(key="cv_papel_cta"):
+        st.markdown(f'''<span class="cv-tag">Domingo · 25 de outubro</span>
+<div class="cv-h" style="font-size:clamp(3.4rem,11vw,8rem);margin-top:14px">{cv.fmt_qtd(BR_T["lula_casa"]).upper()}</div>
+<div class="cv-faixa" style="background:#D3252B;color:#fff">eleitores de Lula</div>
+<div class="cv-h">não foram às urnas<span class="ln"></span><span class="st">★</span></div>
+<div class="cv-cta">É hora de<br>conversar<div class="e">e</div>convencer!</div>
+<div class="cv-sub" style="margin-top:12px">Cada um leva um. Compartilhe com quem vota no seu bairro.</div>''',
+                    unsafe_allow_html=True)
+        compartilhar_2t("t2_compartilhar_cta")
 
 
 # ================================================================ 2) ao vivo
@@ -790,7 +1007,7 @@ def status(info, ensaio):
 with aba[1]:
     c = st.columns([1.3, 1, 1])
     # ?modo=vivo abre direto no ao vivo (link de divulgação no domingo e teste de carga antes dele)
-    abre_vivo = agora >= INICIO - timedelta(hours=1) or _param("modo").lower() in ("vivo", "aovivo", "ao-vivo")
+    abre_vivo = _param("modo").lower() != "ensaio"
     modo = c[0].segmented_control("Modo", ["Ao vivo", "Ensaio"], default="Ao vivo" if abre_vivo else "Ensaio",
                                   key="t2_modo", selection_mode="single") or "Ensaio"
     ensaio = modo == "Ensaio"
@@ -824,13 +1041,15 @@ with aba[1]:
             vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
             st.subheader("🇧🇷 Brasil")
             placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
-            r_ = motor_2t.projetar(uf_v, UF, "uf")[1] if ensaio else proj_vivo("uf")
-            bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
+            cards([("Apurado", pct(br_v.get("pst", 0), 2), "das seções do Brasil", "#1B2A41"),
+                   ("Diferença agora", n(abs(vl - vf)) + " votos",
+                    ("Lula" if vl >= vf else "Flávio") + " à frente na apuração" if vl + vf else "aguardando os votos",
+                    COR_L if vl >= vf else COR_F)])
             # histórico desta sessão
             h = st.session_state.setdefault("t2_hist_" + modo, [])
             if vl + vf and (not h or h[-1][1] != br_v.get("pst")):
                 h.append((datetime.now(BRT).strftime("%H:%M:%S"), br_v.get("pst", 0), 100 * vl / (vl + vf),
-                          r_.get("final_a", [None, None, None])[1]))
+                          None))
             c1, c2 = st.columns([1.4, 1], gap="large")
             with c1:
                 u = uf_v.copy()
@@ -849,7 +1068,6 @@ with aba[1]:
                     hh = pd.DataFrame(h, columns=["hora", "apurado", "lula_agora", "lula_proj"])
                     fig = go.Figure()
                     fig.add_scatter(x=hh.apurado, y=hh.lula_agora, name="Lula apurado", line=dict(color=COR_L))
-                    fig.add_scatter(x=hh.apurado, y=hh.lula_proj, name="Lula projetado", line=dict(color=COR_L, dash="dot"))
                     fig.add_hline(y=50, line_dash="dash", line_color="#5B6477")
                     fig.update_layout(title="Evolução nesta sessão", height=520, xaxis_title="% apurado",
                                       yaxis_title="Lula (% dos válidos)", legend=dict(orientation="h", y=-.15))
@@ -1239,30 +1457,16 @@ with aba[3]:
 
 # ================================================================ 5) pesquisas e contexto
 with aba[4]:
-    ens = SIM["componentes"]["pesquisas"]["ensemble"]
-    c1, c2 = st.columns([1.5, 1], gap="large")
-    with c1:
-        fig = go.Figure()
-        for inst, g in PES.groupby("instituto"):
-            fig.add_scatter(x=g.meio, y=g.lula_2p, mode="markers+lines", name=inst, marker=dict(size=9),
-                            line=dict(width=1), hovertemplate=f"{inst}<br>%{{x|%d/%m}} · Lula %{{y:.1f}}%<extra></extra>")
-        dia = pd.Timestamp("2026-10-25")
-        fig.add_scatter(x=[dia], y=[ens["est"]], mode="markers", name="Média dos 6 agregadores",
-                        marker=dict(size=16, color=COR_L, symbol="diamond"),
-                        error_y=dict(type="data", array=[1.28 * ens["dp"]], color=COR_L))
-        fig.add_hline(y=50, line_dash="dash", line_color="#5B6477")
-        fig.update_layout(title="Pesquisas do 2º turno · Lula nos votos válidos", height=480, yaxis_title="Lula (%)",
-                          legend=dict(orientation="h", y=-.2, font=dict(size=10)))
-        grafico(fig)
-    with c2:
-        mods = SIM["componentes"]["pesquisas"]["modelos"]
-        t = pd.DataFrame([{"Agregador": k, "Lula %": v["est"], "Desvio (pts)": v["dp"]} for k, v in mods.items()])
-        tabela(t, height=260)
-        ef = SIM["componentes"]["pesquisas"]["efeito_instituto"]
-        fig = go.Figure(go.Bar(x=list(ef.values()), y=list(ef.keys()), orientation="h",
-                               marker_color=[COR_L if v > 0 else COR_F for v in ef.values()]))
-        fig.update_layout(title="Efeito de cada instituto (pts para Lula)", height=420, yaxis=dict(autorange="reversed"))
-        grafico(fig)
+    fig = go.Figure()
+    for inst, g in PES.groupby("instituto"):
+        fig.add_scatter(x=g.meio, y=g.lula_2p, mode="markers+lines", name=inst, marker=dict(size=9),
+                        line=dict(width=1), hovertemplate=f"{inst}<br>%{{x|%d/%m}} · Lula %{{y:.1f}}%<extra></extra>")
+    fig.add_hline(y=50, line_dash="dash", line_color="#5B6477")
+    fig.update_layout(title="Pesquisas registradas do 2º turno · Lula nos votos válidos", height=460, yaxis_title="Lula (%)",
+                      legend=dict(orientation="h", y=-.2, font=dict(size=10)))
+    grafico(fig)
+    st.caption("Pesquisas medem intenção de quem diz que vai votar. O resultado depende de quem comparece: veja na aba "
+               "📣 Convencimento onde estão os eleitores de Lula que faltaram no 1º turno.")
     st.markdown("##### Para onde vão os eleitores de quem ficou de fora")
     tr = TRF.assign(Lula=TRF.lula, Flávio=TRF.flavio, Outros=TRF.branco_nulo_indeciso)
     tabela(tr[["instituto", "eleitor_1t", "Flávio", "Lula", "Outros", "observacao"]].rename(columns={
@@ -1286,43 +1490,33 @@ with aba[4]:
 
 # ================================================================ 6) metodologia
 with aba[5]:
-    comp = SIM["componentes"]
-    e = comp["erro"]
     st.markdown(f"""
-**Como o modelo projeta o 2º turno**
+**📣 Projeto Convencimento: como os números são calculados**
 
-1. **Pesquisas do 2º turno** ({comp['pesquisas']['n']} pesquisas registradas, {comp['pesquisas']['primeira'][8:10]}/10 a
-   {comp['pesquisas']['ultima'][8:10]}/10) passam pelos mesmos **6 agregadores** do modelo do 1º turno (média ponderada,
-   mediana, efeito-instituto, Kalman, processo gaussiano e bayesiano hierárquico). Resultado: Lula com
-   **{pct(ens['est'])}** dos válidos (desvio {n(ens['dp'], 1)} ponto).
-2. **Erro das pesquisas.** No 1º turno de 2026, quase todos os institutos superestimaram Lula na disputa direta (erro
-   médio de {n(abs(e['erro_1t_2026_medio']), 1)} pontos na margem). Nos 2º turnos de 2006 a 2022, o erro foi pequeno. Em
-   cada cenário sorteamos um desses erros (metade das vezes de cada grupo) e uma **persistência de 0% a 100%**.
-3. **Base estrutural.** Votos oficiais do 1º turno + transferência medida dos eleitores de Cury, Renan, Caiado, Zema e
-   demais (cruzamentos AtlasIntel e Quaest) + pequena troca entre as bases e efeito do comparecimento. Resultado: Lula com
-   **{pct(comp['estrutural']['lula_p10_p50_p90'][1])}**.
-4. **Mistura:** {round(100 * comp['peso_pesquisas'])}% dos cenários partem das pesquisas e o resto da base estrutural.
-5. **Geografia:** cada estado, município do MA e seção de Tuntum parte do próprio 1º turno com a mesma transferência,
-   recebe o padrão medido de 2022 (o 2º turno acentua levemente a geografia do 1º), o recorte regional do Datafolha (meio
-   caminho) e um ruído do tamanho medido; depois é calibrado para somar o nível de cima (Brasil → UF → município → seção).
+1. **Quem faltou.** Para cada lugar, faltosos = eleitores aptos − quem compareceu no 1º turno (4/10/2026), pelos
+   resultados oficiais do TSE: por estado no Brasil, por município no Maranhão e por seção (boletim de urna) em Tuntum.
+2. **Eleitor de Lula estimado.** Os faltosos de cada lugar são contados como eleitores de Lula na mesma proporção dos
+   votos válidos de Lula naquele lugar (é o método usado pelas campanhas de mobilização). Quanto menor o lugar, melhor a
+   estimativa: em Tuntum a conta é seção por seção.
+3. **A diferença a virar.** No 1º turno, Flávio teve {n(BR_T["flavio_1t"])} votos e Lula {n(BR_T["lula_1t"])}: diferença de
+   {n(BR_T["diferenca"])}. Trazer de volta {pct(100 * BR_T["fracao_para_virar"], 1)} dos eleitores de Lula que ficaram em
+   casa ({cv.fmt_qtd(BR_T["lula_casa"])}) cobre essa diferença.
+4. **Regiões.** Estados agrupados nas 5 regiões do Brasil; municípios do Maranhão nas regiões geográficas do IBGE (2017);
+   em Tuntum, bairro e povoado conforme o cadastro do local de votação (Astolfo Seabra e Vila Luizão como um só bairro).
+
+**Limites.** É uma estimativa: quem faltou não vota necessariamente como os vizinhos. Os eleitores de Flávio que faltaram
+também existem (estimativa: {cv.fmt_qtd(BR_T["flavio_casa"])}); a conta mostra o efeito de trazer de volta os de Lula.
+O voto no exterior fica fora da conta.
+
+**Apuração ao vivo.** No domingo, a partir das 17h (Brasília), a aba Ao vivo lê os arquivos oficiais do TSE a cada minuto
+(Brasil, estados, os 217 municípios do Maranhão e os boletins de urna de cada seção de Tuntum). As abas Maranhão e
+Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turno nesses lugares.
 """)
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
-        tabela(pd.DataFrame([{"Instituto": k, "Erro no 1º turno 2026 (margem, pts)": v}
-                             for k, v in e["erro_1t_2026_por_instituto"].items()]).sort_values(
-            "Erro no 1º turno 2026 (margem, pts)"), height=420)
-    with c2:
-        tabela(pd.DataFrame([{"Eleição": k, "Erro das pesquisas finais de 2º turno (margem, pts)": v}
-                             for k, v in e["historico_2t_por_eleicao"].items()]), height=220)
-        trf = comp["estrutural"]["transferencia"]
-        tabela(pd.DataFrame([{"Eleitor de": k, "Lula entre os que escolhem %": 100 * v["lula_entre"],
-                              "Escolhe Lula ou Flávio %": 100 * v["decide"]} for k, v in trf.items()]), height=220)
-    st.caption("Erro na margem = (Lula − Flávio na urna) − (Lula − Flávio na pesquisa), só os dois. Negativo = a pesquisa "
-               "superestimou Lula. " + " ".join(SIM["limites"]) + f" Modelo gerado em {SIM['gerado_em'][:16].replace('T', ' ')}.")
+
 
 # ================================================================ rodapé com créditos
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
-<div class="tx">{CREDITO}. Modelo estatístico com pesquisas registradas no TSE e resultados oficiais do 1º turno;
-apuração com dados públicos do TSE. Projeções não são certeza nem recomendação de voto.<br><span style="opacity:.6">Versão do painel: 2º turno · 21/10 23h (cartões do MA)</span></div></div>
+<div class="tx">{CREDITO}.
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 22/10 (Projeto Convencimento)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
