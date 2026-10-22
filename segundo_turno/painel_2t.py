@@ -241,9 +241,14 @@ st.markdown("""<style>
   box-shadow: 0 8px 20px rgba(200,16,46,.30), 0 8px 20px rgba(29,78,137,.30), inset 0 1px 0 rgba(255,255,255,.25) !important;}
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] p, [data-testid="stTabs"] [role="tab"][data-selected] p {font-weight: 800 !important;}
 [data-testid="stTabs"] [role="tab"]:focus-visible, [data-testid="stTabs"] [role="tab"][data-focus-visible] {outline: 2px solid #8FE3FF !important; outline-offset: 2px;}
-@media (max-width: 760px) {[data-testid="stTabs"] [role="tablist"] {top: 3rem; border-radius: 16px !important; padding: 6px !important;}
-  [data-testid="stTabs"] [role="tab"] {flex: 0 0 auto !important; padding: .5rem .85rem !important;}
-  [data-testid="stTabs"] [role="tab"] p {font-size: .82rem !important;}}
+/* celular: todas as abas à vista, em grade de 2 colunas (sem precisar rolar para descobrir as outras) */
+@media (max-width: 760px) {[data-testid="stTabs"] [role="tablist"] {position: relative !important; top: auto;
+    display: grid !important; grid-template-columns: 1fr 1fr; overflow: visible !important; border-radius: 16px !important;
+    padding: 6px !important; gap: 6px !important;}
+  [data-testid="stTabs"] [role="tab"] {min-width: 0 !important; width: auto !important; padding: .55rem .4rem !important;}
+  [data-testid="stTabs"] [role="tab"] p {font-size: .84rem !important; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis;}
+  [data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {display: none !important;}}
 @media (prefers-reduced-motion: reduce) {[data-testid="stTabs"] [role="tab"] {transition: none;}}
 /* contador de pessoas conectadas */
 .t2-online {display: flex; width: fit-content; margin: 2px 0 10px auto; align-items: center; gap: 8px;
@@ -1700,5 +1705,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 22/10 (Projeto Convencimento)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 22/10 (menu no celular)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
