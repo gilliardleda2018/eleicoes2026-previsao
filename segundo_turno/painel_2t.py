@@ -299,6 +299,15 @@ st.markdown("""<style>
   flex: 1; height: 4px; background: #D3252B;}
 @media (max-width: 760px) {.cv-barras .it {grid-template-columns: 34% 1fr 5.4rem;} .cv-barras .v {font-size: 1.2rem;} .cv-barras .nm {font-size: 1.05rem;}
   .cv-lista .nm {font-size: 1.05rem;} .cv-lista .v, .cv-lista .n {font-size: 1.5rem;}}
+.cv-kpis {display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 14px 0 6px;}
+.cv-kpis .k {background: #fff; border-top: 5px solid #D3252B; padding: 12px 14px 10px; box-shadow: 0 6px 14px rgba(120,30,30,.08);}
+.cv-kpis .r {font: 800 .68rem 'Montserrat', sans-serif; letter-spacing: .14em; color: #A61E24; text-transform: uppercase;}
+.cv-kpis .q {font: 400 clamp(1.45rem, 2.4vw, 2.1rem)/1.05 'Anton', 'Impact', sans-serif; color: #D3252B; margin: 4px 0 2px;}
+.cv-kpis .d {font: 600 .76rem 'Manrope', sans-serif; color: #4A3A3A;}
+.cv-kpis.v .k {background: rgba(255,255,255,.12); border-top-color: #fff; box-shadow: none;}
+.cv-kpis.v .r, .cv-kpis.v .d {color: #FFE3E0;} .cv-kpis.v .q {color: #fff;}
+.cv-nivel {font: 400 clamp(1.6rem, 3.6vw, 2.4rem)/1 'Anton', 'Impact', sans-serif; color: #1E1E1E; text-transform: uppercase;
+  margin: 34px 0 12px; padding: 10px 0 10px 16px; border-left: 8px solid #D3252B; letter-spacing: .02em;}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -689,23 +698,109 @@ def _bolhas(df, lat, lon, grupo, valor, nome, rotulos=None, altura=520, tam_max=
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
 
+def _kpis(itens, verm=False):
+    """itens: (rótulo, valor, detalhe) — fileira de KPIs no estilo dos cards."""
+    st.markdown('<div class="cv-kpis' + (' v' if verm else '') + '">' + "".join(
+        f'<div class="k"><div class="r">{escape(r)}</div><div class="q">{q}</div><div class="d">{escape(d)}</div></div>'
+        for r, q, d in itens) + "</div>", unsafe_allow_html=True)
+
+
+def _graf(fig, altura=420):
+    fig.update_layout(height=altura, margin=dict(l=8, r=8, t=46, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                      plot_bgcolor="rgba(0,0,0,0)", font=dict(family="Montserrat, Manrope, sans-serif", color="#3A2A2A"),
+                      title_font=dict(family="Anton, Impact, sans-serif", size=20, color="#D3252B"),
+                      hoverlabel=HOVER_CARD, legend=dict(orientation="h", y=-.18))
+    fig.update_xaxes(gridcolor="rgba(160,120,110,.18)", zeroline=False)
+    fig.update_yaxes(gridcolor="rgba(160,120,110,.18)", zeroline=False)
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
+
+def _dispersao(df, nome, grupo, titulo, rotular=8, tam_col="lula_casa", altura=460):
+    """Abstenção × voto em Lula: no alto à direita estão os lugares que mais rendem na mobilização."""
+    fig = go.Figure()
+    mx = float(df[tam_col].max()) or 1
+    for g, d in df.groupby(grupo, sort=False):
+        fig.add_scatter(x=d.lula_pct, y=d.abstencao_pct, mode="markers", name=str(g),
+                        marker=dict(size=np.clip(44 * np.sqrt(d[tam_col] / mx), 6, 44), color=CORES_REG.get(str(g), "#B3141B"),
+                                    opacity=.8, line=dict(width=1, color="#fff")),
+                        text=[f'<span style="font-size:14px"><b>{escape(str(a))}</b></span><br>{_LINHA}<br>'
+                              f'{_rot("Abstenção")}  <b>{_br(b)}%</b><br>{_rot("Lula no 1º turno")}  <b>{_br(c)}%</b><br>'
+                              f'{_rot("Eleitores de Lula em casa")}  <b>{cv.fmt_qtd(e)}</b>'
+                              for a, b, c, e in zip(d[nome], d.abstencao_pct, d.lula_pct, d[tam_col])],
+                        hovertemplate="%{text}<extra></extra>")
+    for r in df.nlargest(rotular, tam_col).itertuples():
+        fig.add_annotation(x=r.lula_pct, y=r.abstencao_pct, text=f"<b>{escape(str(getattr(r, nome)))}</b>", showarrow=False,
+                           yshift=14, font=dict(size=10, color="#3A2A2A"))
+    fig.add_vline(x=50, line_dash="dot", line_color="#D3252B")
+    fig.update_layout(title=titulo, xaxis_title="Lula no 1º turno (% dos válidos)", yaxis_title="Abstenção no 1º turno (%)")
+    _graf(fig, altura)
+
+
+def _barras_pct(nomes, valores, titulo, ref=None, ref_txt="", altura=420, cor="#D3252B"):
+    fig = go.Figure(go.Bar(x=valores, y=nomes, orientation="h", marker_color=cor,
+                           text=[f"{_br(v)}%" for v in valores], textposition="outside",
+                           hovertemplate="%{y}: %{x:.1f}%<extra></extra>"))
+    if ref is not None:
+        fig.add_vline(x=ref, line_dash="dash", line_color="#1E1E1E", annotation_text=ref_txt, annotation_position="top")
+    fig.update_layout(title=titulo, yaxis=dict(autorange="reversed"), xaxis=dict(ticksuffix="%"), showlegend=False)
+    _graf(fig, altura)
+
+
 with aba[0]:
     est, BR_T = cv.brasil()
     vezes = int(1 / BR_T["fracao_para_virar"]) if BR_T["fracao_para_virar"] > 0 else 0
-    # ---- capa
+    MA_C = cv.maranhao(MUN)
+    base_c, _ = base_tuntum()
+    TU = cv.tuntum(base_c)
+    ma_uf = est[est.uf == "MA"].iloc[0]
+
+    # ================= capa
     with st.container(key="cv_verm_capa"):
-        st.markdown(f'''<span class="cv-tag">Brasil · 2º turno · 25 de outubro</span>
+        st.markdown(f"""<span class="cv-tag">Brasil · 2º turno · 25 de outubro</span>
 <div class="cv-big" style="margin-top:16px">Mais de<span class="ln"></span>★</div>
 <div class="cv-mega">{cv.fmt_qtd(BR_T["lula_casa"]).upper()}</div>
 <div class="cv-big">de eleitores de Lula<span class="ln"></span>★</div>
 <div class="cv-faixa">não foram votar no 1º turno</div>
 <div class="cv-big">A diferença foi de {cv.fmt_qtd(BR_T["diferenca"])}<span class="ln"></span>★</div>
-<div class="cv-big cv-amarelo">Basta 1 em cada {vezes} voltar às urnas</div>
-<div class="cv-fonte">Fonte: TSE, resultado oficial do 1º turno (4/10/2026): Flávio {n(BR_T["flavio_1t"])} × Lula
-{n(BR_T["lula_1t"])} votos. Eleitor de Lula estimado pela votação do estado onde cada pessoa vota (exterior fora da
-conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</div>''', unsafe_allow_html=True)
+<div class="cv-big cv-amarelo">Basta 1 em cada {vezes} voltar às urnas</div>""", unsafe_allow_html=True)
+        _kpis([("Faltaram no Brasil", cv.fmt_qtd(BR_T["faltaram"]), f"{pct(BR_T['abstencao_pct'])} do eleitorado"),
+               ("Eleitores de Lula em casa", cv.fmt_qtd(BR_T["lula_casa"]), "estimativa pelo voto do estado"),
+               ("Diferença no 1º turno", cv.fmt_qtd(BR_T["diferenca"]), "Flávio à frente de Lula"),
+               ("Precisam voltar", pct(100 * BR_T["fracao_para_virar"]), f"1 em cada {vezes} eleitores de Lula em casa"),
+               ("No Maranhão", cv.fmt_qtd(ma_uf.lula_casa), f"{pct(100 * ma_uf.lula_casa / BR_T['diferenca'], 0)} da diferença"),
+               ("Em Tuntum", cv.fmt_qtd(TU.lula_casa.sum()), f"{n(TU.faltaram.sum())} faltaram")], verm=True)
+        st.markdown(f'<div class="cv-fonte">Fonte: TSE, resultado oficial do 1º turno (4/10/2026): Flávio {n(BR_T["flavio_1t"])} × '
+                    f'Lula {n(BR_T["lula_1t"])} votos. Eleitor de Lula estimado pela votação do lugar onde cada pessoa vota '
+                    '(exterior fora da conta).</div>', unsafe_allow_html=True)
 
-    # ---- Brasil por estado
+    # ================= calculadora da virada
+    with st.container(key="cv_papel_calc"):
+        _cab("Calculadora da virada", "Quantos precisam voltar?",
+             "Arraste: que parte dos eleitores de Lula que ficaram em casa volta a votar no domingo?")
+        volta = st.slider("Eleitores de Lula que voltam a votar (%)", 1, 40, 20, 1, format="%d%%", key="cv_volta")
+        ganho = BR_T["lula_casa"] * volta / 100
+        saldo = ganho - BR_T["diferenca"]
+        c1, c2 = st.columns([1, 1.3], gap="large")
+        with c1:
+            _kpis([("Votos que voltam", cv.fmt_qtd(ganho), f"{volta}% de {cv.fmt_qtd(BR_T['lula_casa'])}"),
+                   ("Diferença do 1º turno", cv.fmt_qtd(BR_T["diferenca"]), "o que precisa ser coberto"),
+                   ("Saldo", ("+" if saldo >= 0 else "−") + cv.fmt_qtd(abs(saldo)),
+                    "a diferença é coberta" if saldo >= 0 else "ainda falta")])
+        with c2:
+            fig = go.Figure()
+            fig.add_bar(y=["Diferença do 1º turno"], x=[BR_T["diferenca"]], orientation="h", marker_color="#1E1E1E",
+                        text=[cv.fmt_qtd(BR_T["diferenca"])], textposition="inside", name="Diferença")
+            fig.add_bar(y=["Eleitores de Lula que voltam"], x=[ganho], orientation="h",
+                        marker_color="#D3252B" if saldo >= 0 else "#E8892B", text=[cv.fmt_qtd(ganho)],
+                        textposition="inside", name="Voltam")
+            fig.update_layout(title="Votos que voltam × diferença a cobrir", showlegend=False,
+                              xaxis=dict(range=[0, max(BR_T["diferenca"], ganho) * 1.08]))
+            _graf(fig, 260)
+        st.markdown('<div class="cv-fonte">A conta considera só a volta dos eleitores de Lula que faltaram, sobre a diferença '
+                    'oficial do 1º turno.</div>', unsafe_allow_html=True)
+
+    # ================= FEDERAL
+    st.markdown('<div class="cv-nivel">🇧🇷 Federal · Brasil por estado</div>', unsafe_allow_html=True)
     with st.container(key="cv_papel_br"):
         _cab("Brasil por estado", "Onde eles estão",
              "Eleitores de Lula que não votaram no 1º turno, por estado. Quanto maior a bolha, mais gente de Lula ficou em casa.")
@@ -720,26 +815,59 @@ conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</d
         with c2:
             rg = est.groupby("regiao")
             blocos = []
-            for nome_r, v in est.groupby("regiao").lula_casa.sum().sort_values(ascending=False).items():
+            for nome_r, v in rg.lula_casa.sum().sort_values(ascending=False).items():
                 top = rg.get_group(nome_r).sort_values("lula_casa", ascending=False).head(2)
                 blocos.append((nome_r, CORES_REG[nome_r], v,
                                " · ".join(f"{x.nome} {cv.fmt_qtd(x.lula_casa)}" for x in top.itertuples())))
             _blocos(blocos, "Brasil", BR_T["lula_casa"])
-        st.markdown('<div class="cv-fonte">Fonte: TSE, 1º turno de 2026, por estado. Eleitor de Lula estimado pela votação '
-                    'de Lula no estado.</div>', unsafe_allow_html=True)
-    with st.container(key="cv_verm_br"):
-        _cab("Os 10 estados", "Votos a recuperar por estado", "Eleitores de Lula que não votaram no 1º turno")
-        _barras([(x.nome, x.lula_casa) for x in est.head(10).itertuples()])
-        st.markdown(f'<div class="cv-fonte">Só esses 10 estados somam {cv.fmt_qtd(est.head(10).lula_casa.sum())}: mais que '
-                    f'o necessário para virar a diferença de {cv.fmt_qtd(BR_T["diferenca"])}. Fonte: TSE, 1º turno de 2026.'
-                    '</div>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        with st.container(key="cv_verm_br"):
+            _cab("Os 10 estados", "Votos a recuperar por estado", "Eleitores de Lula que não votaram no 1º turno")
+            _barras([(x.nome, x.lula_casa) for x in est.head(10).itertuples()])
+            st.markdown(f'<div class="cv-fonte">Só esses 10 estados somam {cv.fmt_qtd(est.head(10).lula_casa.sum())}. '
+                        'Fonte: TSE, 1º turno de 2026.</div>', unsafe_allow_html=True)
+    with c2:
+        with st.container(key="cv_papel_brfortes"):
+            fortes = est[est.lula_pct >= 60].head(10)
+            _cab("Onde Lula vence", "Onde Lula vence e mais gente ficou em casa",
+                 "Estados onde Lula teve 60% ou mais dos votos válidos", estrela=False)
+            _lista([(x.nome, f"{x.regiao} · Lula {_br(x.lula_pct)}% · abstenção {_br(x.abstencao_pct)}%", x.lula_casa)
+                    for x in fortes.itertuples()])
+    with st.container(key="cv_papel_brgraf"):
+        c1, c2 = st.columns(2, gap="large")
+        with c1:
+            _dispersao(est, "uf", "regiao", "Abstenção × voto em Lula, por estado")
+        with c2:
+            r_ = est.groupby("regiao").agg(faltaram=("faltaram", "sum"), eleitorado=("eleitorado", "sum"),
+                                           lula_casa=("lula_casa", "sum")).reset_index()
+            r_["abst"] = 100 * r_.faltaram / r_.eleitorado
+            r_ = r_.sort_values("lula_casa", ascending=False)
+            fig = go.Figure(go.Bar(x=r_.regiao, y=r_.lula_casa, marker_color=[CORES_REG[x] for x in r_.regiao],
+                                   text=[f"<b>{cv.fmt_qtd(v)}</b><br>abstenção {_br(a_)}%" for v, a_ in zip(r_.lula_casa, r_.abst)],
+                                   textposition="outside", hovertemplate="%{x}: %{y:,.0f}<extra></extra>"))
+            fig.update_layout(title="Eleitores de Lula em casa, por região", showlegend=False,
+                              yaxis=dict(range=[0, r_.lula_casa.max() * 1.25], tickformat=".2s"))
+            _graf(fig, 460)
+        st.markdown('<div class="cv-fonte">No alto à direita do gráfico de dispersão ficam os estados onde a abstenção foi alta '
+                    'e Lula venceu: é onde cada conversa rende mais.</div>', unsafe_allow_html=True)
 
-    # ---- Maranhão
-    MA_C = cv.maranhao(MUN)
+    # ================= ESTADUAL · MARANHÃO
+    st.markdown('<div class="cv-nivel">🏛️ Estadual · Maranhão por região e município</div>', unsafe_allow_html=True)
+    ma_falt, ma_elei = MA_C.faltaram.sum(), MA_C.eleitorado.sum()
+    with st.container(key="cv_verm_makpi"):
+        _cab("Maranhão", f"{cv.fmt_qtd(MA_C.lula_casa.sum())} votos de Lula em casa",
+             "Eleitores de Lula que não votaram no 1º turno no Maranhão")
+        _kpis([("Faltaram no MA", cv.fmt_qtd(ma_falt), f"{pct(100 * ma_falt / ma_elei)} do eleitorado"),
+               ("Eleitores de Lula em casa", cv.fmt_qtd(MA_C.lula_casa.sum()), "soma dos 217 municípios"),
+               ("Cobre da diferença nacional", pct(100 * MA_C.lula_casa.sum() / BR_T["diferenca"], 0),
+                f"de {cv.fmt_qtd(BR_T['diferenca'])}"),
+               ("Lula no MA (1º turno)", pct(100 * MA_C.lula.sum() / MA_C.validos.sum()), "dos votos válidos"),
+               ("Municípios com Lula ≥ 60%", str(int((MA_C.lula_pct >= 60).sum())), "de 217"),
+               ("Abstenção acima de 25%", str(int((MA_C.abstencao_pct > 25).sum())), "municípios")], verm=True)
     with st.container(key="cv_papel_ma"):
         _cab("Maranhão por região", "Onde eles estão no Maranhão",
-             f"{cv.fmt_qtd(MA_C.lula_casa.sum())} eleitores de Lula não votaram no 1º turno no Maranhão. Cada ponto é um "
-             "município: quanto maior, mais gente de Lula ficou em casa.")
+             "Cada ponto é um município: quanto maior, mais gente de Lula ficou em casa. Cores: regiões do IBGE.")
         c1, c2 = st.columns([1.5, 1], gap="large")
         with c1:
             polos = MA_C[MA_C.polo_intermediaria == 1]
@@ -754,9 +882,8 @@ conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</d
                 blocos.append((f"Região de {nome_r}", CORES_REG.get(nome_r, "#B3141B"), v,
                                " · ".join(f"{x.municipio} {cv.fmt_qtd(x.lula_casa)}" for x in top.itertuples())))
             _blocos(blocos, "Maranhão", MA_C.lula_casa.sum())
-        st.markdown(f'<div class="cv-fonte">Só o Maranhão pode cobrir {pct(100 * MA_C.lula_casa.sum() / BR_T["diferenca"], 0)} '
-                    'da diferença nacional do 1º turno. Fonte: TSE, 1º turno de 2026; regiões geográficas do IBGE (2017). '
-                    'Eleitor de Lula estimado pela votação de Lula no município.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="cv-fonte">Fonte: TSE, 1º turno de 2026; regiões geográficas do IBGE (2017). Eleitor de Lula '
+                    'estimado pela votação de Lula no município.</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2, gap="large")
     with c1:
         with st.container(key="cv_verm_ma"):
@@ -770,19 +897,64 @@ conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</d
                  "Municípios onde Lula teve 60% ou mais dos votos válidos", estrela=False)
             _lista([(x.municipio, f"Região {x.regiao_imediata} · Lula {_br(x.lula_pct)}%", x.lula_casa)
                     for x in fortes.itertuples()])
+    with st.container(key="cv_papel_magraf"):
+        c1, c2 = st.columns(2, gap="large")
+        with c1:
+            _dispersao(MA_C, "municipio", "regiao_intermediaria", "Abstenção × voto em Lula, por município", rotular=8)
+        with c2:
+            ri = MA_C.groupby("regiao_imediata").agg(faltaram=("faltaram", "sum"), eleitorado=("eleitorado", "sum"),
+                                                      lula_casa=("lula_casa", "sum")).reset_index()
+            ri = ri.sort_values("lula_casa", ascending=False)
+            fig = go.Figure(go.Bar(x=ri.lula_casa, y=ri.regiao_imediata, orientation="h", marker_color="#D3252B",
+                                   text=[cv.fmt_qtd(v) for v in ri.lula_casa], textposition="outside",
+                                   customdata=100 * ri.faltaram / ri.eleitorado,
+                                   hovertemplate="%{y}: %{x:,.0f} · abstenção %{customdata:.1f}%<extra></extra>"))
+            fig.update_layout(title="As 22 regiões imediatas", yaxis=dict(autorange="reversed", tickfont=dict(size=10)),
+                              showlegend=False)
+            _graf(fig, 640)
+    # ---- seu município
+    with st.container(key="cv_papel_mun"):
+        _cab("Seu município", "Quanto o seu município pode ajudar", "Escolha um dos 217 municípios do Maranhão",
+             estrela=False)
+        nomes_m = MA_C.sort_values("municipio").municipio.tolist()
+        esc = st.selectbox("Município", nomes_m, index=nomes_m.index("Tuntum") if "Tuntum" in nomes_m else 0,
+                           key="cv_mun")
+        x = MA_C[MA_C.municipio == esc].iloc[0]
+        rank = int((MA_C.lula_casa > x.lula_casa).sum()) + 1
+        _kpis([("Eleitorado", n(x.eleitorado), f"região de {x.regiao_imediata}"),
+               ("Faltaram", n(x.faltaram), f"{pct(x.abstencao_pct)} de abstenção"),
+               ("Eleitores de Lula em casa", cv.fmt_qtd(x.lula_casa), f"{rank}º do Maranhão"),
+               ("Lula no 1º turno", pct(x.lula_pct), "dos votos válidos"),
+               ("Meta: 1 em cada " + str(vezes), cv.fmt_qtd(x.lula_casa / vezes), "votos a trazer de volta")])
 
-    # ---- Tuntum
-    base_c, _ = base_tuntum()
-    TU = cv.tuntum(base_c)
+    # ================= MUNICIPAL · TUNTUM
+    st.markdown('<div class="cv-nivel">📍 Municipal · Tuntum por bairro, povoado e local</div>', unsafe_allow_html=True)
+    loc = TU.groupby("local_cadastro", as_index=False).agg(
+        lula_casa=("lula_casa", "sum"), faltaram=("faltaram", "sum"), aptos=("aptos", "sum"), lula=("lula", "sum"),
+        validos=("validos", "sum"), Local=("Local", "first"), bairro=("bairro", "first"), zona_tipo=("zona_tipo", "first"))
+    loc["lula_pct"] = 100 * loc.lula / loc.validos.replace(0, np.nan)
+    loc["abstencao_pct"] = 100 * loc.faltaram / loc.aptos.replace(0, np.nan)
+    loc = loc.sort_values("lula_casa", ascending=False)
+    bb = TU.groupby(["bairro", "zona_tipo"], as_index=False).agg(
+        lula_casa=("lula_casa", "sum"), faltaram=("faltaram", "sum"), aptos=("aptos", "sum"), lula=("lula", "sum"),
+        validos=("validos", "sum"))
+    bb["abstencao_pct"] = 100 * bb.faltaram / bb.aptos
+    bb["lula_pct"] = 100 * bb.lula / bb.validos
+    with st.container(key="cv_verm_tunkpi"):
+        _cab("Tuntum", f"{cv.fmt_qtd(TU.lula_casa.sum())} votos de Lula em casa",
+             "Eleitores de Lula que não votaram no 1º turno em Tuntum")
+        zt = TU.groupby("zona_tipo").agg(f=("faltaram", "sum"), a=("aptos", "sum"))
+        _kpis([("Aptos", n(TU.aptos.sum()), f"{len(TU)} seções · {TU.local_cadastro.nunique()} locais"),
+               ("Faltaram", n(TU.faltaram.sum()), f"{pct(100 * TU.faltaram.sum() / TU.aptos.sum())} de abstenção"),
+               ("Eleitores de Lula em casa", cv.fmt_qtd(TU.lula_casa.sum()), "seção por seção"),
+               ("Lula no 1º turno", pct(100 * TU.lula.sum() / TU.validos.sum()), "dos votos válidos"),
+               ("Abstenção na zona urbana", pct(100 * zt.loc["Zona urbana"].f / zt.loc["Zona urbana"].a)
+                if "Zona urbana" in zt.index else "–", "cidade"),
+               ("Abstenção na zona rural", pct(100 * zt.loc["Zona rural"].f / zt.loc["Zona rural"].a)
+                if "Zona rural" in zt.index else "–", "povoados")], verm=True)
     with st.container(key="cv_papel_tun"):
         _cab("Tuntum por bairro e povoado", "Onde eles estão em Tuntum",
-             f"{cv.fmt_qtd(TU.lula_casa.sum())} eleitores de Lula não votaram no 1º turno em Tuntum "
-             f"({n(TU.faltaram.sum())} faltaram ao todo). Cada ponto é um local de votação.")
-        loc = TU.groupby("local_cadastro", as_index=False).agg(
-            lula_casa=("lula_casa", "sum"), faltaram=("faltaram", "sum"), lula=("lula", "sum"), validos=("validos", "sum"),
-            Local=("Local", "first"), bairro=("bairro", "first"), zona_tipo=("zona_tipo", "first"))
-        loc["lula_pct"] = 100 * loc.lula / loc.validos.replace(0, np.nan)
-        loc = loc.sort_values("lula_casa", ascending=False)
+             "Cada ponto é um local de votação: quanto maior, mais gente de Lula ficou em casa.")
         c1, c2 = st.columns([1.5, 1], gap="large")
         with c1:
             if LOCAIS_GEO is not None:
@@ -798,15 +970,15 @@ conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</d
                 top = zg.get_group(z).groupby("bairro").lula_casa.sum().sort_values(ascending=False).head(2)
                 blocos.append((z, CORES_REG[z], v, " · ".join(f"{b_} {cv.fmt_qtd(x_)}" for b_, x_ in top.items())))
             _blocos(blocos, "Tuntum", TU.lula_casa.sum())
-        st.markdown('<div class="cv-fonte">Fonte: TSE, boletins de urna do 1º turno de 2026 (97 seções). Eleitor de Lula '
-                    'estimado pela votação de Lula na própria seção. Bairro conforme o cadastro do local de votação no TSE.'
-                    '</div>', unsafe_allow_html=True)
+        st.markdown('<div class="cv-fonte">Fonte: TSE, boletins de urna do 1º turno de 2026. Eleitor de Lula estimado pela '
+                    'votação de Lula na própria seção. Bairro conforme o cadastro do local de votação no TSE.</div>',
+                    unsafe_allow_html=True)
     c1, c2 = st.columns(2, gap="large")
     with c1:
         with st.container(key="cv_verm_tun"):
-            por_b = TU.groupby("bairro").lula_casa.sum().sort_values(ascending=False).head(10)
+            por_b = bb.sort_values("lula_casa", ascending=False).head(10)
             _cab("Os 10 bairros e povoados", "Votos a recuperar por bairro", "Eleitores de Lula que não votaram no 1º turno")
-            _barras(list(por_b.items()))
+            _barras([(x.bairro, x.lula_casa) for x in por_b.itertuples()])
             st.markdown('<div class="cv-fonte">Astolfo Seabra e Vila Luizão contam como um bairro só. Fonte: TSE, '
                         'boletins de urna do 1º turno de 2026.</div>', unsafe_allow_html=True)
     with c2:
@@ -815,15 +987,25 @@ conta). Abstenção no 1º turno: {pct(BR_T["abstencao_pct"])} do eleitorado.</d
             _cab("Os 10 locais de votação", "Onde Lula vence e mais gente ficou em casa",
                  "Locais onde Lula teve 60% ou mais dos votos válidos", estrela=False)
             _lista([(x.Local, f"{x.bairro} · Lula {_br(x.lula_pct)}%", x.lula_casa) for x in fortes.itertuples()])
+    with st.container(key="cv_papel_tungraf"):
+        c1, c2 = st.columns(2, gap="large")
+        with c1:
+            ba = bb.sort_values("abstencao_pct", ascending=False)
+            _barras_pct(ba.bairro, ba.abstencao_pct, "Abstenção por bairro e povoado",
+                        ref=100 * TU.faltaram.sum() / TU.aptos.sum(), ref_txt="média de Tuntum",
+                        altura=max(460, 26 * len(ba) + 120))
+        with c2:
+            _dispersao(loc, "Local", "zona_tipo", "Abstenção × voto em Lula, por local de votação", rotular=6,
+                       altura=max(460, 26 * len(ba) + 120))
 
-    # ---- chamada final
+    # ================= chamada final
     with st.container(key="cv_papel_cta"):
-        st.markdown(f'''<span class="cv-tag">Domingo · 25 de outubro</span>
+        st.markdown(f"""<span class="cv-tag">Domingo · 25 de outubro</span>
 <div class="cv-h" style="font-size:clamp(3.4rem,11vw,8rem);margin-top:14px">{cv.fmt_qtd(BR_T["lula_casa"]).upper()}</div>
 <div class="cv-faixa" style="background:#D3252B;color:#fff">eleitores de Lula</div>
 <div class="cv-h">não foram às urnas<span class="ln"></span><span class="st">★</span></div>
 <div class="cv-cta">É hora de<br>conversar<div class="e">e</div>convencer!</div>
-<div class="cv-sub" style="margin-top:12px">Cada um leva um. Compartilhe com quem vota no seu bairro.</div>''',
+<div class="cv-sub" style="margin-top:12px">Cada um leva um. Compartilhe com quem vota no seu bairro.</div>""",
                     unsafe_allow_html=True)
         compartilhar_2t("t2_compartilhar_cta")
 

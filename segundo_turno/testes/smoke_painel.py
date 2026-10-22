@@ -127,7 +127,8 @@ def rodar(titulo, estado=None, botoes=(), params=None):
     for item in ('[role="tab"][aria-selected="true"]', "Por região geográfica do IBGE", "Cidades-polo das regiões",
                  "Apuração por bairro e povoado", "Astolfo Seabra / Vila Luizão",
                  "cv-mega", "Votos a recuperar por estado", "Onde eles estão no Maranhão", "Votos a recuperar por bairro",
-                 "Onde Lula vence e mais gente ficou em casa", "conversar"):
+                 "Onde Lula vence e mais gente ficou em casa", "conversar", "cv-kpis", "Quantos precisam voltar",
+                 "Federal · Brasil", "Estadual · Maranhão", "Municipal · Tuntum", "Quanto o seu município pode ajudar"):
         assert item in textos or any(item in c[1] for c in CHAMADAS if c[0] == "expander"), f"{titulo}: faltou {item}"
     n_bairros = sum(1 for c in CHAMADAS if c[0] == "expander" and " seções" in c[1])
     assert n_bairros >= 20, f"{titulo}: só {n_bairros} tabelas de bairro"

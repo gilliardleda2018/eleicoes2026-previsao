@@ -86,7 +86,8 @@ def fmt_qtd(x):
     """14,8 milhões · 654 mil · 9.000 · 340"""
     x = float(x)
     if x >= 1e6:
-        return f"{x / 1e6:.1f}".replace(".", ",") + " milhões"
+        v = f"{x / 1e6:.1f}".replace(".", ",")
+        return v + (" milhão" if x < 1.95e6 else " milhões")
     if x >= 1e5:
         return f"{round(x / 1e3):.0f} mil"
     if x >= 1e4:
