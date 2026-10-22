@@ -368,7 +368,7 @@ def _param(nome):
 
 SOMENTE_2T = _param("so2t") == "1" or os.environ.get("SOMENTE_2T", "") == "1"
 # endereço divulgado: a página de redirecionamento da Aggilli, quando configurada no serviço
-LINK_2T = os.environ.get("LINK_2T") or (os.environ.get("PUBLIC_URL", "").rstrip("/") + "/segundo_turno?so2t=1"
+LINK_2T = os.environ.get("LINK_2T") or (os.environ.get("PUBLIC_URL", "").rstrip("/") + "/?so2t=1"
                                         if os.environ.get("PUBLIC_URL") else "")
 barra_navegacao("2t")  # na produção, também mostra o contador de pessoas conectadas e o modo TV
 if SOMENTE_2T:
