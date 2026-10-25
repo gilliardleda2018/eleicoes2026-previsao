@@ -766,17 +766,17 @@ with aba[0]:
 <div class="cv-mega">{cv.fmt_qtd(BR_T["lula_casa"]).upper()}</div>
 <div class="cv-big">de eleitores de Lula<span class="ln"></span>★</div>
 <div class="cv-faixa">não foram votar no 1º turno</div>
-<div class="cv-big">A diferença foi de {cv.fmt_qtd(BR_T["diferenca"])}<span class="ln"></span>★</div>
-<div class="cv-big cv-amarelo">Basta 1 em cada {vezes} voltar às urnas</div>""", unsafe_allow_html=True)
+<div class="cv-big">A diferença foi de {cv.fmt_qtd(BR_T["diferenca"])} de votos<span class="ln"></span>★</div>
+<div class="cv-big cv-amarelo">Basta que 1 em cada {vezes} volte às urnas</div>""", unsafe_allow_html=True)
         _kpis([("Faltaram no Brasil", cv.fmt_qtd(BR_T["faltaram"]), f"{pct(BR_T['abstencao_pct'])} do eleitorado"),
-               ("Eleitores de Lula em casa", cv.fmt_qtd(BR_T["lula_casa"]), "estimativa pelo voto do estado"),
+               ("Eleitores de Lula em casa", cv.fmt_qtd(BR_T["lula_casa"]), "estimativa pela votação em cada estado"),
                ("Diferença no 1º turno", cv.fmt_qtd(BR_T["diferenca"]), "Flávio à frente de Lula"),
-               ("Precisam voltar", pct(100 * BR_T["fracao_para_virar"]), f"1 em cada {vezes} eleitores de Lula em casa"),
-               ("No Maranhão", cv.fmt_qtd(ma_uf.lula_casa), f"{pct(100 * ma_uf.lula_casa / BR_T['diferenca'], 0)} da diferença"),
-               ("Em Tuntum", cv.fmt_qtd(TU.lula_casa.sum()), f"{n(TU.faltaram.sum())} faltaram")], verm=True)
+               ("Precisam voltar", pct(100 * BR_T["fracao_para_virar"]), f"1 em cada {vezes} eleitores de Lula que ficaram em casa"),
+               ("No Maranhão", cv.fmt_qtd(ma_uf.lula_casa), f"cobrem {pct(100 * ma_uf.lula_casa / BR_T['diferenca'], 0)} da diferença"),
+               ("Em Tuntum", cv.fmt_qtd(TU.lula_casa.sum()), f"{n(TU.faltaram.sum())} eleitores faltaram")], verm=True)
         st.markdown(f'<div class="cv-fonte">Fonte: TSE, resultado oficial do 1º turno (4/10/2026): Flávio {n(BR_T["flavio_1t"])} × '
-                    f'Lula {n(BR_T["lula_1t"])} votos. Eleitor de Lula estimado pela votação do lugar onde cada pessoa vota '
-                    '(exterior fora da conta).</div>', unsafe_allow_html=True)
+                    f'Lula {n(BR_T["lula_1t"])} votos. Eleitores de Lula estimados pela votação do local onde cada pessoa vota '
+                    '(voto no exterior fora da conta).</div>', unsafe_allow_html=True)
 
     # ================= calculadora da virada
     with st.container(key="cv_papel_calc"):
@@ -788,9 +788,9 @@ with aba[0]:
         c1, c2 = st.columns([1, 1.3], gap="large")
         with c1:
             _kpis([("Votos que voltam", cv.fmt_qtd(ganho), f"{volta}% de {cv.fmt_qtd(BR_T['lula_casa'])}"),
-                   ("Diferença do 1º turno", cv.fmt_qtd(BR_T["diferenca"]), "o que precisa ser coberto"),
+                   ("Diferença do 1º turno", cv.fmt_qtd(BR_T["diferenca"]), "o que é preciso superar"),
                    ("Saldo", ("+" if saldo >= 0 else "−") + cv.fmt_qtd(abs(saldo)),
-                    "a diferença é coberta" if saldo >= 0 else "ainda falta")])
+                    "a diferença é superada" if saldo >= 0 else "ainda faltam votos")])
         with c2:
             fig = go.Figure()
             fig.add_bar(y=["Diferença do 1º turno"], x=[BR_T["diferenca"]], orientation="h", marker_color="#1E1E1E",
@@ -861,11 +861,11 @@ with aba[0]:
     st.markdown('<div class="cv-nivel">🏛️ Estadual · Maranhão por região e município</div>', unsafe_allow_html=True)
     ma_falt, ma_elei = MA_C.faltaram.sum(), MA_C.eleitorado.sum()
     with st.container(key="cv_verm_makpi"):
-        _cab("Maranhão", f"{cv.fmt_qtd(MA_C.lula_casa.sum())} votos de Lula em casa",
+        _cab("Maranhão", f"{cv.fmt_qtd(MA_C.lula_casa.sum())} eleitores de Lula em casa",
              "Eleitores de Lula que não votaram no 1º turno no Maranhão")
         _kpis([("Faltaram no MA", cv.fmt_qtd(ma_falt), f"{pct(100 * ma_falt / ma_elei)} do eleitorado"),
                ("Eleitores de Lula em casa", cv.fmt_qtd(MA_C.lula_casa.sum()), "soma dos 217 municípios"),
-               ("Cobre da diferença nacional", pct(100 * MA_C.lula_casa.sum() / BR_T["diferenca"], 0),
+               ("Parte da diferença nacional", pct(100 * MA_C.lula_casa.sum() / BR_T["diferenca"], 0),
                 f"de {cv.fmt_qtd(BR_T['diferenca'])}"),
                ("Lula no MA (1º turno)", pct(100 * MA_C.lula.sum() / MA_C.validos.sum()), "dos votos válidos"),
                ("Municípios com Lula ≥ 60%", str(int((MA_C.lula_pct >= 60).sum())), "de 217"),
@@ -887,8 +887,8 @@ with aba[0]:
                 blocos.append((f"Região de {nome_r}", CORES_REG.get(nome_r, "#B3141B"), v,
                                " · ".join(f"{x.municipio} {cv.fmt_qtd(x.lula_casa)}" for x in top.itertuples())))
             _blocos(blocos, "Maranhão", MA_C.lula_casa.sum())
-        st.markdown('<div class="cv-fonte">Fonte: TSE, 1º turno de 2026; regiões geográficas do IBGE (2017). Eleitor de Lula '
-                    'estimado pela votação de Lula no município.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="cv-fonte">Fonte: TSE, 1º turno de 2026; regiões geográficas do IBGE (2017). Eleitores de Lula '
+                    'estimados pela votação de Lula no município.</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2, gap="large")
     with c1:
         with st.container(key="cv_verm_ma"):
@@ -946,7 +946,7 @@ with aba[0]:
     bb["abstencao_pct"] = 100 * bb.faltaram / bb.aptos
     bb["lula_pct"] = 100 * bb.lula / bb.validos
     with st.container(key="cv_verm_tunkpi"):
-        _cab("Tuntum", f"{cv.fmt_qtd(TU.lula_casa.sum())} votos de Lula em casa",
+        _cab("Tuntum", f"{cv.fmt_qtd(TU.lula_casa.sum())} eleitores de Lula em casa",
              "Eleitores de Lula que não votaram no 1º turno em Tuntum")
         zt = TU.groupby("zona_tipo").agg(f=("faltaram", "sum"), a=("aptos", "sum"))
         _kpis([("Aptos", n(TU.aptos.sum()), f"{len(TU)} seções · {TU.local_cadastro.nunique()} locais"),
@@ -975,7 +975,7 @@ with aba[0]:
                 top = zg.get_group(z).groupby("bairro").lula_casa.sum().sort_values(ascending=False).head(2)
                 blocos.append((z, CORES_REG[z], v, " · ".join(f"{b_} {cv.fmt_qtd(x_)}" for b_, x_ in top.items())))
             _blocos(blocos, "Tuntum", TU.lula_casa.sum())
-        st.markdown('<div class="cv-fonte">Fonte: TSE, boletins de urna do 1º turno de 2026. Eleitor de Lula estimado pela '
+        st.markdown('<div class="cv-fonte">Fonte: TSE, boletins de urna do 1º turno de 2026. Eleitores de Lula estimados pela '
                     'votação de Lula na própria seção. Bairro conforme o cadastro do local de votação no TSE.</div>',
                     unsafe_allow_html=True)
     c1, c2 = st.columns(2, gap="large")
@@ -1705,5 +1705,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 22/10 (menu no celular)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 24/10 (revisão do português)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
