@@ -329,6 +329,14 @@ st.markdown("""<style>
 @keyframes t2piscar {0% {opacity: 1; box-shadow: 0 0 0 0 rgba(18,161,80,.65);}
   50% {opacity: .35; box-shadow: 0 0 0 7px rgba(18,161,80,0);} 100% {opacity: 1; box-shadow: 0 0 0 0 rgba(18,161,80,0);}}
 @media (prefers-reduced-motion: reduce) {.t2-ap-selo .pt {animation: none;}}
+/* mapa por município (visão escura) */
+[class*="st-key-t2_mapa_mun"] {background: #202124; border-radius: 18px; padding: 14px 14px 10px;}
+.t2-leg {color: #E8EAED; font: 600 .8rem 'Montserrat', sans-serif; margin-top: 4px;}
+.t2-leg .tt {display: inline-block; background: #3C4043; border-radius: 8px; padding: 5px 10px; margin-bottom: 8px;}
+.t2-leg .ln {display: flex; align-items: center; gap: 6px; margin: 3px 0;}
+.t2-leg .q {width: 13px; height: 13px; border-radius: 3px; display: inline-block; border: 1px solid rgba(255,255,255,.25);}
+.t2-leg .ln span:last-child {margin-left: 8px;}
+.t2-leg .nt, [class*="st-key-t2_mapa_mun"] .nt {color: #BDC1C6; font: 500 .74rem 'Manrope', sans-serif; margin-top: 6px;}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -1191,6 +1199,33 @@ def proj_vivo(nivel):
     return motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ma_v is not None else {"sem_dados": True}
 
 
+import mapa_br as mapa_br_mod  # noqa: E402
+
+
+@st.cache_resource(show_spinner=False)
+def iniciar_mapa_br():
+    mapa_br_mod.iniciar(motor_2t)
+    return True
+
+
+@st.cache_data(show_spinner=False, max_entries=20)
+def mapa_mun_ensaio(fracao, semente, _uf_v):
+    return mapa_br_mod.desenhar(mapa_br_mod.ensaio(_uf_v))
+
+
+def _leg(cores):
+    return "".join(f'<span class="q" style="background:{c}"></span>' for c in cores)
+
+
+LEGENDA_MAPA_MUN = (
+    '<div class="t2-leg"><div class="tt">Como ler o mapa?</div>'
+    + "".join(f'<div class="ln"><span class="q" style="background:{f}"></span><span class="q" style="background:{l}"></span>'
+              f'<span>{r}</span></div>' for f, l, r in zip(mapa_br_mod.TONS_F, mapa_br_mod.TONS_L,
+                                                             ("0 a 5 p.p.", "5 a 20 p.p.", "acima de 20 p.p.")))
+    + '<div class="nt"><b style="color:#7C84C6">Azul: Flávio</b> · <b style="color:#E0607A">Vermelho: Lula</b> · '
+      'cinza: ainda sem votos. Quanto mais escuro, maior a vantagem do 1º colocado.</div></div>')
+
+
 def titulo_apurado(texto, pst):
     """Título da seção com o selo verde piscando: % apurado."""
     v = f"{float(pst or 0):.2f}".replace(".", ",")
@@ -1284,11 +1319,22 @@ with aba[1]:
                 u = u[u.uf != "ZZ"]
                 todas = sorted(set(UF.uf) - {"ZZ"})
                 faltam = [x for x in todas if x not in set(u.loc[u.lula_agora.notna(), "uf"])]
-                fig = mapa_br(u[u.lula_agora.notna()], "lula_agora", "Apuração por estado · Lula (% dos válidos apurados)",
-                              hover={"pst": ":.1f", "lula_agora": ":.1f"})
-                grafico(sem_votos(fig, geo("br"), "properties.uf", faltam, faltam))
-                if faltam:
-                    st.caption(f"Em cinza: {len(faltam)} estado(s) ainda sem votos apurados.")
+                try:  # mapa por município (vermelho Lula, azul Flávio); se falhar, volta o mapa por estado
+                    if ensaio:
+                        png, n_mun = mapa_mun_ensaio(fracao, int(semente), uf_v), None
+                    else:
+                        iniciar_mapa_br()
+                        png, n_mun, _ = mapa_br_mod.imagem_atual()
+                    with st.container(key="t2_mapa_mun"):
+                        st.image(png, width="stretch")
+                        st.markdown(LEGENDA_MAPA_MUN + (f'<div class="nt">{n(n_mun)} municípios com votos nesta leitura · '
+                                    'atualiza a cada ~4 min</div>' if n_mun is not None else ""), unsafe_allow_html=True)
+                except Exception:  # noqa: BLE001
+                    fig = mapa_br(u[u.lula_agora.notna()], "lula_agora", "Apuração por estado · Lula (% dos válidos apurados)",
+                                  hover={"pst": ":.1f", "lula_agora": ":.1f"})
+                    grafico(sem_votos(fig, geo("br"), "properties.uf", faltam, faltam))
+                    if faltam:
+                        st.caption(f"Em cinza: {len(faltam)} estado(s) ainda sem votos apurados.")
             with c2:
                 if len(h) >= 2:
                     hh = pd.DataFrame(h, columns=["hora", "apurado", "lula_agora", "lula_proj"])
@@ -1746,5 +1792,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (abas + projeção Brasil)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (mapa por município)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
