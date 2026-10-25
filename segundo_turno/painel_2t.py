@@ -607,6 +607,18 @@ if ao_vivo_agora:  # bolinha verde piscando na aba "Ao vivo · agora" (no lugar 
 [data-testid="stTabs"] [role="tab"]:nth-child(2) p::before {content: ""; display: inline-block; width: 10px; height: 10px;
   margin-right: 8px; vertical-align: middle; border-radius: 50%; background: #22C55E;
   animation: t2piscar 1.4s ease-in-out infinite;}
+/* o botão inteiro solta ondas verdes, como um sinal ao vivo */
+[data-testid="stTabs"] [role="tab"]:nth-child(2) {position: relative !important; overflow: visible !important;
+  border-color: rgba(34,197,94,.85) !important; animation: t2vibra 1.1s ease-in-out infinite;}
+[data-testid="stTabs"] [role="tab"]:nth-child(2)::after {content: ""; position: absolute; inset: 0; border-radius: 14px;
+  pointer-events: none; animation: t2onda 1.1s ease-out infinite;}
+@keyframes t2onda {0% {box-shadow: 0 0 0 0 rgba(34,197,94,.95), 0 0 0 0 rgba(34,197,94,.6);}
+  50% {box-shadow: 0 0 0 4px rgba(34,197,94,.45), 0 0 0 1px rgba(34,197,94,.7);}
+  100% {box-shadow: 0 0 0 8px rgba(34,197,94,0), 0 0 0 5px rgba(34,197,94,0);}}
+@keyframes t2vibra {0%, 100% {transform: scale(1);} 25% {transform: scale(1.035);} 50% {transform: scale(.99);}
+  75% {transform: scale(1.02);}}
+@media (prefers-reduced-motion: reduce) {[data-testid="stTabs"] [role="tab"]:nth-child(2),
+  [data-testid="stTabs"] [role="tab"]:nth-child(2)::after {animation: none;}}
 </style>""", unsafe_allow_html=True)
 aba = st.tabs(["📣 Convencimento", "Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
                "📰 Pesquisas e contexto", "🧪 Metodologia"])
@@ -1729,5 +1741,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (ao vivo em verde)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (ao vivo com ondas)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
