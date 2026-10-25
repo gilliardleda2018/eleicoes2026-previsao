@@ -620,7 +620,7 @@ if ao_vivo_agora:  # bolinha verde piscando na aba "Ao vivo · agora" (no lugar 
 @media (prefers-reduced-motion: reduce) {[data-testid="stTabs"] [role="tab"]:nth-child(2),
   [data-testid="stTabs"] [role="tab"]:nth-child(2)::after {animation: none;}}
 </style>""", unsafe_allow_html=True)
-aba = st.tabs(["📣 Convencimento", "Ao vivo · agora" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
+aba = st.tabs(["📣 Convencimento", "APURAÇÃO - AO VIVO AQUI" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
                "📰 Pesquisas e contexto", "🧪 Metodologia"])
 
 
@@ -1741,5 +1741,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (ao vivo com ondas)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (apuração ao vivo aqui)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
