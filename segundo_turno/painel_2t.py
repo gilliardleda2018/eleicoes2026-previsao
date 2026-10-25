@@ -218,16 +218,21 @@ st.markdown("""<style>
 /* abas: barra de botões em vidro azul-noite; a aba ativa ganha o degradê do duelo.
    Streamlit 1.6x desenha as abas com react-aria (role="tab", aria-selected / data-selected,
    .react-aria-SelectionIndicator e uma linha cinza em ::after); versões antigas usavam baseweb. Cobre os dois. */
-[data-testid="stTabs"] [role="tablist"] {position: sticky !important; top: 3.4rem; z-index: 60 !important; display: flex !important;
+[data-testid="stTabs"] [role="tablist"] {position: sticky !important; top: 3.4rem; z-index: 60 !important; display: flex !important; flex-wrap: wrap !important; justify-content: center;
   gap: 8px !important; padding: 8px !important; margin: 2px 0 18px !important; border-radius: 20px !important;
-  overflow-x: auto; scrollbar-width: none; border: 0 !important;
+  overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: thin; scrollbar-color: #22C55E rgba(255,255,255,.12);
+  -webkit-overflow-scrolling: touch; scroll-behavior: smooth; border: 0 !important;
   background: linear-gradient(145deg, rgba(18,35,63,.97), rgba(22,48,79,.97) 55%, rgba(27,59,102,.97)) !important;
   box-shadow: 0 14px 30px rgba(11,22,40,.22), inset 1px 1px 0 rgba(255,255,255,.10);}
-[data-testid="stTabs"] [role="tablist"]::-webkit-scrollbar {display: none;}
+/* rolagem lateral visível: ninguém perde as abas que não couberam */
+[data-testid="stTabs"] [role="tablist"]::-webkit-scrollbar {display: block; height: 7px;}
+[data-testid="stTabs"] [role="tablist"]::-webkit-scrollbar-track {background: rgba(255,255,255,.10); border-radius: 8px; margin: 0 14px;}
+[data-testid="stTabs"] [role="tablist"]::-webkit-scrollbar-thumb {background: #22C55E; border-radius: 8px;}
+[data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {display: flex !important;}
 [data-testid="stTabs"] [role="tablist"]::after, [data-testid="stTabs"] [role="tablist"]::before {display: none !important;}
 [data-testid="stTabs"] .react-aria-SelectionIndicator, [data-testid="stTabs"] [data-baseweb="tab-highlight"],
 [data-testid="stTabs"] [data-baseweb="tab-border"], [data-testid="stTabs"] [data-testid="stTabsHighlight"] {display: none !important;}
-[data-testid="stTabs"] [role="tab"] {flex: 1 0 auto !important; justify-content: center !important; height: auto !important;
+[data-testid="stTabs"] [role="tab"] {flex: 0 0 auto !important; justify-content: center !important; height: auto !important;
   min-height: 0 !important; margin: 0 !important; padding: .62rem 1.15rem !important; border-radius: 14px !important;
   border: 1px solid rgba(255,255,255,.16) !important; background: rgba(255,255,255,.07) !important;
   color: #D6E6FA !important; transition: transform .16s, background .16s, box-shadow .16s;}
@@ -248,7 +253,8 @@ st.markdown("""<style>
   [data-testid="stTabs"] [role="tab"] {min-width: 0 !important; width: auto !important; padding: .55rem .4rem !important;}
   [data-testid="stTabs"] [role="tab"] p {font-size: .84rem !important; white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis;}
-  [data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {display: none !important;}}
+  [data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {display: none !important;}
+  [data-testid="stTabs"] [role="tab"]:nth-child(2) {grid-column: 1 / -1;}}
 @media (prefers-reduced-motion: reduce) {[data-testid="stTabs"] [role="tab"] {transition: none;}}
 /* contador de pessoas conectadas */
 .t2-online {display: flex; width: fit-content; margin: 2px 0 10px auto; align-items: center; gap: 8px;
@@ -1263,15 +1269,13 @@ with aba[1]:
             vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
             titulo_apurado("🇧🇷 Brasil", br_v.get("pst", 0))
             placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
-            cards([("Apurado", pct(br_v.get("pst", 0), 2), "das seções do Brasil", "#1B2A41"),
-                   ("Diferença agora", n(abs(vl - vf)) + " votos",
-                    ("Lula" if vl >= vf else "Flávio") + " à frente na apuração" if vl + vf else "aguardando os votos",
-                    COR_L if vl >= vf else COR_F)])
+            r_ = motor_2t.projetar(uf_v, UF, "uf")[1] if ensaio else proj_vivo("uf")
+            bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
             # histórico desta sessão
             h = st.session_state.setdefault("t2_hist_" + modo, [])
             if vl + vf and (not h or h[-1][1] != br_v.get("pst")):
                 h.append((datetime.now(BRT).strftime("%H:%M:%S"), br_v.get("pst", 0), 100 * vl / (vl + vf),
-                          None))
+                          r_.get("final_a", [None, None, None])[1]))
             c1, c2 = st.columns([1.4, 1], gap="large")
             with c1:
                 u = uf_v.copy()
@@ -1290,6 +1294,7 @@ with aba[1]:
                     hh = pd.DataFrame(h, columns=["hora", "apurado", "lula_agora", "lula_proj"])
                     fig = go.Figure()
                     fig.add_scatter(x=hh.apurado, y=hh.lula_agora, name="Lula apurado", line=dict(color=COR_L))
+                    fig.add_scatter(x=hh.apurado, y=hh.lula_proj, name="Lula projetado", line=dict(color=COR_L, dash="dot"))
                     fig.add_hline(y=50, line_dash="dash", line_color="#5B6477")
                     fig.update_layout(title="Evolução nesta sessão", height=520, xaxis_title="% apurado",
                                       yaxis_title="Lula (% dos válidos)", legend=dict(orientation="h", y=-.15))
@@ -1741,5 +1746,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (apuração ao vivo aqui)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (abas + projeção Brasil)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
