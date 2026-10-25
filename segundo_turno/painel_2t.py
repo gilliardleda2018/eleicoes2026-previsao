@@ -313,6 +313,16 @@ st.markdown("""<style>
 .cv-kpis.v .r, .cv-kpis.v .d {color: #FFE3E0;} .cv-kpis.v .q {color: #fff;}
 .cv-nivel {font: 400 clamp(1.6rem, 3.6vw, 2.4rem)/1 'Anton', 'Impact', sans-serif; color: #1E1E1E; text-transform: uppercase;
   margin: 34px 0 12px; padding: 10px 0 10px 16px; border-left: 8px solid #D3252B; letter-spacing: .02em;}
+/* selo verde piscando com o % apurado */
+.t2-ap-tit {display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: 22px 0 10px; font: 800 1.45rem 'Montserrat', sans-serif; color: #1B2A41;}
+.t2-ap-selo {display: inline-flex; align-items: center; gap: 8px; background: #C9F7DC; color: #0B5E35;
+  border-radius: 8px; padding: 4px 12px; font: 700 .95rem 'Montserrat', sans-serif; white-space: nowrap;}
+.t2-ap-selo .pt {width: 10px; height: 10px; border-radius: 50%; background: #12A150;
+  box-shadow: 0 0 0 0 rgba(18,161,80,.7); animation: t2piscar 1.4s ease-in-out infinite;}
+@keyframes t2piscar {0% {opacity: 1; box-shadow: 0 0 0 0 rgba(18,161,80,.65);}
+  50% {opacity: .35; box-shadow: 0 0 0 7px rgba(18,161,80,0);} 100% {opacity: 1; box-shadow: 0 0 0 0 rgba(18,161,80,0);}}
+@media (prefers-reduced-motion: reduce) {.t2-ap-selo .pt {animation: none;}}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -1157,6 +1167,13 @@ def proj_vivo(nivel):
     return motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ma_v is not None else {"sem_dados": True}
 
 
+def titulo_apurado(texto, pst):
+    """Título da seção com o selo verde piscando: % apurado."""
+    v = f"{float(pst or 0):.2f}".replace(".", ",")
+    st.markdown(f'<div class="t2-ap-tit"><span>{texto}</span><span class="t2-ap-selo"><span class="pt"></span>{v} %</span>'
+                '</div>', unsafe_allow_html=True)
+
+
 def placar(nome_l, votos_l, nome_f, votos_f, total, rotulo=""):
     pl_, pf_ = (100 * votos_l / total, 100 * votos_f / total) if total else (0, 0)
     st.markdown(f"""<div class="t2-placar">
@@ -1226,7 +1243,7 @@ with aba[1]:
                         st.write(("✅ " if ok else "❌ ") + f"**{etapa}** · {det}")
         else:
             vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
-            st.subheader("🇧🇷 Brasil")
+            titulo_apurado("🇧🇷 Brasil", br_v.get("pst", 0))
             placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
             cards([("Apurado", pct(br_v.get("pst", 0), 2), "das seções do Brasil", "#1B2A41"),
                    ("Diferença agora", n(abs(vl - vf)) + " votos",
@@ -1266,9 +1283,9 @@ with aba[1]:
                         columns={"unidade": "UF", "pst": "% apurado", "saldo": "Saldo Lula"}), height=500)
 
         # ---- Maranhão
-        st.subheader("🏛️ Maranhão")
         # mesma tela na simulação e no ao vivo; antes de começar, tudo aparece zerado/cinza
         comecou = ma_v is not None and bool(ma_v.get("validos"))
+        titulo_apurado("🏛️ Maranhão", ma_v.get("pst", 0) if ma_v is not None else 0)
         if not comecou:
             st.markdown('<div class="t2-status">O Maranhão ainda não começou a apurar: as tabelas abaixo se preenchem '
                         'sozinhas assim que o TSE publicar os primeiros votos.</div>', unsafe_allow_html=True)
@@ -1323,8 +1340,9 @@ with aba[1]:
             tabela_polos(m, True)
 
         # ---- Tuntum
-        st.subheader("📍 Tuntum · boletins de urna por seção")
         tun = mun_v[mun_v.unidade.astype(str) == motor_2t.TUNTUM] if len(mun_v) else pd.DataFrame()
+        titulo_apurado("📍 Tuntum · boletins de urna por seção",
+                       float(tun.pst.iloc[0]) if len(tun) and "pst" in tun else 0)
         if len(tun) and tun.vv.iloc[0] > 0:
             placar("LULA · TUNTUM", tun.get("v_13", pd.Series([0])).iloc[0], "FLÁVIO · TUNTUM",
                    tun.get("v_22", pd.Series([0])).iloc[0], tun.vv.iloc[0], "")
@@ -1705,5 +1723,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 24/10 (revisão do português)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (selo % apurado)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
