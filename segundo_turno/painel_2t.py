@@ -794,6 +794,7 @@ def _barras_pct(nomes, valores, titulo, ref=None, ref_txt="", altura=420, cor="#
 
 
 with aba[0]:
+    topo_cv = st.container()  # resultado do Convencimento (redução da abstenção), preenchido mais abaixo
     est, BR_T = cv.brasil()
     vezes = int(1 / BR_T["fracao_para_virar"]) if BR_T["fracao_para_virar"] > 0 else 0
     MA_C = cv.maranhao(MUN)
@@ -1273,6 +1274,267 @@ def status(info, ensaio):
         st.markdown(f'<div class="t2-aviso">⚠️ {escape(str(a))}</div>', unsafe_allow_html=True)
 
 
+# ================================================================ redução da abstenção (1º → 2º turno)
+import abstencao_2t as ab2  # noqa: E402
+
+COR_CAIU, COR_SUBIU = "#12A150", "#E8892B"
+ESCALA_ABS = [[0, COR_SUBIU], [0.5, "#F3F1EC"], [1, COR_CAIU]]
+NIVEIS_ABS = ["🇧🇷 Brasil por estado", "🏛️ Maranhão por município", "📍 Tuntum por bairro e seção"]
+
+st.markdown("""<style>
+.t2-abs {display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 6px 0 14px;}
+.t2-abs .c {position: relative; overflow: hidden; border-radius: 22px; padding: 16px 20px 14px; color: #FFFFFF;
+  border: 1px solid rgba(210,230,255,.22); box-shadow: 0 16px 34px rgba(11,22,40,.28), inset 1px 1px 0 rgba(255,255,255,.10);
+  background: radial-gradient(420px 180px at 100% 0%, var(--brilho), transparent 65%),
+              linear-gradient(150deg, #0B1628 0%, #12233F 55%, #16304F 100%);}
+.t2-abs .nv {font: 700 .7rem 'Montserrat'; letter-spacing: .2em; color: #8FE3FF; text-transform: uppercase;}
+.t2-abs .lg {font: 800 1.12rem/1.2 'Montserrat'; margin: 2px 0 8px; color: #FFFFFF;}
+.t2-abs .big {display: flex; align-items: baseline; gap: 8px; font: 800 clamp(2.3rem, 4.4vw, 3.3rem)/1 'Montserrat';
+  letter-spacing: -.03em; color: var(--cor); font-variant-numeric: tabular-nums;}
+.t2-abs .big small {font: 700 1rem 'Montserrat'; letter-spacing: 0;}
+.t2-abs .rot {font: 700 .78rem 'Montserrat'; color: #D6E6FA; margin: 4px 0 12px; text-transform: uppercase; letter-spacing: .06em;}
+.t2-abs .br {display: grid; grid-template-columns: 4.6rem 1fr 3.6rem; align-items: center; gap: 8px; margin: 5px 0;
+  font: 600 .76rem 'Montserrat'; color: #D6E6FA;}
+.t2-abs .br .tr {height: 10px; border-radius: 999px; background: rgba(255,255,255,.10); overflow: hidden;}
+.t2-abs .br .fi {height: 100%; border-radius: 999px;}
+.t2-abs .br b {color: #FFFFFF; text-align: right; font-variant-numeric: tabular-nums;}
+.t2-abs .ft {margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.14); font: 600 .8rem/1.45 'Montserrat';
+  color: #EAF4FF;}
+.t2-abs .ft b {color: var(--cor); font-weight: 800;}
+.t2-abs .ft span {display: block; color: #9FB7D9; font-size: .72rem; font-weight: 500;}
+.t2-abs .esp {font: 700 1.05rem 'Montserrat'; color: #9FB7D9; margin: 10px 0 14px;}
+.t2-abs-tit {display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 26px 0 8px;
+  font: 800 1.45rem 'Montserrat', sans-serif; color: #1B2A41;}
+.t2-abs-tit span {font: 700 .78rem 'Montserrat'; color: #0B5E35; background: #C9F7DC; border-radius: 8px; padding: 4px 10px;}
+.t2-abs-nota {font: 500 .78rem/1.45 'Manrope', sans-serif; color: #5B6477; margin: 0 0 10px;}
+@media (max-width: 900px) {.t2-abs {grid-template-columns: 1fr;}}
+</style>""", unsafe_allow_html=True)
+
+
+def _pts(x, casas=1):
+    return f"{_br(abs(x), casas)}"
+
+
+def _gente(x):
+    """'+3,8 milhões de eleitores a mais nas urnas' / '12 mil eleitores a menos nas urnas'."""
+    if x is None or pd.isna(x):
+        return ""
+    if abs(x) < 1:
+        return "o mesmo número de eleitores nas urnas"
+    return (f"<b>+{cv.fmt_qtd(x)}</b> eleitores a mais nas urnas" if x > 0
+            else f"<b>{cv.fmt_qtd(-x)}</b> eleitores a menos nas urnas")
+
+
+def _cartao_abs(nivel, r, extra=""):
+    """Cartão em destaque: queda (ou alta) da abstenção do 1º para o 2º turno num lugar."""
+    if r is None or r.get("abst_2t") is None:
+        a1 = r["abst_1t"] if r else None
+        return (f'<div class="c" style="--cor:#9FB7D9;--brilho:rgba(143,227,255,.18)"><div class="nv">{nivel}</div>'
+                f'<div class="lg">{escape(r["nome"]) if r else "–"}</div><div class="esp">⏳ aguardando a apuração</div>'
+                + (f'<div class="ft">Abstenção no 1º turno: <b style="color:#FFFFFF">{_br(a1)}%</b></div>' if a1 is not None
+                   else "") + "</div>")
+    red = r["reducao"]
+    caiu = red >= 0
+    cor = "#3BE07F" if caiu else "#FFB15C"
+    brilho = "rgba(59,224,127,.30)" if caiu else "rgba(232,137,43,.32)"
+    seta, verbo = ("▼", "pontos a menos de abstenção") if caiu else ("▲", "pontos a mais de abstenção")
+    a1, a2 = r["abst_1t"], r["abst_2t"]
+    esc = max(a1, a2) * 1.15 or 1
+
+    def barra(rot, v, c):
+        return (f'<div class="br"><span>{rot}</span><div class="tr"><div class="fi" style="width:{100 * v / esc:.1f}%;'
+                f'background:{c}"></div></div><b>{_br(v)}%</b></div>')
+
+    parcial = "" if r.get("totalizado") or r.get("pst", 100) >= 99.99 else \
+        f'<span>{_br(r.get("pst", 0), 2)}% apurado · taxa das seções já totalizadas</span>'
+    return (f'<div class="c" style="--cor:{cor};--brilho:{brilho}"><div class="nv">{nivel}</div>'
+            f'<div class="lg">{escape(r["nome"])}</div>'
+            f'<div class="big">{seta} {_pts(red)}<small>pts</small></div><div class="rot">{verbo}</div>'
+            + barra("1º turno", a1, "rgba(214,230,250,.55)") + barra("2º turno", a2, cor)
+            + f'<div class="ft">{_gente(r.get("a_mais"))}{extra}{parcial}</div></div>')
+
+
+def cartoes_abstencao(itens):
+    """itens: (nível, resumo, texto extra) — os três cartões em destaque lado a lado."""
+    st.markdown('<div class="t2-abs">' + "".join(_cartao_abs(nv, r, ex) for nv, r, ex in itens) + "</div>",
+                unsafe_allow_html=True)
+
+
+def _barras_reducao(nomes, valores, titulo, destaque=None, altura=None):
+    """Barras horizontais da redução (pts): verde = abstenção caiu, laranja = subiu."""
+    cores = [COR_CAIU if v >= 0 else COR_SUBIU for v in valores]
+    rot = [f"<b>{escape(str(x))}</b>" if destaque and x == destaque else escape(str(x)) for x in nomes]
+    fig = go.Figure(go.Bar(x=valores, y=rot, orientation="h", marker_color=cores,
+                           marker_line=dict(color=["#1B2A41" if destaque and x == destaque else "rgba(0,0,0,0)"
+                                                   for x in nomes], width=2),
+                           text=[("▼ " if v >= 0 else "▲ ") + f"{_pts(v)} pts" for v in valores], textposition="outside",
+                           cliponaxis=False, hovertemplate="%{y}: %{x:.2f} pts<extra></extra>"))
+    fig.add_vline(x=0, line_color="#5B6477", line_width=1)
+    fig.update_layout(title=titulo, height=altura or max(380, 24 * len(nomes) + 120), showlegend=False,
+                      yaxis=dict(autorange="reversed", tickfont=dict(size=11)),
+                      xaxis=dict(title="pontos de abstenção a menos no 2º turno", zeroline=False),
+                      margin=dict(l=8, r=60, t=46, b=8))
+    grafico(fig)
+
+
+def _faixa(v):
+    m = float(np.nanpercentile(np.abs(v), 95)) if np.isfinite(v).any() else 1.0
+    return max(m, .5)
+
+
+def _detalhe_brasil(t):
+    ok = t[t.abst_2t.notna()]
+    if not len(ok):
+        st.markdown('<div class="t2-status">Os estados aparecem aqui assim que o TSE publicar o comparecimento.</div>',
+                    unsafe_allow_html=True)
+        return
+    top = ok.iloc[0]
+    rk_ma = ok.reset_index(drop=True)
+    pos_ma = (rk_ma.index[rk_ma.uf == "MA"][0] + 1) if (rk_ma.uf == "MA").any() else None
+    cards([("Estados onde a abstenção caiu", f"{int((ok.reducao > 0).sum())} de {len(ok)}",
+            f"{int((ok.reducao < 0).sum())} com alta", COR_CAIU),
+           ("Maior queda" if top.reducao >= 0 else "Menor alta", f"{top.uf} · {'▼' if top.reducao >= 0 else '▲'} "
+            f"{_pts(top.reducao)} pts", f"{_br(top.abst_1t)}% → {_br(top.abst_2t)}%", COR_CAIU if top.reducao >= 0 else COR_SUBIU),
+           ("Maranhão no ranking", f"{pos_ma}º de {len(ok)}" if pos_ma else "–", "entre os estados", "#1B2A41"),
+           ("Saldo nos estados", ("+" if ok.a_mais.sum() >= 0 else "−") + cv.fmt_qtd(abs(ok.a_mais.sum())),
+            "eleitores nas urnas em relação ao 1º turno", "#6D5BA8")])
+    c1, c2 = st.columns([1.25, 1], gap="large")
+    with c1:
+        f = _faixa(ok.reducao.values)
+        fig = mapa_br(ok, "reducao", "Redução da abstenção por estado (pts)", rng=(-f, f), escala=ESCALA_ABS,
+                      hover={"abst_1t": ":.1f", "abst_2t": ":.1f", "reducao": ":.2f"})
+        fig.update_layout(coloraxis_colorbar=dict(title="", ticksuffix=" pts"))
+        grafico(fig)
+    with c2:
+        _barras_reducao(ok.nome.tolist(), ok.reducao.tolist(), "Os 27 estados", destaque="Maranhão", altura=560)
+    tabela(t[["nome", "regiao", "pst", "abst_1t", "abst_2t", "reducao", "a_mais"]].rename(columns={
+        "nome": "Estado", "regiao": "Região", "pst": "% apurado", "abst_1t": "Abstenção 1º t %",
+        "abst_2t": "Abstenção 2º t %", "reducao": "Redução (pts)", "a_mais": "Eleitores a mais"}), height=420)
+
+
+def _detalhe_ma(t, prefixo):
+    ok = t[t.abst_2t.notna()]
+    if not len(ok):
+        st.markdown('<div class="t2-status">Os municípios aparecem aqui assim que o Maranhão começar a apurar.</div>',
+                    unsafe_allow_html=True)
+        return
+    top = ok.iloc[0]
+    tu = ab2.municipio(t, motor_2t.TUNTUM)
+    cards([("Municípios onde a abstenção caiu", f"{int((ok.reducao > 0).sum())} de {len(ok)}",
+            f"{int((ok.reducao < 0).sum())} com alta · {217 - len(ok)} aguardando" if len(ok) < 217
+            else f"{int((ok.reducao < 0).sum())} com alta", COR_CAIU),
+           ("Maior queda" if top.reducao >= 0 else "Menor alta", f"{'▼' if top.reducao >= 0 else '▲'} {_pts(top.reducao)} pts",
+            f"{top.municipio}: {_br(top.abst_1t)}% → {_br(top.abst_2t)}%", COR_CAIU if top.reducao >= 0 else COR_SUBIU),
+           ("Tuntum no ranking", f"{tu['posicao']}º de {tu['de']}" if tu and tu.get("posicao") else "–",
+            (("queda de " if tu["reducao"] >= 0 else "alta de ") + f"{_pts(tu['reducao'])} pts")
+            if tu and tu.get("reducao") is not None else "aguardando", "#1B2A41"),
+           ("Saldo no Maranhão", ("+" if ok.a_mais.sum() >= 0 else "−") + cv.fmt_qtd(abs(ok.a_mais.sum())),
+            "eleitores nas urnas em relação ao 1º turno", "#6D5BA8")])
+    c1, c2 = st.columns([1.3, 1], gap="large")
+    with c1:
+        g = ok.merge(MUN[["cd_tse", "cd_ibge"]], on="cd_tse", how="left")
+        f = _faixa(g.reducao.values)
+        fig = px.choropleth_map(g, geojson=geo_recorte(geo("ma"), "properties.CD_MUN", g.cd_ibge), locations="cd_ibge",
+                                featureidkey="properties.CD_MUN", color="reducao", color_continuous_scale=ESCALA_ABS,
+                                range_color=(-f, f), map_style="carto-positron", zoom=5.3,
+                                center={"lat": -5.2, "lon": -45.2}, opacity=.88, hover_name="municipio")
+        fig.update_traces(text=[f'<span style="font-size:15px"><b>{escape(str(r.municipio))}</b></span><br>'
+                                f'{_rot("Abstenção 1º turno")}  <b>{_br(r.abst_1t)}%</b><br>'
+                                f'{_rot("Abstenção 2º turno")}  <b>{_br(r.abst_2t)}%</b><br>{_LINHA}<br>'
+                                + (f'<span style="color:#3BE07F"><b>▼ {_pts(r.reducao, 2)} pts</b></span>' if r.reducao >= 0
+                                   else f'<span style="color:#FFB15C"><b>▲ {_pts(r.reducao, 2)} pts</b></span>')
+                                + f'  · {_rot("eleitores")} <b>{"+" if r.a_mais >= 0 else "−"}{_br(abs(r.a_mais), 0)}</b>'
+                                for r in g.itertuples()],
+                          hovertemplate="%{text}<extra></extra>", hoverlabel=HOVER_CARD)
+        fig.update_layout(height=600, margin=dict(l=0, r=0, t=36, b=0), title="Redução da abstenção por município (pts)",
+                          coloraxis_colorbar=dict(title="", ticksuffix=" pts"))
+        grafico(fig)
+    with c2:
+        dez = ok.head(10)
+        _barras_reducao(dez.municipio.tolist(), dez.reducao.tolist(), "As 10 maiores quedas", altura=360)
+        # regiões imediatas: taxa do 2º turno ponderada pelo eleitorado dos municípios já apurados
+        r_ = ok.assign(f1=ok.eleitorado_1t - ok.comp_1t, f2=ok.abst_2t / 100 * ok.eleitorado_1t).groupby(
+            "regiao_imediata", as_index=False).agg(e=("eleitorado_1t", "sum"), f1=("f1", "sum"), f2=("f2", "sum"))
+        r_["reducao"] = 100 * (r_.f1 - r_.f2) / r_.e
+        r_ = r_.sort_values("reducao", ascending=False)
+        _barras_reducao(r_.regiao_imediata.tolist(), r_.reducao.tolist(), "Por região imediata (IBGE)", altura=560)
+    busca = st.text_input("Buscar município", key=f"{prefixo}_busca", placeholder="ex.: Imperatriz")
+    tt = t if not busca else t[t.municipio.str.lower().str.contains(busca.strip().lower(), na=False)]
+    tabela(tt[["posicao", "municipio", "regiao_imediata", "pst", "abst_1t", "abst_2t", "reducao", "a_mais"]].rename(columns={
+        "posicao": "Posição", "municipio": "Município", "regiao_imediata": "Região imediata", "pst": "% apurado",
+        "abst_1t": "Abstenção 1º t %", "abst_2t": "Abstenção 2º t %", "reducao": "Redução (pts)",
+        "a_mais": "Eleitores a mais"}), height=460)
+
+
+def _detalhe_tuntum(s):
+    r = ab2.resumo_secoes(s)
+    if not r["lidas"]:
+        st.markdown('<div class="t2-status">As seções de Tuntum aparecem aqui conforme os boletins de urna do 2º turno '
+                    'forem publicados.</div>', unsafe_allow_html=True)
+        return
+    z = ab2.por_grupo(s, "zona_tipo").set_index("zona_tipo")
+    itens = [("Seções comparadas", f"{r['lidas']} de {r['secoes']}", "boletins de urna do 2º turno lidos", "#1B2A41")]
+    for nome in ("Zona urbana", "Zona rural"):
+        if nome in z.index and pd.notna(z.loc[nome, "reducao"]):
+            x = z.loc[nome]
+            itens.append((f"{nome} · abstenção", ("▼ " if x.reducao >= 0 else "▲ ") + f"{_pts(x.reducao)} pts",
+                          f"{_br(x.abst_1t)}% → {_br(x.abst_2t)}% · {'+' if x.a_mais >= 0 else '−'}{n(abs(x.a_mais))} eleitores",
+                          COR_CAIU if x.reducao >= 0 else COR_SUBIU))
+    itens.append(("Saldo em Tuntum", ("+" if r["a_mais"] >= 0 else "−") + n(abs(r["a_mais"])),
+                  "eleitores nas urnas em relação ao 1º turno, nas mesmas seções", "#6D5BA8"))
+    cards(itens)
+    c1, c2 = st.columns(2, gap="large")
+    b = ab2.por_grupo(s, "bairro")
+    b = b[b.lidas > 0]
+    with c1:
+        _barras_reducao(b.bairro.tolist(), b.reducao.tolist(), "Por bairro e povoado")
+    with c2:
+        lo = ab2.por_grupo(s, "Local")
+        lo = lo[lo.lidas > 0]
+        _barras_reducao(lo.Local.tolist(), lo.reducao.tolist(), "Por local de votação")
+    lid = s[s.lida].sort_values("reducao", ascending=False)
+    tabela(lid[["secao", "bairro", "Local", "aptos_2t", "comp_1t", "comp_2t", "a_mais", "abst_1t", "abst_2t", "reducao"]].rename(
+        columns={"secao": "Seção", "bairro": "Bairro/povoado", "aptos_2t": "Aptos", "comp_1t": "Votaram 1º t",
+                 "comp_2t": "Votaram 2º t", "a_mais": "Eleitores a mais", "abst_1t": "Abstenção 1º t %",
+                 "abst_2t": "Abstenção 2º t %", "reducao": "Redução (pts)"}), height=420)
+    st.caption(f"Comparação seção a seção, só nas seções com boletim do 2º turno já lido. {BAIRRO_UNIFICADO} são um "
+               "bairro só.")
+
+
+def painel_abstencao(uf_v, br_v, mun_v, ma_v, sec_v, prefixo, detalhe=True):
+    """Indicadores da redução da abstenção nos três níveis. Mesmo caminho no ensaio e no ao vivo."""
+    t_br, r_br = ab2.brasil(uf_v, br_v)
+    t_ma, r_ma = ab2.maranhao(mun_v, ma_v, MUN)
+    base_t, _ = base_tuntum()
+    s_tu = ab2.secoes(base_t, sec_v)
+    if detalhe:
+        nomes_m = MUN.sort_values("municipio").set_index("cd_tse").municipio
+        cd = st.selectbox("Município do terceiro cartão", list(nomes_m.index), format_func=lambda c: nomes_m[c],
+                          index=list(nomes_m.index).index(motor_2t.TUNTUM), key=f"{prefixo}_mun")
+    else:
+        cd = motor_2t.TUNTUM
+    r_mu = ab2.municipio(t_ma, cd)
+    if r_mu and r_mu.get("posicao"):
+        ex = (f'<span>{r_mu["posicao"]}º maior queda entre {r_mu["de"]} municípios do Maranhão</span>' if r_mu["reducao"] >= 0
+              else f'<span>{r_mu["posicao"]}º de {r_mu["de"]} municípios do Maranhão</span>')
+    else:
+        ex = ""
+    cartoes_abstencao([("🇧🇷 Federal", r_br, ""), ("🏛️ Estadual", r_ma, ""), ("📍 Municipal", r_mu, ex)])
+    st.markdown('<div class="t2-abs-nota">Abstenção = eleitores aptos que não votaram. Redução = abstenção do 1º turno '
+                '(4/10) − abstenção do 2º turno (25/10), em pontos percentuais; eleitores a mais = redução × eleitorado. '
+                'Durante a apuração, a taxa do 2º turno vale para as seções já totalizadas. Fonte: TSE.</div>',
+                unsafe_allow_html=True)
+    if not detalhe:
+        return
+    nivel = st.segmented_control("Detalhar", NIVEIS_ABS, default=NIVEIS_ABS[0], key=f"{prefixo}_nivel") or NIVEIS_ABS[0]
+    if nivel == NIVEIS_ABS[0]:
+        _detalhe_brasil(t_br)
+    elif nivel == NIVEIS_ABS[1]:
+        _detalhe_ma(t_ma, prefixo)
+    else:
+        _detalhe_tuntum(s_tu)
+
+
 with aba[1]:
     c = st.columns([1.3, 1, 1])
     # ?modo=vivo abre direto no ao vivo (link de divulgação no domingo e teste de carga antes dele)
@@ -1357,6 +1619,15 @@ with aba[1]:
                     t = t.assign(saldo=t.Lula - t.Flávio).sort_values("saldo")
                     tabela(t[["unidade", "pst", "Lula", "Flávio", "saldo"]].rename(
                         columns={"unidade": "UF", "pst": "% apurado", "saldo": "Saldo Lula"}), height=500)
+
+        # ---- redução da abstenção: Brasil, Maranhão e município, com os cartões em destaque
+        st.markdown('<div class="t2-abs-tit">📉 Redução da abstenção · 1º → 2º turno'
+                    + ('<span>✔ RESULTADO OFICIAL</span>' if FINALIZADO else "") + '</div>', unsafe_allow_html=True)
+        try:
+            painel_abstencao(uf_v, br_v, mun_v, ma_v, sec_v, "t2_abs")
+        except Exception as e:  # noqa: BLE001  (o indicador nunca derruba a apuração)
+            st.markdown(f'<div class="t2-aviso">⚠️ Indicadores de abstenção indisponíveis nesta leitura '
+                        f'({escape(type(e).__name__)}).</div>', unsafe_allow_html=True)
 
         # ---- Maranhão
         # mesma tela na simulação e no ao vivo; antes de começar, tudo aparece zerado/cinza
@@ -1480,6 +1751,25 @@ with aba[1]:
                     "lula_2t": "Previsto %", "desvio": "Diferença (pts)"}), height=400)
 
     ao_vivo()
+
+
+# resultado do Convencimento no topo da aba 📣: os mesmos cartões, com a leitura do TSE (depois que a apuração começa)
+if agora >= INICIO:
+    with topo_cv:
+        try:
+            uf_c, br_c, _ = vivo_nacional()
+            mun_c, ma_c, _ = vivo_ma()
+            sec_c, _ = vivo_secoes(motor_2t.TUNTUM)
+            if br_c is not None:
+                with st.container(key="cv_papel_resultado"):
+                    _cab("Resultado do Convencimento", "A abstenção caiu?",
+                         "Abstenção do 1º para o 2º turno no Brasil, no Maranhão e em Tuntum" if FINALIZADO
+                         else "Abstenção do 1º para o 2º turno, com a apuração em andamento")
+                    painel_abstencao(uf_c, br_c, mun_c, ma_c, sec_c, "cv_abs", detalhe=False)
+                    st.markdown('<div class="cv-fonte">Detalhe por estado, município, bairro e seção na aba '
+                                f'{"🏆 RESULTADO OFICIAL" if FINALIZADO else "de apuração"}.</div>', unsafe_allow_html=True)
+        except Exception:  # noqa: BLE001  (sem leitura do TSE, a aba segue como antes)
+            pass
 
 
 # ================================================================ 3) Maranhão
@@ -1789,6 +2079,13 @@ with aba[5]:
 **Limites.** É uma estimativa: quem faltou não vota necessariamente como os vizinhos. Os eleitores de Flávio que faltaram
 também existem (estimativa: {cv.fmt_qtd(BR_T["flavio_casa"])}); a conta mostra o efeito de trazer de volta os de Lula.
 O voto no exterior fica fora da conta.
+
+**📉 Redução da abstenção (1º → 2º turno).** Abstenção = eleitores aptos que não votaram ÷ eleitores aptos. A
+redução é a abstenção do 1º turno menos a do 2º, em pontos percentuais (positivo = mais gente votou), em três níveis:
+federal (Brasil e cada estado), estadual (Maranhão e cada município) e municipal (Tuntum por bairro, povoado, local e
+seção, pelos boletins de urna, comparando sempre as mesmas seções). Durante a apuração, a taxa do 2º turno vale para as
+seções já totalizadas, como o TSE publica; "eleitores a mais nas urnas" = redução × eleitorado. O total do Brasil inclui
+o voto no exterior nos dois turnos; a tabela por estado não.
 
 **Apuração ao vivo.** No domingo, a partir das 17h (Brasília), a aba Ao vivo lê os arquivos oficiais do TSE a cada minuto
 (Brasil, estados, os 217 municípios do Maranhão e os boletins de urna de cada seção de Tuntum). As abas Maranhão e

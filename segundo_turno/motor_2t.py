@@ -172,15 +172,16 @@ def _apuracao_nacional(cod=None):
             info["avisos"].append(f"{u}: sem resposta do TSE")
             continue
         linhas.append({"unidade": u, "pst": d["pst"], "vv": d["validos"], "comparecimento": d["comparecimento"],
-                       "eleitorado": d["eleitorado"], "brancos": d["brancos"], "nulos": d["nulos"],
-                       **{f"v_{n}": v for n, v in d["votos"].items()}})
+                       "abstencao": d["abstencao"], "eleitorado": d["eleitorado"], "brancos": d["brancos"],
+                       "nulos": d["nulos"], **{f"v_{n}": v for n, v in d["votos"].items()}})
     uf = pd.DataFrame(linhas).fillna(0)
     br = _tenta(lambda: ler_total(cod, "br"))
     if br is None and len(uf):
         info["avisos"].append("Brasil: arquivo indisponível, usando a soma das UFs")
         tot = uf.sum(numeric_only=True)
         br = {"pst": float(np.average(uf.pst, weights=uf.eleitorado.clip(lower=1))), "validos": tot.vv,
-              "comparecimento": tot.comparecimento, "eleitorado": tot.eleitorado, "brancos": tot.brancos,
+              "comparecimento": tot.comparecimento, "abstencao": tot.get("abstencao", 0.0),
+              "eleitorado": tot.eleitorado, "brancos": tot.brancos,
               "nulos": tot.nulos, "votos": {c[2:]: tot[c] for c in uf.columns if c.startswith("v_")},
               "totalizado": False, "hora": "", "leiaute": "soma das UFs"}
     if br is None:
@@ -208,7 +209,8 @@ def _apuracao_ma(cod=None):
             linhas.append({"unidade": c, "pst": 0.0, "vv": 0.0})
             continue
         linhas.append({"unidade": c, "pst": d["pst"], "vv": d["validos"], "comparecimento": d["comparecimento"],
-                       "brancos": d["brancos"], "nulos": d["nulos"], **{f"v_{n}": v for n, v in d["votos"].items()}})
+                       "abstencao": d["abstencao"], "eleitorado": d["eleitorado"], "brancos": d["brancos"],
+                       "nulos": d["nulos"], **{f"v_{n}": v for n, v in d["votos"].items()}})
     falhas = sum(d is None for _, d in partes)
     if falhas:
         info["avisos"].append(f"{falhas} municípios sem resposta nesta leitura")
@@ -422,22 +424,49 @@ def ensaio(fracao, semente=7, cenario=None):
 
     uf = apurar(u, "uf")
     mun = apurar(m, "cd_tse")
+    # comparecimento simulado (sorteio à parte, para não mudar os votos do ensaio): abstenção do 1º turno com um
+    # desvio comum e um por lugar; comparecimento e abstenção valem para a parte apurada, como no TSE
+    rng_c = np.random.default_rng(semente + 1000)
+    mov = rng_c.normal(1.2, 1.5)  # pontos de abstenção a menos no 2º turno (cenário do ensaio)
+
+    def presenca(df, out):
+        e = df["eleitorado"].values.astype(float)
+        a1 = 1 - df["comparecimento"].values / np.maximum(e, 1)
+        a2 = np.clip(a1 - (mov + rng_c.normal(0, 1.2, len(df))) / 100, .03, .7)
+        parte = out.pst.values / 100
+        out["eleitorado"] = e
+        out["comparecimento"] = np.round(e * (1 - a2) * parte)
+        out["abstencao"] = np.round(e * a2 * parte)
+        return out
+
+    uf = presenca(u, uf)
+    mun = presenca(m, mun)
+    # o Maranhão na tabela por estado acompanha a soma dos municípios (no TSE, os dois números batem)
+    k = uf.unidade.astype(str).str.upper() == "MA"
+    if k.any() and (mun.abstencao + mun.comparecimento).sum() > 0:
+        a_ma = mun.abstencao.sum() / (mun.abstencao + mun.comparecimento).sum()
+        e_ma, parte = uf.loc[k, "eleitorado"].values, uf.loc[k, "pst"].values / 100
+        uf.loc[k, "comparecimento"] = np.round(e_ma * (1 - a_ma) * parte)
+        uf.loc[k, "abstencao"] = np.round(e_ma * a_ma * parte)
     sec = s.copy()
     publicada = rng.random(len(sec)) < min(1, fracao * 1.2)
     sec = sec[publicada].copy()
     p = np.clip(sec.lula_2t / 100 + rng.normal(choque / 4, .03, len(sec)), .02, .98)
     vv = np.round(sec.validos_2t_est)
+    comp_s = np.round(np.clip(sec.comparecimento + sec.aptos * (mov + rng_c.normal(0, 2.5, len(sec))) / 100, 0, sec.aptos))
     sec_out = pd.DataFrame({"zona": sec.zona, "secao": sec.secao, "local": sec.local, "aptos": sec.aptos,
-                            "comparecimento": np.round(vv * 1.04), "lula": np.round(vv * p),
+                            "comparecimento": comp_s, "lula": np.round(vv * p),
                             "flavio": vv - np.round(vv * p), "brancos": np.round(vv * .01), "nulos": np.round(vv * .03),
                             "hora": "ensaio"})
     tot = lambda df: {"pst": float(100 * df.vv.sum() / max(u.validos_2t_est.sum(), 1)), "validos": float(df.vv.sum()),
                       "votos": {"13": float(df.v_13.sum()), "22": float(df.v_22.sum())}, "totalizado": fracao >= 1,
-                      "hora": "ensaio", "leiaute": "ensaio"}
+                      "hora": "ensaio", "leiaute": "ensaio", "eleitorado": float(df.eleitorado.sum()),
+                      "comparecimento": float(df.comparecimento.sum()), "abstencao": float(df.abstencao.sum())}
     br = tot(uf)
     ma = {"pst": float(100 * mun.vv.sum() / max(m.validos_2t_est.sum(), 1)), "validos": float(mun.vv.sum()),
           "votos": {"13": float(mun.v_13.sum()), "22": float(mun.v_22.sum())}, "totalizado": fracao >= 1,
-          "hora": "ensaio", "leiaute": "ensaio"}
+          "hora": "ensaio", "leiaute": "ensaio", "eleitorado": float(mun.eleitorado.sum()),
+          "comparecimento": float(mun.comparecimento.sum()), "abstencao": float(mun.abstencao.sum())}
     return uf, br, mun, ma, sec_out
 
 
