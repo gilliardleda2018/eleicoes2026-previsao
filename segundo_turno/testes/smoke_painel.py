@@ -130,6 +130,10 @@ def rodar(titulo, estado=None, botoes=(), params=None):
                  "Onde Lula vence e mais gente ficou em casa", "conversar", "cv-kpis", "Quantos precisam voltar",
                  "Federal · Brasil", "Estadual · Maranhão", "Municipal · Tuntum", "Quanto o seu município pode ajudar"):
         assert item in textos or any(item in c[1] for c in CHAMADAS if c[0] == "expander"), f"{titulo}: faltou {item}"
+    # redução da abstenção: título e os três cartões em destaque, sem cair no aviso de erro
+    assert "Redução da abstenção · 1º → 2º turno" in textos, f"{titulo}: faltou a seção de abstenção"
+    assert textos.count('<div class="t2-abs">') >= 1, f"{titulo}: faltaram os cartões de abstenção"
+    assert "Indicadores de abstenção indisponíveis" not in textos, f"{titulo}: erro nos indicadores de abstenção"
     n_bairros = sum(1 for c in CHAMADAS if c[0] == "expander" and " seções" in c[1])
     assert n_bairros >= 20, f"{titulo}: só {n_bairros} tabelas de bairro"
     print(f"OK {titulo}: {n_graf} gráficos, {n_tab} tabelas, {n_bairros} bairros/povoados, {len(CHAMADAS)} chamadas"
@@ -153,12 +157,26 @@ if __name__ == "__main__":
     assert sum(c[0] == "link_button" for c in CHAMADAS) >= 2, "faltou o botão de compartilhar (topo e chamada final)"
     del os.environ["LINK_2T"]
     rodar("ensaio 2% + busca", {"t2_modo": "Ensaio", "t2_frac": 2, "t2_busca_ma": "imperatriz"})
+    # detalhe da abstenção nos três níveis (Brasil é o padrão; aqui Maranhão com busca e Tuntum, outro município no cartão)
+    rodar("abstenção · Maranhão", {"t2_modo": "Ensaio", "t2_frac": 100, "t2_abs_nivel": "🏛️ Maranhão por município",
+                                   "t2_abs_busca": "tun"})
+    rodar("abstenção · Tuntum", {"t2_modo": "Ensaio", "t2_frac": 60, "t2_abs_nivel": "📍 Tuntum por bairro e seção"})
     # ao vivo com o TSE "respondendo" (dados do ensaio no formato do motor)
     uf, br, mun, ma, sec = motor_2t.ensaio(0.6, semente=3)
     motor_2t.apuracao_nacional = lambda cod=None: (uf, br, {"consultado": 0, "eleicao": "6258", "avisos": ["teste"]})
     motor_2t.apuracao_ma = lambda cod=None: (mun, ma, {"consultado": 0, "avisos": []})
     motor_2t.apuracao_secoes = lambda cod=None, cdmun=None: (sec, {"publicadas": len(sec), "lidas": len(sec)})
     rodar("ao vivo (simulado)", {"t2_modo": "Ao vivo"}, botoes={"t2_ler_sec"})
+    assert any(c[0] == "markdown" and "Resultado do Convencimento" in c[1] for c in CHAMADAS), \
+        "faltou o resultado do Convencimento (cartões de abstenção no topo da aba 📣)"
+    for nivel in ("🏛️ Maranhão por município", "📍 Tuntum por bairro e seção"):
+        rodar(f"ao vivo · abstenção {nivel}", {"t2_modo": "Ao vivo", "t2_abs_nivel": nivel})
+    # leitura antiga guardada (sem as colunas de abstenção/eleitorado): a taxa sai do comparecimento
+    uf_a, mun_a = uf.drop(columns=["abstencao", "eleitorado"]), mun.drop(columns=["abstencao", "eleitorado"])
+    br_a = {k: v for k, v in br.items() if k != "abstencao"}
+    motor_2t.apuracao_nacional = lambda cod=None: (uf_a, br_a, {"consultado": 0, "eleicao": "6258", "avisos": []})
+    motor_2t.apuracao_ma = lambda cod=None: (mun_a, ma, {"consultado": 0, "avisos": []})
+    rodar("ao vivo (leitura antiga, sem coluna de abstenção)", {"t2_modo": "Ao vivo", "t2_abs_nivel": "🏛️ Maranhão por município"})
     # ao vivo antes das 17h: TSE respondendo com 0% apurado
     import pandas as pd
     zero_uf = pd.DataFrame({"unidade": motor_2t.UFS, "pst": 0.0, "vv": 0.0, "v_13": 0.0, "v_22": 0.0})
