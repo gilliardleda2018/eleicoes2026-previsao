@@ -337,6 +337,10 @@ st.markdown("""<style>
 .t2-leg .q {width: 13px; height: 13px; border-radius: 3px; display: inline-block; border: 1px solid rgba(255,255,255,.25);}
 .t2-leg .ln span:last-child {margin-left: 8px;}
 .t2-leg .nt, [class*="st-key-t2_mapa_mun"] .nt {color: #BDC1C6; font: 500 .74rem 'Manrope', sans-serif; margin-top: 6px;}
+.t2-ap-selo.fim .pt {animation: none; background: #0B5E35;}
+.t2-eleito {display: inline-block; margin-left: 10px; padding: 3px 10px; border-radius: 999px; background: #FFFFFF;
+  color: #0B5E35; font: 900 .72rem 'Montserrat', sans-serif; letter-spacing: .12em; vertical-align: middle;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);}
 /* placar ao vivo */
 .t2-placar {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
 .t2-pl {border-radius: 20px; padding: 16px 18px; color: #FFFFFF; position: relative; overflow: hidden;
@@ -428,6 +432,8 @@ if agora < INICIO:
     vivo = ""
 else:
     quando, vivo = "Apuração em andamento · dados oficiais do TSE", "vivo"
+if agora >= datetime(2026, 10, 25, 21, 0, tzinfo=BRT) and os.environ.get("RESULTADO_OFICIAL", "1") == "1":
+    quando, vivo = "Resultado oficial · apuração encerrada · dados do TSE", ""
 def foto_url(nome):
     return f"/app/static/fotos_2t/{nome}" if (RAIZ / "static" / "fotos_2t" / nome).exists() else foto(nome)
 
@@ -616,25 +622,19 @@ def destino_em_disputa(df):
 
 
 ao_vivo_agora = agora >= INICIO - timedelta(hours=1)
-if ao_vivo_agora:  # bolinha verde piscando na aba "Ao vivo · agora" (no lugar do emoji vermelho)
+# apuração encerrada: botão fixo "RESULTADO OFICIAL" em destaque (sem piscar). RESULTADO_OFICIAL=0 no serviço desliga.
+FINALIZADO = os.environ.get("RESULTADO_OFICIAL", "1") == "1" and agora >= datetime(2026, 10, 25, 21, 0, tzinfo=BRT)
+if FINALIZADO:
     st.markdown("""<style>
-[data-testid="stTabs"] [role="tab"]:nth-child(2) p::before {content: ""; display: inline-block; width: 10px; height: 10px;
-  margin-right: 8px; vertical-align: middle; border-radius: 50%; background: #22C55E;
-  animation: t2piscar 1.4s ease-in-out infinite;}
-/* o botão inteiro solta ondas verdes, como um sinal ao vivo */
-[data-testid="stTabs"] [role="tab"]:nth-child(2) {position: relative !important; overflow: visible !important;
-  border-color: rgba(34,197,94,.85) !important; animation: t2vibra 1.1s ease-in-out infinite;}
-[data-testid="stTabs"] [role="tab"]:nth-child(2)::after {content: ""; position: absolute; inset: 0; border-radius: 14px;
-  pointer-events: none; animation: t2onda 1.1s ease-out infinite;}
-@keyframes t2onda {0% {box-shadow: 0 0 0 0 rgba(34,197,94,.95), 0 0 0 0 rgba(34,197,94,.6);}
-  50% {box-shadow: 0 0 0 4px rgba(34,197,94,.45), 0 0 0 1px rgba(34,197,94,.7);}
-  100% {box-shadow: 0 0 0 8px rgba(34,197,94,0), 0 0 0 5px rgba(34,197,94,0);}}
-@keyframes t2vibra {0%, 100% {transform: scale(1);} 25% {transform: scale(1.035);} 50% {transform: scale(.99);}
-  75% {transform: scale(1.02);}}
-@media (prefers-reduced-motion: reduce) {[data-testid="stTabs"] [role="tab"]:nth-child(2),
-  [data-testid="stTabs"] [role="tab"]:nth-child(2)::after {animation: none;}}
+[data-testid="stTabs"] [role="tab"]:nth-child(2) {border: 2px solid #F5C04A !important;
+  background: linear-gradient(110deg, #B8860B 0%, #E3A92B 50%, #B8860B 100%) !important; color: #FFFFFF !important;
+  box-shadow: 0 6px 18px rgba(227,169,43,.45) !important;}
+[data-testid="stTabs"] [role="tab"]:nth-child(2) p {font-weight: 900 !important; letter-spacing: .06em;}
+[data-testid="stTabs"] [role="tab"]:nth-child(2)[aria-selected="true"] {
+  background: linear-gradient(110deg, #8A6508 0%, #D79A1E 50%, #8A6508 100%) !important;}
 </style>""", unsafe_allow_html=True)
-aba = st.tabs(["📣 Convencimento", "APURAÇÃO - AO VIVO AQUI" if ao_vivo_agora else "📡 Ao vivo", "🗺️ Maranhão", "📍 Tuntum",
+aba = st.tabs(["📣 Convencimento", "🏆 RESULTADO OFICIAL" if FINALIZADO else
+               ("APURAÇÃO - AO VIVO AQUI" if ao_vivo_agora else "📡 Ao vivo"), "🗺️ Maranhão", "📍 Tuntum",
                "📰 Pesquisas e contexto", "🧪 Metodologia"])
 
 
@@ -1229,12 +1229,18 @@ LEGENDA_MAPA_MUN = (
 def titulo_apurado(texto, pst):
     """Título da seção com o selo verde piscando: % apurado."""
     v = f"{float(pst or 0):.2f}".replace(".", ",")
-    st.markdown(f'<div class="t2-ap-tit"><span>{texto}</span><span class="t2-ap-selo"><span class="pt"></span>{v} %</span>'
+    fim = ' fim' if FINALIZADO else ''
+    rot = "✔ RESULTADO OFICIAL · " if FINALIZADO else ""
+    st.markdown(f'<div class="t2-ap-tit"><span>{texto}</span><span class="t2-ap-selo{fim}"><span class="pt"></span>{rot}{v} %</span>'
                 '</div>', unsafe_allow_html=True)
 
 
-def placar(nome_l, votos_l, nome_f, votos_f, total, rotulo=""):
+def placar(nome_l, votos_l, nome_f, votos_f, total, rotulo="", selo=None):
+    """selo: texto do selo no mais votado ("ELEITO", "MAIS VOTADO") quando a apuração acabou."""
     pl_, pf_ = (100 * votos_l / total, 100 * votos_f / total) if total else (0, 0)
+    if selo and total and votos_l != votos_f:
+        s_ = f'<span class="t2-eleito">✔ {selo}</span>'
+        nome_l, nome_f = (nome_l + s_, nome_f) if votos_l > votos_f else (nome_l, nome_f + s_)
     st.markdown(f"""<div class="t2-placar">
 <div class="t2-pl" style="--cor:{COR_L};--escuro:#7A0A1C"><div class="ft" style="background-image:url('{fl}')"></div>
 <div class="nm">{nome_l}{rotulo}</div><div class="vt">{n(votos_l)}</div><div class="pc">{pct(pl_, 2)} dos válidos</div></div>
@@ -1303,9 +1309,10 @@ with aba[1]:
         else:
             vl, vf = br_v["votos"].get("13", 0), br_v["votos"].get("22", 0)
             titulo_apurado("🇧🇷 Brasil", br_v.get("pst", 0))
-            placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf)
+            placar("LULA", vl, "FLÁVIO BOLSONARO", vf, vl + vf, selo="ELEITO" if FINALIZADO else None)
             r_ = motor_2t.projetar(uf_v, UF, "uf")[1] if ensaio else proj_vivo("uf")
-            bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
+            if not FINALIZADO:
+                bloco_projecao(r_, br_v.get("pst", 0), vl, vf)
             # histórico desta sessão
             h = st.session_state.setdefault("t2_hist_" + modo, [])
             if vl + vf and (not h or h[-1][1] != br_v.get("pst")):
@@ -1360,10 +1367,11 @@ with aba[1]:
                         'sozinhas assim que o TSE publicar os primeiros votos.</div>', unsafe_allow_html=True)
             mun_v = pd.DataFrame({"unidade": MUN.cd_tse, "pst": 0.0, "vv": 0.0, "v_13": 0.0, "v_22": 0.0})
         ml, mf = (ma_v["votos"].get("13", 0), ma_v["votos"].get("22", 0)) if comecou else (0, 0)
-        placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf)
+        placar("LULA · MA", ml, "FLÁVIO · MA", mf, ml + mf, selo="MAIS VOTADO" if FINALIZADO else None)
         if comecou:
             rm = motor_2t.projetar(mun_v, MUN, "cd_tse")[1] if ensaio else proj_vivo("ma")
-            bloco_projecao(rm, ma_v.get("pst", 0), ml, mf)
+            if not FINALIZADO:
+                bloco_projecao(rm, ma_v.get("pst", 0), ml, mf)
         m = MUN[["cd_tse", "cd_ibge", "municipio", "lula_2t", "lula", "flavio", "validos", "validos_2t_est",
                  "votos_lula_2t", "votos_flavio_2t", "regiao_imediata", "regiao_intermediaria", "polo_imediata",
                  "polo_intermediaria"]].merge(mun_v.assign(cd_tse=mun_v.unidade.astype(str)), on="cd_tse", how="left")
@@ -1414,7 +1422,7 @@ with aba[1]:
                        float(tun.pst.iloc[0]) if len(tun) and "pst" in tun else 0)
         if len(tun) and tun.vv.iloc[0] > 0:
             placar("LULA · TUNTUM", tun.get("v_13", pd.Series([0])).iloc[0], "FLÁVIO · TUNTUM",
-                   tun.get("v_22", pd.Series([0])).iloc[0], tun.vv.iloc[0], "")
+                   tun.get("v_22", pd.Series([0])).iloc[0], tun.vv.iloc[0], "", selo="MAIS VOTADO" if FINALIZADO else None)
         st.caption(f"Boletins publicados: {info_sec.get('publicadas', 0)} · lidos: {info_sec.get('lidas', 0)} de "
                    f"{len(SEC)} seções.")
         base_t, _ = base_tuntum()
@@ -1792,5 +1800,5 @@ Tuntum mostram o resultado do 1º turno e a estimativa do modelo para o 2º turn
 st.markdown(f"""<div class="t2-rodape">{LOGO_IMG.replace('<img', '<img class="logo"')}
 <div><div class="nm">Aggilli Intelligence · Transformando dados em inteligência</div>
 <div class="tx">{CREDITO}.
-Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (mapa por município)</span></div></div>
+Projeto Convencimento: estimativas a partir dos resultados oficiais do TSE do 1º turno; apuração com dados públicos do TSE.<br><span style="opacity:.6">Versão do painel: 2º turno · 25/10 (resultado oficial)</span></div></div>
 <div class="t2-redes">{REDES}</div></div>""", unsafe_allow_html=True)
