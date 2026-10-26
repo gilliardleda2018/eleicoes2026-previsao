@@ -794,7 +794,6 @@ def _barras_pct(nomes, valores, titulo, ref=None, ref_txt="", altura=420, cor="#
 
 
 with aba[0]:
-    topo_cv = st.container()  # resultado do Convencimento (redução da abstenção), preenchido mais abaixo
     est, BR_T = cv.brasil()
     vezes = int(1 / BR_T["fracao_para_virar"]) if BR_T["fracao_para_virar"] > 0 else 0
     MA_C = cv.maranhao(MUN)
@@ -1562,6 +1561,15 @@ with aba[1]:
             mun_v, ma_v, info_ma = vivo_ma()
             sec_v, info_sec = vivo_secoes(motor_2t.TUNTUM)
         status(info, ensaio)
+        # [abstencao] cartões da redução da abstenção no topo da aba (Brasil, Maranhão e município)
+        st.markdown('<div class="t2-abs-tit">📉 Redução da abstenção · 1º → 2º turno'
+                    + ('<span>✔ RESULTADO OFICIAL</span>' if FINALIZADO else "") + '</div>', unsafe_allow_html=True)
+        try:
+            painel_abstencao(uf_v, br_v, mun_v, ma_v, sec_v, "t2_abs")
+        except Exception as e:  # noqa: BLE001  (o indicador nunca derruba a apuração)
+            st.markdown(f'<div class="t2-aviso">⚠️ Indicadores de abstenção indisponíveis nesta leitura '
+                        f'({escape(type(e).__name__)}).</div>', unsafe_allow_html=True)
+        # [/abstencao]
         if br_v is None:
             st.error(info.get("erro", "Sem dados do TSE no momento."))
             with st.expander("Diagnóstico da conexão com o TSE"):
@@ -1619,15 +1627,6 @@ with aba[1]:
                     t = t.assign(saldo=t.Lula - t.Flávio).sort_values("saldo")
                     tabela(t[["unidade", "pst", "Lula", "Flávio", "saldo"]].rename(
                         columns={"unidade": "UF", "pst": "% apurado", "saldo": "Saldo Lula"}), height=500)
-
-        # ---- redução da abstenção: Brasil, Maranhão e município, com os cartões em destaque
-        st.markdown('<div class="t2-abs-tit">📉 Redução da abstenção · 1º → 2º turno'
-                    + ('<span>✔ RESULTADO OFICIAL</span>' if FINALIZADO else "") + '</div>', unsafe_allow_html=True)
-        try:
-            painel_abstencao(uf_v, br_v, mun_v, ma_v, sec_v, "t2_abs")
-        except Exception as e:  # noqa: BLE001  (o indicador nunca derruba a apuração)
-            st.markdown(f'<div class="t2-aviso">⚠️ Indicadores de abstenção indisponíveis nesta leitura '
-                        f'({escape(type(e).__name__)}).</div>', unsafe_allow_html=True)
 
         # ---- Maranhão
         # mesma tela na simulação e no ao vivo; antes de começar, tudo aparece zerado/cinza
@@ -1751,25 +1750,6 @@ with aba[1]:
                     "lula_2t": "Previsto %", "desvio": "Diferença (pts)"}), height=400)
 
     ao_vivo()
-
-
-# resultado do Convencimento no topo da aba 📣: os mesmos cartões, com a leitura do TSE (depois que a apuração começa)
-if agora >= INICIO:
-    with topo_cv:
-        try:
-            uf_c, br_c, _ = vivo_nacional()
-            mun_c, ma_c, _ = vivo_ma()
-            sec_c, _ = vivo_secoes(motor_2t.TUNTUM)
-            if br_c is not None:
-                with st.container(key="cv_papel_resultado"):
-                    _cab("Resultado do Convencimento", "A abstenção caiu?",
-                         "Abstenção do 1º para o 2º turno no Brasil, no Maranhão e em Tuntum" if FINALIZADO
-                         else "Abstenção do 1º para o 2º turno, com a apuração em andamento")
-                    painel_abstencao(uf_c, br_c, mun_c, ma_c, sec_c, "cv_abs", detalhe=False)
-                    st.markdown('<div class="cv-fonte">Detalhe por estado, município, bairro e seção na aba '
-                                f'{"🏆 RESULTADO OFICIAL" if FINALIZADO else "de apuração"}.</div>', unsafe_allow_html=True)
-        except Exception:  # noqa: BLE001  (sem leitura do TSE, a aba segue como antes)
-            pass
 
 
 # ================================================================ 3) Maranhão

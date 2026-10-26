@@ -134,6 +134,11 @@ def rodar(titulo, estado=None, botoes=(), params=None):
     assert "Redução da abstenção · 1º → 2º turno" in textos, f"{titulo}: faltou a seção de abstenção"
     assert textos.count('<div class="t2-abs">') >= 1, f"{titulo}: faltaram os cartões de abstenção"
     assert "Indicadores de abstenção indisponíveis" not in textos, f"{titulo}: erro nos indicadores de abstenção"
+    # os cartões ficam no topo da aba de resultado: antes do placar do Brasil
+    ordem = [c[1] for c in CHAMADAS if c[0] == "markdown"]
+    i_abs = next(k for k, h in enumerate(ordem) if "t2-abs-tit" in h)
+    i_br = next((k for k, h in enumerate(ordem) if "t2-ap-tit" in h and "Brasil" in h), len(ordem))
+    assert i_abs < i_br, f"{titulo}: os cartões de abstenção têm de vir antes do placar do Brasil"
     n_bairros = sum(1 for c in CHAMADAS if c[0] == "expander" and " seções" in c[1])
     assert n_bairros >= 20, f"{titulo}: só {n_bairros} tabelas de bairro"
     print(f"OK {titulo}: {n_graf} gráficos, {n_tab} tabelas, {n_bairros} bairros/povoados, {len(CHAMADAS)} chamadas"
@@ -167,8 +172,6 @@ if __name__ == "__main__":
     motor_2t.apuracao_ma = lambda cod=None: (mun, ma, {"consultado": 0, "avisos": []})
     motor_2t.apuracao_secoes = lambda cod=None, cdmun=None: (sec, {"publicadas": len(sec), "lidas": len(sec)})
     rodar("ao vivo (simulado)", {"t2_modo": "Ao vivo"}, botoes={"t2_ler_sec"})
-    assert any(c[0] == "markdown" and "Resultado do Convencimento" in c[1] for c in CHAMADAS), \
-        "faltou o resultado do Convencimento (cartões de abstenção no topo da aba 📣)"
     for nivel in ("🏛️ Maranhão por município", "📍 Tuntum por bairro e seção"):
         rodar(f"ao vivo · abstenção {nivel}", {"t2_modo": "Ao vivo", "t2_abs_nivel": nivel})
     # leitura antiga guardada (sem as colunas de abstenção/eleitorado): a taxa sai do comparecimento
